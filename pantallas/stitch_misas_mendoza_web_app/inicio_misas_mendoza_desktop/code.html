@@ -1,0 +1,235 @@
+<!DOCTYPE html><html class="light" lang="es"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Misas Mendoza - Inicio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#ece8dd",
+                        "on-tertiary-fixed-variant": "#444840",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#191d16",
+                        "background": "#fdf9ee",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#e6e2d7",
+                        "surface-bright": "#fdf9ee",
+                        "on-surface": "#1c1c15",
+                        "surface-container-low": "#f7f3e8",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed": "#ccead8",
+                        "on-primary-container": "#f5fff7",
+                        "on-primary": "#ffffff",
+                        "surface": "#fdf9ee",
+                        "secondary-container": "#eadfc9",
+                        "on-background": "#1c1c15",
+                        "inverse-surface": "#323129",
+                        "secondary-fixed-dim": "#d0c5b0",
+                        "error-container": "#ffdad6",
+                        "surface-tint": "#496457",
+                        "tertiary": "#5a5d54",
+                        "surface-container-highest": "#e6e2d7",
+                        "error": "#ba1a1a",
+                        "surface-dim": "#dddacf",
+                        "on-primary-fixed": "#052016",
+                        "secondary": "#655e4c",
+                        "primary": "#476254",
+                        "on-error-container": "#93000a",
+                        "surface-container": "#f2eee3",
+                        "on-secondary-fixed": "#201b0e",
+                        "on-secondary-fixed-variant": "#4d4636",
+                        "tertiary-container": "#72766c",
+                        "inverse-on-surface": "#f5f0e5",
+                        "primary-fixed-dim": "#b0cdbd",
+                        "inverse-primary": "#b0cdbd",
+                        "on-tertiary-container": "#fbfef2",
+                        "on-secondary-container": "#696250",
+                        "tertiary-fixed-dim": "#c5c8bd",
+                        "outline": "#727974",
+                        "outline-variant": "#c2c8c2",
+                        "primary-container": "#5f7b6c",
+                        "on-primary-fixed-variant": "#324c40",
+                        "secondary-fixed": "#ece1cb",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface-variant": "#424844",
+                        "tertiary-fixed": "#e1e4d8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "xl": "80px",
+                        "md": "24px",
+                        "lg": "48px",
+                        "container-max": "1120px",
+                        "base": "8px",
+                        "xs": "4px",
+                        "sm": "12px"
+                    },
+                    "fontFamily": {
+                        "display-lg-mobile": ["Geist"],
+                        "caption": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "body-md": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "label-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "display-lg-mobile": ["36px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "caption": ["12px", { "lineHeight": "1.4", "letterSpacing": "0", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Geist', sans-serif; }
+        .glass-panel { background: rgba(233, 222, 200, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full h-16 px-gutter bg-surface-container/95 backdrop-blur-md sticky top-0 z-50 border-b border-outline-variant/30 dark:border-outline/20 md:justify-between">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim" style="font-variation-settings: 'FILL' 1;">church</span>
+<span class="font-headline-md text-headline-md tracking-tight text-primary dark:text-primary-fixed-dim">Misas Mendoza</span>
+</div>
+<nav class="hidden md:flex items-center gap-lg"><a class="text-primary dark:text-primary-fixed-dim font-bold border-b-2 border-primary py-4 hover:text-primary-container transition-colors duration-300" href="#">Inicio</a>
+<a class="text-on-surface-variant dark:text-on-secondary-fixed-variant font-label-md py-4 hover:text-primary-container transition-colors duration-300" href="#">Eventos</a>
+<div class="flex items-center gap-sm ml-4">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-variant transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-secondary-container hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-on-secondary-container">account_circle</span>
+</button>
+</div></nav>
+<button class="md:hidden text-primary flex items-center hover:text-primary-container transition-colors duration-300">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-md md:px-gutter py-xl flex flex-col gap-xl">
+<!-- Search & Filters Section -->
+<section class="flex flex-col items-center gap-md w-full max-w-3xl mx-auto">
+<div class="w-full relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline-variant group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-transparent border-0 border-b-[1.5px] border-outline-variant focus:border-primary focus:ring-0 pl-12 pr-4 py-4 font-body-lg text-body-lg text-on-surface placeholder-on-surface-variant transition-colors" placeholder="Buscar parroquias, zonas o curas..." type="text">
+</div>
+<div class="flex flex-wrap justify-center gap-sm mt-4">
+<button class="px-4 py-2 rounded-full bg-primary/10 text-primary font-label-md text-label-md hover:bg-primary/20 transition-colors border border-primary/20">Capital</button>
+<button class="px-4 py-2 rounded-full bg-outline-variant/40 text-on-surface font-label-md text-label-md hover:bg-outline-variant/60 transition-colors border border-outline-variant/50">Las Heras</button>
+<button class="px-4 py-2 rounded-full bg-outline-variant/40 text-on-surface font-label-md text-label-md hover:bg-outline-variant/60 transition-colors border border-outline-variant/50">Guaymallén</button>
+<button class="px-4 py-2 rounded-full bg-outline-variant/40 text-on-surface font-label-md text-label-md hover:bg-outline-variant/60 transition-colors border border-outline-variant/50">Godoy Cruz</button>
+<button class="px-4 py-2 rounded-full bg-outline-variant/40 text-on-surface font-label-md text-label-md hover:bg-outline-variant/60 transition-colors border border-outline-variant/50">Maipú</button>
+</div>
+</section>
+<!-- Bento Grid Results -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+<!-- Card 1 -->
+<article class="bg-secondary-container rounded-xl p-md flex flex-col gap-md transition-all hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(118,146,131,0.08)] group relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+<div class="flex justify-between items-start z-10">
+<h3 class="font-headline-md text-headline-md text-on-background">Basílica de San Francisco</h3>
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-[#769283] text-on-primary font-caption text-caption whitespace-nowrap">
+<span class="material-symbols-outlined text-[14px] mr-1">location_on</span> 1.2 km
+                    </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-xs z-10">
+                    Necochea 201, Ciudad
+                </p>
+<div class="mt-auto pt-sm border-t border-outline-variant/30 z-10">
+<p class="font-label-md text-label-md text-on-surface-variant mb-xs">Próxima Misa</p>
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">schedule</span>
+<span class="font-body-lg text-body-lg text-primary font-medium">Hoy, 19:30</span>
+</div>
+</div>
+<button class="mt-sm w-full py-4 border border-[#c0c3b8] text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-variant transition-colors z-10">Detalles</button>
+</article>
+<!-- Card 2 -->
+<article class="bg-secondary-container rounded-xl p-md flex flex-col gap-md transition-all hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(118,146,131,0.08)] group relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+<div class="flex justify-between items-start z-10">
+<h3 class="font-headline-md text-headline-md text-on-background">Nuestra Señora de Loreto</h3>
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-[#769283] text-on-primary font-caption text-caption whitespace-nowrap">
+<span class="material-symbols-outlined text-[14px] mr-1">location_on</span> 2.5 km
+                    </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-xs z-10">
+                    José F. Moreno 1316, Ciudad
+                </p>
+<div class="mt-auto pt-sm border-t border-outline-variant/30 z-10">
+<p class="font-label-md text-label-md text-on-surface-variant mb-xs">Próxima Misa</p>
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">schedule</span>
+<span class="font-body-lg text-body-lg text-primary font-medium">Mañana, 09:00</span>
+</div>
+</div>
+<button class="mt-sm w-full py-4 border border-[#c0c3b8] text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-variant transition-colors z-10">Detalles</button>
+</article>
+<!-- Card 3 -->
+<article class="bg-secondary-container rounded-xl p-md flex flex-col gap-md transition-all hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(118,146,131,0.08)] group relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+<div class="flex justify-between items-start z-10">
+<h3 class="font-headline-md text-headline-md text-on-background">San Nicolás y Santiago Apóstol</h3>
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-[#769283] text-on-primary font-caption text-caption whitespace-nowrap">
+<span class="material-symbols-outlined text-[14px] mr-1">location_on</span> 3.8 km
+                    </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-xs z-10">
+                    Peatonal Sarmiento 150, Ciudad
+                </p>
+<div class="mt-auto pt-sm border-t border-outline-variant/30 z-10">
+<p class="font-label-md text-label-md text-on-surface-variant mb-xs">Próxima Misa</p>
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">schedule</span>
+<span class="font-body-lg text-body-lg text-primary font-medium">Mañana, 11:30</span>
+</div>
+</div>
+<button class="mt-sm w-full py-4 border border-[#c0c3b8] text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-variant transition-colors z-10">Detalles</button>
+</article>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full h-20 z-50 flex justify-around items-center px-4 pb-safe bg-surface-container-low dark:bg-surface-container shadow-[0_-4px_24px_rgba(118,146,131,0.06)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center bg-primary-container/20 text-primary dark:text-on-primary-container rounded-full px-4 py-1 hover:bg-primary/5 transition-all scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-md text-label-md mt-1">Inicio</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-tertiary-fixed-variant hover:bg-primary/5 transition-all" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-label-md text-label-md mt-1">Eventos</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-tertiary-fixed-variant hover:bg-primary/5 transition-all" href="#">
+<span class="material-symbols-outlined">map</span>
+<span class="font-label-md text-label-md mt-1">Mapa</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-tertiary-fixed-variant hover:bg-primary/5 transition-all" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-label-md mt-1">Perfil</span>
+</a>
+</nav>
+
+
+
+
+
+
+</body></html>

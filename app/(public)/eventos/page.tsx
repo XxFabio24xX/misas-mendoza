@@ -1,0 +1,194 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { Calendar, ChevronRight, MapPin } from "lucide-react";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+
+type Evento = {
+  id: number;
+  titulo: string;
+  descripcion: string;
+  fecha_inicio: string;
+  fecha_fin?: string;
+  tipo: string;
+  zona: string;
+  lugar_id?: string;
+  activo: boolean;
+  imagen_url?: string;
+  lugares?: { nombre: string } | null;
+};
+
+function formatFecha(inicio: string, fin?: string): string {
+  const start = new Date(inicio);
+  if (!fin) return format(start, "EEE d MMM '•' HH:mm", { locale: es });
+
+  const end = new Date(fin);
+  const sameDay =
+    start.getFullYear() === end.getFullYear() &&
+    start.getMonth() === end.getMonth() &&
+    start.getDate() === end.getDate();
+
+  if (sameDay) {
+    return `${format(start, "EEE d MMM", { locale: es })} • ${format(start, "HH:mm")} - ${format(end, "HH:mm")}`;
+  }
+
+  return `${format(start, "EEE d MMM", { locale: es })} - ${format(end, "EEE d MMM", { locale: es })}`;
+}
+
+export default function EventosPage() {
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tipoFilter, setTipoFilter] = useState("Todos");
+  const [zonaFilter, setZonaFilter] = useState("Todas");
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("eventos")
+        .select("*, lugares(nombre)")
+        .eq("activo", true)
+        .order("fecha_inicio", { ascending: true });
+      if (data) setEventos(data as Evento[]);
+      setLoading(false);
+    })();
+  }, []);
+
+  const tipos = useMemo(() => {
+    const set = new Set(eventos.map((e) => e.tipo).filter(Boolean));
+    return ["Todos", ...[...set].sort()];
+  }, [eventos]);
+
+  const zonas = useMemo(() => {
+    const set = new Set(eventos.map((e) => e.zona).filter(Boolean));
+    return ["Todas", ...[...set].sort()];
+  }, [eventos]);
+
+  const filtered = useMemo(
+    () =>
+      eventos.filter(
+        (e) =>
+          (tipoFilter === "Todos" || e.tipo === tipoFilter) &&
+          (zonaFilter === "Todas" || e.zona === zonaFilter),
+      ),
+    [eventos, tipoFilter, zonaFilter],
+  );
+
+  return (
+    <div className="mx-auto max-w-280 px-5 py-8 md:px-6 md:py-10">
+      <h1 className="text-2xl font-semibold text-on-surface md:text-3xl">
+        Próximos Eventos y Avisos
+      </h1>
+      <p className="mt-2 text-sm text-on-surface-variant">
+        Descubrí las actividades de la comunidad católica en Mendoza.
+      </p>
+
+      <div className="mt-6 flex flex-wrap gap-2">
+        {tipos.map((tipo) => (
+          <button
+            key={tipo}
+            onClick={() => setTipoFilter(tipo)}
+            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+              tipoFilter === tipo
+                ? "border border-primary/20 bg-primary/10 text-primary"
+                : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
+            }`}
+          >
+            {tipo}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-on-surface-variant">
+          Zonas:
+        </span>
+        {zonas.map((zona) => (
+          <button
+            key={zona}
+            onClick={() => setZonaFilter(zona)}
+            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+              zonaFilter === zona
+                ? "border border-primary/20 bg-primary/10 text-primary"
+                : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
+            }`}
+          >
+            {zona}
+          </button>
+        ))}
+      </div>
+
+      {loading && (
+        <div className="mt-20 flex flex-col items-center gap-3 text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-on-surface-variant">Cargando eventos...</p>
+        </div>
+      )}
+
+      {!loading && filtered.length === 0 && (
+        <p className="mt-20 text-center text-sm text-on-surface-variant">
+          No hay eventos que coincidan con los filtros seleccionados.
+        </p>
+      )}
+
+      {!loading && (
+        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((evento) => (
+            <article
+              key={evento.id}
+              className="group relative flex flex-col gap-4 overflow-hidden rounded-xl bg-secondary-container p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(118,146,131,0.12)]"
+            >
+              <div className="absolute -mr-8 -mt-8 right-0 top-0 h-32 w-32 rounded-bl-full bg-primary/5 transition-transform duration-300 group-hover:scale-110" />
+
+              <div className="relative z-10">
+                <span
+                  className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
+                    evento.tipo === "Jóvenes"
+                      ? "bg-primary/10 text-primary"
+                      : evento.tipo === "Avisos" || evento.tipo === "Aviso"
+                        ? "bg-surface-container-highest text-on-surface"
+                        : evento.tipo === "Especial"
+                          ? "bg-primary-container text-on-primary-container"
+                          : "bg-tertiary-container text-on-tertiary-container"
+                  }`}
+                >
+                  {evento.tipo}
+                </span>
+
+                <h2 className="mt-3 text-lg font-semibold text-on-surface">
+                  {evento.titulo}
+                </h2>
+
+                <p className="mt-2 flex items-center gap-1.5 text-xs text-on-surface-variant">
+                  <Calendar className="h-3.5 w-3.5 shrink-0" />
+                  {formatFecha(evento.fecha_inicio, evento.fecha_fin)}
+                </p>
+
+                <p className="mt-1.5 flex items-center gap-1.5 text-xs text-on-surface-variant">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  {evento.lugares?.nombre ?? "Ubicación no disponible"}
+                </p>
+
+                <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-on-surface-variant">
+                  {evento.descripcion}
+                </p>
+              </div>
+
+              <div className="relative z-10 mt-auto border-t border-outline-variant/30 pt-4">
+                <Link
+                  href={`/eventos/${evento.id}`}
+                  className="flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/70"
+                >
+                  Más información
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
