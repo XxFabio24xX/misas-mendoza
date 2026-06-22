@@ -1,12 +1,11 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Calendar, Home, Map, User } from "lucide-react";
+import { Calendar, Home, User } from "lucide-react";
 
 const links = [
   { href: "/", label: "Inicio", Icon: Home },
   { href: "/eventos", label: "Eventos", Icon: Calendar },
-  { href: "/mapa", label: "Mapa", Icon: Map },
   { href: "/login", label: "Perfil", Icon: User },
 ];
 

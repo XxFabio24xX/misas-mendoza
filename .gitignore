@@ -33,6 +33,16 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# API keys y secretos locales
+.secrets/
+
+# Configuración local de herramientas de desarrollo
+opencode.json
+.claude/
+
+# Supabase temp
+supabase/.temp/
+
 # vercel
 .vercel
 

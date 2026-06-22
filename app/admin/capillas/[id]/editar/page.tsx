@@ -7,6 +7,8 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
 import { actualizarCapilla, eliminarCapilla } from "../../actions";
+import { HorariosGrid, type HorarioData } from "@/app/components/horarios-grid";
+import { ImageUploader } from "@/app/components/image-uploader";
 
 const LocationPicker = dynamic(
   () => import("@/app/components/location-picker"),
@@ -33,6 +35,15 @@ type Lugar = {
   lng: number;
   hay_confesiones: boolean;
   activo: boolean;
+  notas_horarios?: string;
+};
+
+type HorarioRaw = {
+  id: string;
+  dia_semana: number | null;
+  dia_mes: number | null;
+  hora: string;
+  temporada: string;
 };
 
 export default function EditarCapillaPage() {
@@ -43,10 +54,13 @@ export default function EditarCapillaPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [lugar, setLugar] = useState<Lugar | null>(null);
+  const [horarios, setHorarios] = useState<HorarioData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lat, setLat] = useState<number>(-32.8908);
   const [lng, setLng] = useState<number>(-68.8272);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const fetchLugar = useCallback(async () => {
     if (!id) {
@@ -54,11 +68,14 @@ export default function EditarCapillaPage() {
       setLoading(false);
       return;
     }
-    const { data, error: err } = await supabase
-      .from("lugares")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
+    const [{ data, error: err }, { data: horariosData }] = await Promise.all([
+      supabase.from("lugares").select("*").eq("id", id).maybeSingle(),
+      supabase
+        .from("horarios")
+        .select("id, dia_semana, dia_mes, hora, temporada")
+        .eq("lugar_id", id)
+        .order("dia_semana", { ascending: true }),
+    ]);
     if (err) {
       setError(err.message);
     } else if (data) {
@@ -66,9 +83,21 @@ export default function EditarCapillaPage() {
       setLugar(l);
       setLat(l.lat ?? -32.8908);
       setLng(l.lng ?? -68.8272);
+      if (l.imagen_url) setImagePreview(l.imagen_url);
       setError(null);
     } else {
       setError("No se encontró la capilla.");
+    }
+    if (horariosData) {
+      setHorarios(
+        (horariosData as HorarioRaw[]).map((h) => ({
+          tipo: h.dia_mes != null ? "mensual" : "semanal",
+          dia_semana: h.dia_semana ?? 0,
+          dia_mes: h.dia_mes ?? 1,
+          hora: h.hora.slice(0, 5),
+          temporada: (h.temporada as HorarioData["temporada"]) ?? "Todo el año",
+        }))
+      );
     }
     setLoading(false);
   }, [id]);
@@ -80,6 +109,27 @@ export default function EditarCapillaPage() {
       setError(null);
       formData.set("lat", String(lat));
       formData.set("lng", String(lng));
+
+      if (imageFile) {
+        const ext = imageFile.name.split(".").pop() ?? "jpg";
+        const fileName = `${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("imagenes_capillas")
+          .upload(fileName, imageFile, { upsert: false });
+        if (uploadError) {
+          setError(`Error al subir la imagen: ${uploadError.message}`);
+          return;
+        }
+        const { data: urlData } = supabase.storage
+          .from("imagenes_capillas")
+          .getPublicUrl(fileName);
+        formData.set("imagen_url", urlData.publicUrl);
+      } else if (!imagePreview) {
+        formData.set("imagen_url", "");
+      } else {
+        formData.set("imagen_url", imagePreview);
+      }
+
       try {
         await actualizarCapilla(id, formData);
       } catch (e) {
@@ -133,13 +183,6 @@ export default function EditarCapillaPage() {
           <h1 className="text-xl font-semibold text-on-surface md:text-2xl">Editar Capilla</h1>
           <p className="mt-0.5 text-sm text-on-surface-variant">Modificá los datos de la capilla.</p>
         </div>
-        <Link
-          href={`/admin/capillas/${id}/horarios`}
-          className="inline-flex items-center gap-2 rounded-lg border border-outline-variant px-4 py-2.5 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
-        >
-          <Clock className="h-4 w-4" />
-          Horarios
-        </Link>
       </div>
 
       <form action={handleSubmit} className="mt-6 space-y-6">
@@ -260,12 +303,45 @@ export default function EditarCapillaPage() {
               />
             </div>
             <div>
-              <label htmlFor="imagen_url" className="text-sm font-medium text-on-surface">URL de Imagen <span className="text-on-surface-variant font-normal">(opcional)</span></label>
-              <input id="imagen_url" name="imagen_url" type="url" defaultValue={lugar?.imagen_url ?? ""}
-                placeholder="https://ejemplo.com/foto.jpg"
-                className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
+              <label className="text-sm font-medium text-on-surface">
+                Imagen <span className="font-normal text-on-surface-variant">(opcional)</span>
+              </label>
+              <ImageUploader
+                value={imagePreview}
+                onChange={(file, preview) => { setImageFile(file); setImagePreview(preview); }}
+                aspect={768 / 288}
               />
             </div>
+          </div>
+        </section>
+
+        <section className="rounded-xl bg-surface-container p-5 shadow-[0_4px_16px_rgba(118,146,131,0.06)]">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-on-surface">Horarios de Misas</h2>
+            <Link
+              href={`/admin/capillas/${id}/horarios`}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/70 hover:underline"
+            >
+              <Clock className="h-3.5 w-3.5" />
+              Editor avanzado
+            </Link>
+          </div>
+          <p className="mb-4 text-sm text-on-surface-variant">
+            Al guardar, estos horarios reemplazarán los actuales. Usá el editor avanzado para opciones adicionales.
+          </p>
+          <HorariosGrid initialHorarios={horarios} />
+          <div className="mt-5">
+            <label htmlFor="notas_horarios" className="text-sm font-medium text-on-surface">
+              Notas de Temporada <span className="font-normal text-on-surface-variant">(opcional)</span>
+            </label>
+            <textarea
+              id="notas_horarios"
+              name="notas_horarios"
+              rows={3}
+              defaultValue={lugar?.notas_horarios ?? ""}
+              placeholder="Ej: En verano se agrega una misa a las 20:30 los sábados. En invierno se suspende la misa de las 7:00..."
+              className="mt-1.5 block w-full resize-y rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
+            />
           </div>
         </section>
 

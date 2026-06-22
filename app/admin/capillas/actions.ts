@@ -3,12 +3,13 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { HorarioData } from "@/app/components/horarios-grid";
 
 export async function crearCapilla(formData: FormData) {
   const lat = parseFloat(formData.get("lat") as string) || null;
   const lng = parseFloat(formData.get("lng") as string) || null;
 
-  const { error } = await supabaseAdmin.rpc("crear_lugar", {
+  const { data, error } = await supabaseAdmin.rpc("crear_lugar", {
     p_nombre: formData.get("nombre"),
     p_tipo: formData.get("tipo"),
     p_departamento: formData.get("departamento"),
@@ -24,9 +25,31 @@ export async function crearCapilla(formData: FormData) {
     p_imagen_url: formData.get("imagen_url") || null,
     p_hay_confesiones: formData.get("hay_confesiones") === "on",
     p_activo: formData.get("activo") === "on",
+    p_notas_horarios: formData.get("notas_horarios") || null,
   });
 
   if (error) throw new Error(error.message);
+
+  const lugarId = (data as { id?: string })?.id;
+  if (!lugarId) throw new Error("La RPC crear_lugar no devolvió un ID. Verificá que la migración 005 esté aplicada en Supabase.");
+  if (lugarId) {
+    const horariosJson = formData.get("horarios_json") as string;
+    if (horariosJson) {
+      const horarios: HorarioData[] = JSON.parse(horariosJson);
+      if (horarios.length > 0) {
+        const rows = horarios.map((h) => ({
+          lugar_id: lugarId,
+          dia_semana: h.tipo === "semanal" ? h.dia_semana : null,
+          dia_mes: h.tipo === "mensual" ? h.dia_mes : null,
+          hora: h.hora,
+          temporada: h.temporada,
+          tipo_actividad: "Misa",
+        }));
+        const { error: horError } = await supabaseAdmin.from("horarios").insert(rows);
+        if (horError) throw new Error(horError.message);
+      }
+    }
+  }
 
   revalidatePath("/admin/capillas");
   revalidatePath("/admin");
@@ -55,9 +78,30 @@ export async function actualizarCapilla(id: string, formData: FormData) {
     p_imagen_url: formData.get("imagen_url") || null,
     p_hay_confesiones: formData.get("hay_confesiones") === "on",
     p_activo: formData.get("activo") === "on",
+    p_notas_horarios: formData.get("notas_horarios") || null,
   });
 
   if (error) throw new Error(error.message);
+
+  const horariosJson = formData.get("horarios_json") as string;
+  if (horariosJson !== null) {
+    const horarios: HorarioData[] = JSON.parse(horariosJson);
+
+    await supabaseAdmin.from("horarios").delete().eq("lugar_id", id);
+
+    if (horarios.length > 0) {
+      const rows = horarios.map((h) => ({
+        lugar_id: id,
+        dia_semana: h.tipo === "semanal" ? h.dia_semana : null,
+        dia_mes: h.tipo === "mensual" ? h.dia_mes : null,
+        hora: h.hora,
+        temporada: h.temporada,
+        tipo_actividad: "Misa",
+      }));
+      const { error: horError } = await supabaseAdmin.from("horarios").insert(rows);
+      if (horError) throw new Error(horError.message);
+    }
+  }
 
   revalidatePath("/admin/capillas");
   revalidatePath(`/admin/capillas/${id}/editar`);
@@ -82,9 +126,13 @@ export async function toggleCapillaActiva(id: string, activo: boolean) {
 }
 
 export async function agregarHorario(lugarId: string, formData: FormData) {
+  const diaSemanaRaw = formData.get("dia_semana") as string;
+  const diaMesRaw = formData.get("dia_mes") as string;
+
   const { error } = await supabaseAdmin.from("horarios").insert({
     lugar_id: lugarId,
-    dia_semana: parseInt(formData.get("dia_semana") as string),
+    dia_semana: diaSemanaRaw ? parseInt(diaSemanaRaw) : null,
+    dia_mes: diaMesRaw ? parseInt(diaMesRaw) : null,
     hora: formData.get("hora") as string,
     tipo_actividad: (formData.get("tipo_actividad") as string) || "Misa",
     temporada: (formData.get("temporada") as string) || "Todo el año",
@@ -112,10 +160,14 @@ export async function editarHorario(
   lugarId: string,
   formData: FormData,
 ) {
+  const diaSemanaRaw = formData.get("dia_semana") as string;
+  const diaMesRaw = formData.get("dia_mes") as string;
+
   const { error } = await supabaseAdmin
     .from("horarios")
     .update({
-      dia_semana: parseInt(formData.get("dia_semana") as string),
+      dia_semana: diaSemanaRaw ? parseInt(diaSemanaRaw) : null,
+      dia_mes: diaMesRaw ? parseInt(diaMesRaw) : null,
       hora: formData.get("hora") as string,
       tipo_actividad: (formData.get("tipo_actividad") as string) || "Misa",
       temporada: (formData.get("temporada") as string) || "Todo el año",

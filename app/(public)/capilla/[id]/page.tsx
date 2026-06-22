@@ -21,7 +21,8 @@ type Lugar = {
 type Horario = {
   id: string;
   lugar_id: string;
-  dia_semana: number;
+  dia_semana: number | null;
+  dia_mes: number | null;
   hora: string;
   tipo_actividad: string;
   temporada: string;
@@ -70,8 +71,10 @@ const SEASON_ORDER = ["Todo el año", "Invierno", "Verano"];
 function groupByDay(horarios: Horario[]) {
   const byDay = new Map<number, { times: string[]; tipos: string[]; obs: string[] }>();
   for (const h of horarios) {
-    if (!byDay.has(h.dia_semana)) byDay.set(h.dia_semana, { times: [], tipos: [], obs: [] });
-    const entry = byDay.get(h.dia_semana)!;
+    if (h.dia_semana == null) continue;
+    const dia = h.dia_semana;
+    if (!byDay.has(dia)) byDay.set(dia, { times: [], tipos: [], obs: [] });
+    const entry = byDay.get(dia)!;
     entry.times.push(h.hora.slice(0, 5));
     entry.tipos.push(h.tipo_actividad ?? "Misa");
     if (h.observacion) entry.obs.push(h.observacion);
@@ -223,7 +226,9 @@ export default async function CapillaPage({
                 <div className="mt-4 space-y-5">
                   {temporadasPresentes.map((temporada) => {
                     const meta = TEMPORADA_META[temporada] ?? TEMPORADA_META["Todo el año"];
-                    const grouped = groupByDay(byTemporada.get(temporada)!);
+                    const allInTemporada = byTemporada.get(temporada)!;
+                    const grouped = groupByDay(allInTemporada);
+                    const mensuales = allInTemporada.filter((h) => h.dia_mes != null);
 
                     return (
                       <div
@@ -244,7 +249,7 @@ export default async function CapillaPage({
                           </div>
                         </div>
 
-                        {/* Day rows */}
+                        {/* Horarios semanales */}
                         <div className="divide-y divide-outline-variant/15 px-4">
                           {grouped.map((group) => (
                             <div
@@ -268,6 +273,20 @@ export default async function CapillaPage({
                                   </p>
                                 )}
                               </div>
+                            </div>
+                          ))}
+                          {/* Horarios mensuales fijos */}
+                          {mensuales.map((h) => (
+                            <div
+                              key={h.id}
+                              className="flex items-baseline justify-between gap-4 py-3"
+                            >
+                              <p className="shrink-0 text-sm font-medium text-on-surface">
+                                Día {h.dia_mes} de cada mes
+                              </p>
+                              <p className="text-sm tabular-nums text-on-surface-variant">
+                                {h.hora.slice(0, 5)} hs
+                              </p>
                             </div>
                           ))}
                         </div>

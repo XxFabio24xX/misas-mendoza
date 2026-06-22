@@ -19,7 +19,7 @@ type Lugar = {
 type Horario = {
   id: number;
   lugar_id: number;
-  dia_semana: number;
+  dia_semana: number | null;
   hora: string;
 };
 
@@ -74,7 +74,10 @@ export default function Home() {
     setError(null);
     const { data, error: dbError } = await supabase
       .from("lugares")
-      .select("*");
+      .select("*")
+      .eq("activo", true)
+      .order("nombre")
+      .limit(50);
     if (dbError) {
       setError(dbError.message);
     } else {

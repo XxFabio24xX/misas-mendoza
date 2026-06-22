@@ -5,6 +5,9 @@ import { ArrowLeft, Loader2, MapPin } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { crearCapilla } from "../actions";
+import { HorariosGrid } from "@/app/components/horarios-grid";
+import { ImageUploader } from "@/app/components/image-uploader";
+import { supabase } from "@/lib/supabase";
 
 const LocationPicker = dynamic(
   () => import("@/app/components/location-picker"),
@@ -19,12 +22,33 @@ export default function NuevaCapillaPage() {
   const [error, setError] = useState<string | null>(null);
   const [lat, setLat] = useState<number>(-32.8908);
   const [lng, setLng] = useState<number>(-68.8272);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   async function handleSubmit(formData: FormData) {
     startTransition(async () => {
       setError(null);
       formData.set("lat", String(lat));
       formData.set("lng", String(lng));
+
+      if (imageFile) {
+        const ext = imageFile.name.split(".").pop() ?? "jpg";
+        const fileName = `${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("imagenes_capillas")
+          .upload(fileName, imageFile, { upsert: false });
+        if (uploadError) {
+          setError(`Error al subir la imagen: ${uploadError.message}`);
+          return;
+        }
+        const { data: urlData } = supabase.storage
+          .from("imagenes_capillas")
+          .getPublicUrl(fileName);
+        formData.set("imagen_url", urlData.publicUrl);
+      } else if (!imagePreview) {
+        formData.set("imagen_url", "");
+      }
+
       try {
         await crearCapilla(formData);
       } catch (e) {
@@ -166,12 +190,35 @@ export default function NuevaCapillaPage() {
               />
             </div>
             <div>
-              <label htmlFor="imagen_url" className="text-sm font-medium text-on-surface">URL de Imagen <span className="text-on-surface-variant font-normal">(opcional)</span></label>
-              <input id="imagen_url" name="imagen_url" type="url"
-                placeholder="https://ejemplo.com/foto.jpg"
-                className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
+              <label className="text-sm font-medium text-on-surface">
+                Imagen <span className="font-normal text-on-surface-variant">(opcional)</span>
+              </label>
+              <ImageUploader
+                value={imagePreview}
+                onChange={(file, preview) => { setImageFile(file); setImagePreview(preview); }}
+                aspect={768 / 288}
               />
             </div>
+          </div>
+        </section>
+
+        <section className="rounded-xl bg-surface-container p-5 shadow-[0_4px_16px_rgba(118,146,131,0.06)]">
+          <h2 className="mb-4 text-base font-semibold text-on-surface">Horarios de Misas</h2>
+          <p className="mb-4 text-sm text-on-surface-variant">
+            Agregá los horarios de misas de esta capilla. Podés agregar más horarios después desde el panel de horarios.
+          </p>
+          <HorariosGrid />
+          <div className="mt-5">
+            <label htmlFor="notas_horarios" className="text-sm font-medium text-on-surface">
+              Notas de Temporada <span className="font-normal text-on-surface-variant">(opcional)</span>
+            </label>
+            <textarea
+              id="notas_horarios"
+              name="notas_horarios"
+              rows={3}
+              placeholder="Ej: En verano se agrega una misa a las 20:30 los sábados. En invierno se suspende la misa de las 7:00..."
+              className="mt-1.5 block w-full resize-y rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
+            />
           </div>
         </section>
 

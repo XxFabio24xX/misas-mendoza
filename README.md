@@ -1,69 +1,161 @@
 # Misas Mendoza
 
-Web app to manage and discover Catholic chapels, parishes, and events in Mendoza, Argentina. Includes a public-facing site for the community and an admin panel for content managers.
+Aplicación web para descubrir horarios de misas, capillas, parroquias y eventos católicos en Mendoza, Argentina. Incluye un sitio público para la comunidad y un panel de administración para colaboradores.
+
+> **Stack:** Next.js 16 · Supabase (PostgreSQL + PostGIS) · Tailwind CSS v4 · TypeScript
+
+---
+
+## Capturas de Pantalla
+
+### Inicio — Capillas cercanas
+
+<!-- Agregar screenshot: pantallas/stitch_misas_mendoza_web_app/inicio_misas_mendoza_desktop/screen.png -->
+![Inicio desktop](pantallas/Home.png)
+
+### Detalle de Capilla
+
+<!-- Agregar screenshot: pantallas/stitch_misas_mendoza_web_app/detalle_misas_mendoza_desktop/screen.png -->
+![Detalle capilla desktop](pantallas/Detalle_iglesia.png)
+
+### Mobile
+
+<!-- Agregar capturas del dispositivo móvil en pantallas/ cuando estén disponibles -->
+> _Capturas de mobile próximamente_
+
+### Panel de Administración
+
+<!-- Agregar screenshot del admin cuando esté disponible -->
+> _Capturas del panel admin próximamente_
+
+---
+
+## Funcionalidades
+
+### Sitio Público
+
+| Pantalla | Descripción |
+|---|---|
+| **Inicio (`/`)** | Muestra capillas ordenadas por distancia al usuario (geolocalización + PostGIS). Cards con nombre, dirección y horario de la próxima misa. Filtros por departamento. |
+| **Detalle capilla (`/capilla/[id]`)** | Hero con imagen, datos de contacto, horarios agrupados por temporada (Todo el año / Invierno / Verano) y día, y mapa interactivo con "Cómo llegar". |
+| **Eventos (`/eventos`)** | Listado de eventos con filtros por tipo (Misa especial, Retiro, Jóvenes, etc.) y zona. Fechas formateadas en español. |
+
+### Panel de Administración (`/admin`)
+
+Acceso protegido por login. Dos roles:
+- **Super Admin:** acceso completo a todas las secciones.
+- **Editor de departamento:** solo puede gestionar capillas y eventos de su departamento asignado.
+
+| Sección | Funcionalidades |
+|---|---|
+| **Dashboard** | Resumen por departamento, capillas sin horarios, tabla de acceso rápido. |
+| **Capillas** | CRUD completo. Formulario con: info básica, contacto, descripción, **subida de imagen con recorte interactivo** (Supabase Storage), **grilla dinámica de horarios** (semanales + mensuales fijos), notas de temporada, y selector de ubicación en mapa (Leaflet + PostGIS). |
+| **Eventos** | CRUD completo. Fechas con inicio/fin, tipo, zona, ubicación con mapa. |
+| **Voluntarios** _(solo admin)_ | Crear, editar y desactivar cuentas de colaboradores (crea usuario en Supabase Auth + perfil en DB). |
+
+---
 
 ## Tech Stack
 
-- **Framework:** Next.js 16 (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS v4 (`@theme` in `globals.css`, no `tailwind.config.ts`)
-- **Database:** Supabase (PostgreSQL + PostGIS)
-- **Authentication:** Supabase Auth (email/password)
-- **Icons:** lucide-react
-- **Maps:** react-leaflet + Leaflet
-- **Font:** Geist (via `next/font/google`)
-- **Date formatting:** date-fns
+| Tecnología | Uso |
+|---|---|
+| **Next.js 16** | App Router, Server Components, Server Actions |
+| **TypeScript** | Tipado completo cliente y servidor |
+| **Tailwind CSS v4** | Design system "Serene Organic Minimalist" — tokens en `globals.css` con `@theme {}` |
+| **Supabase** | PostgreSQL + PostGIS para geolocalización, Auth, Storage para imágenes |
+| **react-leaflet** | Mapas interactivos (selector de ubicación y detalle de capilla) |
+| **react-easy-crop** | Recorte interactivo de imágenes antes de subir |
+| **lucide-react** | Íconos |
+| **date-fns** | Formateo de fechas en español |
 
-## Features
+---
 
-### Public site (`/(public)`)
-- **Home (`/`):** Shows chapels near the user's location (geolocation + PostGIS RPC), with cards listing next Mass time
-- **Events (`/eventos`):** Lists events with filters by type and zone, formatted dates
-- **Chapel detail (`/capilla/[id]`):** Server-rendered page with hero image, contact info, confession hours, grouped Mass schedule, and an interactive Leaflet map with "Cómo llegar" button
+## Estructura del Proyecto
 
-### Authentication & Authorization (`/login`)
-- Login with email/password via Supabase Auth
-- Two roles: `admin` and `editor_departamento`
-- `editor_departamento` is scoped to a single department
+```
+app/
+├── (public)/                   # Sitio público (layout con header + bottom nav mobile)
+│   ├── layout.tsx
+│   ├── page.tsx                # Inicio — capillas cercanas
+│   ├── capilla/[id]/page.tsx   # Detalle de capilla (Server Component)
+│   └── eventos/
+│       ├── page.tsx            # Listado de eventos
+│       └── [id]/page.tsx       # Detalle de evento
+├── admin/
+│   ├── layout.tsx              # Sidebar + drawer mobile + auth guard
+│   ├── page.tsx                # Dashboard
+│   ├── capillas/
+│   │   ├── actions.ts          # Server Actions (CRUD + upload imagen)
+│   │   ├── page.tsx            # Lista de capillas
+│   │   ├── nuevo/page.tsx      # Formulario creación
+│   │   ├── [id]/editar/page.tsx
+│   │   └── [id]/horarios/page.tsx  # Editor avanzado de horarios
+│   ├── eventos/
+│   │   ├── actions.ts
+│   │   ├── page.tsx
+│   │   ├── nuevo/page.tsx
+│   │   └── [id]/editar/page.tsx
+│   └── voluntarios/
+│       ├── actions.ts
+│       ├── page.tsx
+│       ├── nuevo/page.tsx
+│       └── [id]/editar/page.tsx
+├── components/
+│   ├── horarios-grid.tsx       # Grilla dinámica de horarios (desktop tabla + mobile cards)
+│   ├── image-uploader.tsx      # File picker con validación de peso y recorte interactivo
+│   ├── location-picker.tsx     # Mapa Leaflet para seleccionar coordenadas
+│   ├── map-wrapper.tsx         # Dynamic import (SSR: false) para Leaflet
+│   ├── bottom-nav.tsx          # Navegación inferior mobile
+│   ├── back-button.tsx
+│   ├── confirm-dialog.tsx
+│   └── theme-toggle.tsx
+├── login/page.tsx
+└── globals.css                 # Tailwind v4: @theme {}, tokens, dark mode, utilities
+lib/
+├── supabase.ts                 # Cliente público (anon key)
+├── supabase-admin.ts           # Cliente servidor (service role — solo Server Actions)
+└── misas-utils.ts              # findNextMisa(), formatDistancia()
+supabase/migrations/
+├── 001_create_perfiles.sql     # Tabla perfiles + trigger handle_new_user
+├── 002_set_coordenadas_trigger.sql
+├── 003_lugar_rpc.sql           # RPCs crear_lugar / actualizar_lugar (PostGIS)
+├── 004_add_ubicacion_to_eventos.sql
+├── 005_horarios_avanzados.sql  # notas_horarios en lugares, dia_mes en horarios, RPCs actualizados
+└── 006_get_lugares_cercanos.sql  # RPC PostGIS para búsqueda por proximidad
+```
 
-### Admin panel (`/admin`)
-- **Dashboard:** Department summary cards with chapel counts, quick chapel management table with search, edit, and delete
-- **Capillas CRUD:** Create, edit, delete chapels with fields (name, address, department, phone, email, image URL, lat/lng, confessions checkbox). Department-scoped for editors via RBAC.
-- **Eventos CRUD:** Create, edit, delete events (title, type, zone, location, start/end datetime, description). Zone-scoped for editors.
-- **Voluntarios CRUD** (admin-only): Create, edit, delete volunteer accounts (creates Supabase Auth user + profile record)
-- **Responsive design:** Cards on mobile (`block md:hidden`), tables on desktop (`hidden md:block`)
-- **Delete confirmation** via reusable `ConfirmDialog` modal
+---
 
-## Database Schema (Supabase)
+## Base de Datos (Supabase)
 
-### `lugares` — Chapels/parishes/sanctuaries
-| Column | Type | Notes |
+### `lugares`
+| Columna | Tipo | Notas |
 |---|---|---|
-| `id` | `uuid` | PK, default `gen_random_uuid()` |
+| `id` | `uuid` | PK |
 | `nombre` | `text` | |
+| `tipo` | `tipo_lugar` | enum: `parroquia`, `capilla`, `santuario` |
+| `departamento` | `departamentos_mza` | enum con los 18 dptos. de Mendoza |
 | `direccion` | `text` | |
-| `departamento` | `departamentos_mza` | Custom enum |
-| `telefono` | `text` | |
-| `email` | `text` | |
-| `imagen_url` | `text` | |
-| `lat` | `float8` | |
-| `lng` | `float8` | |
-| `coordenadas` | `geography(Point, 4326)` | PostGIS, computed via RPC functions |
+| `lat`, `lng` | `float8` | |
+| `coordenadas` | `geography(Point,4326)` | Calculado por RPC desde lat/lng |
+| `imagen_url` | `text` | URL pública en Supabase Storage |
+| `notas_horarios` | `text` | Aclaraciones de temporada (migración 005) |
 | `hay_confesiones` | `boolean` | |
-| `created_at` | `timestamptz` | |
+| `activo` | `boolean` | |
 
-### `horarios` — Mass schedules
-| Column | Type |
-|---|---|
-| `id` | `uuid` |
-| `lugar_id` | `uuid` (FK → lugares) |
-| `dia_semana` | `int2` (0=Sunday…6=Saturday) |
-| `hora` | `text` (HH:mm) |
+### `horarios`
+| Columna | Tipo | Notas |
+|---|---|---|
+| `lugar_id` | `uuid` | FK → lugares |
+| `dia_semana` | `int2 (nullable)` | 0=Dom … 6=Sáb. Null si es mensual |
+| `dia_mes` | `int2 (nullable)` | 1–31. Para misas mensuales fijas |
+| `hora` | `time` | |
+| `temporada` | `text` | `'Todo el año'`, `'Invierno'`, `'Verano'` |
+| `tipo_actividad` | `text` | `'Misa'`, `'Confesión'`, etc. |
 
-### `eventos` — Events
-| Column | Type |
+### `eventos`
+| Columna | Tipo |
 |---|---|
-| `id` | `uuid` |
 | `titulo` | `text` |
 | `tipo` | `text` |
 | `zona` | `text` |
@@ -71,95 +163,82 @@ Web app to manage and discover Catholic chapels, parishes, and events in Mendoza
 | `fecha_inicio` | `timestamptz` |
 | `fecha_fin` | `timestamptz` |
 | `descripcion` | `text` |
-| `activo` | `boolean` |
-| `created_at` | `timestamptz` |
+| `lat`, `lng` | `float8` |
 
-### `perfiles` — User profiles
-| Column | Type |
+### `perfiles`
+| Columna | Tipo |
 |---|---|
 | `id` | `uuid` (FK → auth.users) |
 | `nombre_completo` | `text` |
-| `email` | `text` |
-| `rol` | `text` (`admin` / `editor_departamento`) |
+| `rol` | `text` — `'admin'` / `'editor_departamento'` |
 | `departamento_asignado` | `text` |
 | `activo` | `boolean` |
-| `created_at` | `timestamptz` |
 
-- Created by a trigger on `auth.users` insert via `handle_new_user()`
-- RLS policies restrict admin operations to users with `rol = 'admin'`
+---
 
-### RPC functions (migrations/003_lugar_rpc.sql)
-- `crear_lugar` — Inserts a chapel, building the `coordenadas` geography from `lat`/`lng`
-- `actualizar_lugar` — Updates a chapel, rebuilding `coordenadas` from `lat`/`lng`
+## Configuración Local
 
-## Project Structure
+### Requisitos
+- Node.js 20+
+- Cuenta en [Supabase](https://supabase.com) con un proyecto creado
 
-```
-app/
-├── (public)/            # Public layout (header + bottom nav)
-│   ├── layout.tsx
-│   ├── page.tsx         # Home
-│   ├── capilla/[id]/
-│   │   └── page.tsx     # Chapel detail (server component)
-│   └── eventos/
-│       └── page.tsx     # Events list
-├── login/
-│   └── page.tsx         # Auth form
-├── admin/
-│   ├── layout.tsx       # Admin sidebar + mobile drawer
-│   ├── page.tsx         # Dashboard
-│   ├── capillas/
-│   │   ├── actions.ts   # Server actions
-│   │   ├── page.tsx     # List
-│   │   ├── nuevo/
-│   │   │   └── page.tsx # Create
-│   │   └── [id]/editar/
-│   │       └── page.tsx # Edit
-│   ├── eventos/
-│   │   ├── actions.ts
-│   │   ├── page.tsx
-│   │   ├── nuevo/
-│   │   │   └── page.tsx
-│   │   └── [id]/editar/
-│   │       └── page.tsx
-│   └── voluntarios/
-│       ├── actions.ts
-│       ├── page.tsx
-│       ├── nuevo/
-│       │   └── page.tsx
-│       └── [id]/editar/
-│           └── page.tsx
-├── components/
-│   ├── confirm-dialog.tsx
-│   ├── Map.tsx          # Leaflet map
-│   ├── map-wrapper.tsx  # Dynamic import wrapper
-│   └── back-button.tsx
-├── globals.css          # Tailwind v4 theme
-└── layout.tsx           # Root layout
-lib/
-├── supabase.ts          # Public Supabase client
-└── supabase-admin.ts    # Server-only admin client (service role)
-supabase/migrations/
-├── 001_create_perfiles.sql
-├── 002_set_coordenadas_trigger.sql
-└── 003_lugar_rpc.sql
-```
+### Pasos
 
-## Setup
-
-1. Clone the repo
-2. Install dependencies:
+1. **Clonar el repositorio**
+   ```bash
+   git clone https://github.com/tu-usuario/misas-mendoza.git
+   cd misas-mendoza
    ```
+
+2. **Instalar dependencias**
+   ```bash
    npm install
    ```
-3. Create `.env.local` with your Supabase credentials:
+
+3. **Variables de entorno** — crear `.env.local`:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
+   SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
    ```
-   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+4. **Ejecutar migraciones** en el SQL Editor de Supabase, en orden:
    ```
-4. Run the SQL migrations in `supabase/migrations/` in the Supabase SQL Editor
-5. Start the dev server:
+   supabase/migrations/001_create_perfiles.sql
+   supabase/migrations/002_set_coordenadas_trigger.sql
+   supabase/migrations/003_lugar_rpc.sql
+   supabase/migrations/004_add_ubicacion_to_eventos.sql
+   supabase/migrations/005_horarios_avanzados.sql
+   supabase/migrations/006_get_lugares_cercanos.sql
    ```
+
+5. **Crear bucket de imágenes** en Supabase Storage:
+   - Nombre: `imagenes_capillas`
+   - Acceso: **público**
+
+6. **Iniciar el servidor de desarrollo**
+   ```bash
    npm run dev
    ```
+   Abrir [http://localhost:3000](http://localhost:3000)
+
+---
+
+## Deploy en Vercel
+
+Vercel es la plataforma recomendada ya que es del mismo equipo que Next.js y el deploy es automático desde GitHub.
+
+1. Subir el repositorio a GitHub
+2. Entrar a [vercel.com](https://vercel.com) → **Add New Project** → importar el repo
+3. Agregar las variables de entorno (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`)
+4. Click en **Deploy** — Vercel detecta Next.js automáticamente
+
+Cada push a `main` genera un deploy automático. Las Pull Requests generan previews con URL propia.
+
+> **Alternativas:** [Railway](https://railway.app) y [Netlify](https://netlify.com) también soportan Next.js, pero Vercel es la opción más directa para este stack.
+
+---
+
+## Licencia
+
+MIT

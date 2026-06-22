@@ -84,7 +84,14 @@ export default function AdminLayout({
         .select("*")
         .eq("id", user.id)
         .single();
-      if (data) setPerfil(data as Perfil);
+      if (data) {
+        if (!(data as Perfil).activo) {
+          await supabase.auth.signOut();
+          router.push("/login");
+          return;
+        }
+        setPerfil(data as Perfil);
+      }
       setLoading(false);
     })();
   }, [router]);
