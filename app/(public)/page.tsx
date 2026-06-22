@@ -10,7 +10,7 @@ type Lugar = {
   id: number;
   nombre: string;
   direccion: string;
-  distancia: number;
+  distancia: number | null;
   departamento: string;
   lat: number;
   lng: number;
@@ -26,10 +26,9 @@ type Horario = {
 export default function Home() {
   const [lugares, setLugares] = useState<Lugar[]>([]);
   const [horarios, setHorarios] = useState<Horario[]>([]);
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
-    null,
-  );
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLocating, setIsLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [noLocation, setNoLocation] = useState(false);
   const [search, setSearch] = useState("");
@@ -43,32 +42,28 @@ export default function Home() {
   const fetchHorarios = useCallback(async (places: Lugar[]) => {
     if (!places.length) return;
     const ids = places.map((p) => p.id);
-    const { data } = await supabase
-      .from("horarios")
-      .select("*")
-      .in("lugar_id", ids);
+    const { data } = await supabase.from("horarios").select("*").in("lugar_id", ids);
     if (data) setHorarios(data as Horario[]);
   }, []);
 
+  // Fetches location-sorted results — does NOT set global loading
   const fetchCercanos = useCallback(
     async (lat: number, lng: number) => {
-      setLoading(true);
-      setError(null);
-      const { data, error: rpcError } = await supabase.rpc(
-        "get_lugares_cercanos",
-        { user_lat: lat, user_lng: lng },
-      );
+      const { data, error: rpcError } = await supabase.rpc("get_lugares_cercanos", {
+        user_lat: lat,
+        user_lng: lng,
+      });
       if (rpcError) {
         setError(rpcError.message);
       } else {
         setLugares(data as Lugar[]);
         await fetchHorarios(data as Lugar[]);
       }
-      setLoading(false);
     },
     [fetchHorarios],
   );
 
+  // Fetches all places sorted by name — used as fast initial load
   const fetchFallback = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -87,24 +82,24 @@ export default function Home() {
     setLoading(false);
   }, [fetchHorarios]);
 
+  // On mount: show fallback immediately and start geolocation in parallel
   useEffect(() => {
+    fetchFallback();
+
     navigator.geolocation.getCurrentPosition(
       (position) =>
-        setCoords({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        }),
-      () => {
-        setNoLocation(true);
-        fetchFallback();
-      },
-      { timeout: 5000, enableHighAccuracy: false },
+        setCoords({ lat: position.coords.latitude, lng: position.coords.longitude }),
+      () => setNoLocation(true),
+      { timeout: 3000, enableHighAccuracy: false },
     );
   }, [fetchFallback]);
 
+  // When coords arrive: silently upgrade to location-sorted results
   useEffect(() => {
     if (!coords) return;
-    fetchCercanos(coords.lat, coords.lng);
+    setNoLocation(false);
+    setIsLocating(true);
+    fetchCercanos(coords.lat, coords.lng).finally(() => setIsLocating(false));
   }, [coords, fetchCercanos]);
 
   const horariosMap = useMemo(() => {
@@ -178,10 +173,14 @@ export default function Home() {
       {loading && (
         <div className="mt-20 flex flex-col items-center gap-3 text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm text-on-surface-variant">
-            Buscando iglesias cercanas...
-          </p>
+          <p className="text-sm text-on-surface-variant">Cargando iglesias...</p>
         </div>
+      )}
+
+      {isLocating && !loading && (
+        <p className="mt-4 text-center text-xs text-on-surface-variant animate-pulse">
+          Ordenando por cercanía a tu ubicación...
+        </p>
       )}
 
       {noLocation && !loading && !error && (
@@ -200,6 +199,8 @@ export default function Home() {
         <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((place) => {
             const misas = horariosMap.get(place.id) ?? [];
+            const distanciaValida =
+              place.distancia != null && !isNaN(place.distancia);
             return (
               <article
                 key={place.id}
@@ -213,10 +214,16 @@ export default function Home() {
                   <h2 className="text-lg font-semibold leading-tight text-on-surface">
                     {place.nombre}
                   </h2>
-                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#769283] px-3 py-1 text-xs font-medium text-white whitespace-nowrap">
-                    <MapPin className="h-3 w-3" />
-                    {formatDistancia(place.distancia)}
-                  </span>
+                  {distanciaValida ? (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#769283] px-3 py-1 text-xs font-medium text-white whitespace-nowrap">
+                      <MapPin className="h-3 w-3" />
+                      {formatDistancia(place.distancia!)}
+                    </span>
+                  ) : (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-outline-variant/60 px-3 py-1 text-xs font-medium text-on-surface-variant whitespace-nowrap">
+                      {place.departamento}
+                    </span>
+                  )}
                 </div>
 
                 {/* Dirección */}
