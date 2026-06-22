@@ -91,8 +91,8 @@ export default function VoluntariosPage() {
       search.trim()
         ? perfiles.filter(
             (p) =>
-              p.nombre_completo.toLowerCase().includes(search.toLowerCase()) ||
-              p.email.toLowerCase().includes(search.toLowerCase()),
+              (p.nombre_completo ?? "").toLowerCase().includes(search.toLowerCase()) ||
+              (p.email ?? "").toLowerCase().includes(search.toLowerCase()),
           )
         : perfiles,
     [perfiles, search],
