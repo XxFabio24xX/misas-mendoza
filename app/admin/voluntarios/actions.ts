@@ -7,10 +7,14 @@ export async function crearVoluntario(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const nombre = formData.get("nombre") as string;
-  const departamento = formData.get("departamento") as string;
+  const rol = (formData.get("rol") as string) || "editor_departamento";
+  const departamento = formData.get("departamento") as string | null;
 
-  if (!email || !password || !nombre || !departamento) {
-    return { error: "Todos los campos son obligatorios." };
+  if (!email || !password || !nombre) {
+    return { error: "Nombre, email y contraseña son obligatorios." };
+  }
+  if (rol === "editor_departamento" && !departamento) {
+    return { error: "El departamento es obligatorio para editores." };
   }
 
   const { data: authUser, error: authError } =
@@ -18,30 +22,22 @@ export async function crearVoluntario(formData: FormData) {
       email,
       password,
       email_confirm: true,
-      user_metadata: { nombre, rol: "editor_departamento" },
+      user_metadata: { nombre, rol },
     });
 
-  if (authError) {
-    return { error: authError.message };
-  }
-
-  if (!authUser.user) {
-    return { error: "No se pudo crear el usuario." };
-  }
+  if (authError) return { error: authError.message };
+  if (!authUser.user) return { error: "No se pudo crear el usuario." };
 
   const { error: perfilError } = await supabaseAdmin.from("perfiles").upsert({
     id: authUser.user.id,
     nombre_completo: nombre,
     email,
-    rol: "editor_departamento",
-    departamento_asignado: departamento,
+    rol,
+    departamento_asignado: rol === "admin" ? null : departamento,
     activo: true,
   });
 
-  if (perfilError) {
-    console.error("ERROR CRÍTICO AL INSERTAR PERFIL:", perfilError);
-    return { error: perfilError.message };
-  }
+  if (perfilError) return { error: perfilError.message };
 
   revalidatePath("/admin/voluntarios");
   return { success: true };

@@ -13,6 +13,7 @@ export default function NuevoVoluntarioPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rol, setRol] = useState<"editor_departamento" | "admin">("editor_departamento");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -118,29 +119,52 @@ export default function NuevoVoluntarioPage() {
         </div>
 
         <div>
-          <label
-            htmlFor="departamento"
-            className="text-sm font-medium text-on-surface"
-          >
-            Departamento Asignado
+          <label htmlFor="rol" className="text-sm font-medium text-on-surface">
+            Rol
           </label>
           <select
-            id="departamento"
-            name="departamento"
-            required
-            defaultValue=""
+            id="rol"
+            name="rol"
+            value={rol}
+            onChange={(e) => setRol(e.target.value as typeof rol)}
             className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
           >
-            <option value="" disabled>
-              Seleccioná un departamento...
-            </option>
-            {DEPARTMENTS.map((dept) => (
-              <option key={dept} value={dept}>
-                {dept}
-              </option>
-            ))}
+            <option value="editor_departamento">Editor de Departamento</option>
+            <option value="admin">Super Admin</option>
           </select>
+          {rol === "admin" && (
+            <p className="mt-1.5 text-xs text-on-surface-variant">
+              El Super Admin tiene acceso completo a todas las capillas, eventos y voluntarios.
+            </p>
+          )}
         </div>
+
+        {rol === "editor_departamento" && (
+          <div>
+            <label
+              htmlFor="departamento"
+              className="text-sm font-medium text-on-surface"
+            >
+              Departamento Asignado
+            </label>
+            <select
+              id="departamento"
+              name="departamento"
+              required
+              defaultValue=""
+              className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
+            >
+              <option value="" disabled>
+                Seleccioná un departamento...
+              </option>
+              {DEPARTMENTS.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {error && (
           <div className="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container">
