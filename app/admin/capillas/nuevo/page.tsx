@@ -8,6 +8,7 @@ import { crearCapilla } from "../actions";
 import { HorariosGrid } from "@/app/components/horarios-grid";
 import { ImageUploader } from "@/app/components/image-uploader";
 import { supabase } from "@/lib/supabase";
+import imageCompression from "browser-image-compression";
 
 const LocationPicker = dynamic(
   () => import("@/app/components/location-picker"),
@@ -32,11 +33,16 @@ export default function NuevaCapillaPage() {
       formData.set("lng", String(lng));
 
       if (imageFile) {
+        const compressed = await imageCompression(imageFile, {
+          maxSizeMB: 0.2,
+          maxWidthOrHeight: 1280,
+          useWebWorker: true,
+        });
         const ext = imageFile.name.split(".").pop() ?? "jpg";
         const fileName = `${crypto.randomUUID()}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("imagenes_capillas")
-          .upload(fileName, imageFile, { upsert: false });
+          .upload(fileName, compressed, { upsert: false });
         if (uploadError) {
           setError(`Error al subir la imagen: ${uploadError.message}`);
           return;

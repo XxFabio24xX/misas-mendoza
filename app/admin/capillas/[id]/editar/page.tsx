@@ -6,6 +6,7 @@ import { ArrowLeft, Clock, Loader2, MapPin, Trash2 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
+import imageCompression from "browser-image-compression";
 import { actualizarCapilla, eliminarCapilla } from "../../actions";
 import { HorariosGrid, type HorarioData } from "@/app/components/horarios-grid";
 import { ImageUploader } from "@/app/components/image-uploader";
@@ -111,11 +112,16 @@ export default function EditarCapillaPage() {
       formData.set("lng", String(lng));
 
       if (imageFile) {
+        const compressed = await imageCompression(imageFile, {
+          maxSizeMB: 0.2,
+          maxWidthOrHeight: 1280,
+          useWebWorker: true,
+        });
         const ext = imageFile.name.split(".").pop() ?? "jpg";
         const fileName = `${crypto.randomUUID()}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("imagenes_capillas")
-          .upload(fileName, imageFile, { upsert: false });
+          .upload(fileName, compressed, { upsert: false });
         if (uploadError) {
           setError(`Error al subir la imagen: ${uploadError.message}`);
           return;
