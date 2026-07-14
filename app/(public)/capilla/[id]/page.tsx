@@ -13,7 +13,6 @@ type Lugar = {
   email?: string;
   imagen_url?: string;
   hay_confesiones: boolean;
-  horario_confesiones?: string;
   departamento: string;
   lat: number;
   lng: number;
@@ -123,7 +122,7 @@ export default async function CapillaPage({
     supabasePublic
       .from("lugares")
       .select(
-        "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, horario_confesiones, departamento, lat, lng, recibe_caritas",
+        "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, departamento, lat, lng, recibe_caritas",
       )
       .eq("id", id)
       .single(),
@@ -223,11 +222,6 @@ export default async function CapillaPage({
                   <CrossIcon className="h-4 w-4 text-primary" />
                   Confesiones Disponibles
                 </p>
-                {lugar.horario_confesiones && (
-                  <p className="mt-1 whitespace-pre-line text-sm text-on-surface-variant">
-                    {lugar.horario_confesiones}
-                  </p>
-                )}
               </div>
             )}
 
