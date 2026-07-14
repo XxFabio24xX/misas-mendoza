@@ -179,7 +179,10 @@ export default async function CapillaPage({
             </p>
 
             {lugar.recibe_caritas && (
-              <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#e9dec8] px-3.5 py-1.5 text-xs font-medium text-[#769283]">
+              // Colores fijos (no theme-aware) a propósito: el fondo #e9dec8 tampoco
+              // cambia con el tema, así que el texto debe quedar igual de fijo para
+              // no perder contraste en dark mode.
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#e9dec8] px-3.5 py-1.5 text-xs font-medium text-[#476254]">
                 <HandHeart className="h-3.5 w-3.5 shrink-0" />
                 Recibe donaciones para Cáritas
               </div>

@@ -62,7 +62,9 @@ export default function GlobalMap({ lugares }: { lugares: LugarMapa[] }) {
               <p className="mt-0.5 text-xs text-on-surface-variant">{lugar.direccion}</p>
               <Link
                 href={`/capilla/${lugar.id}`}
-                className="mt-2 inline-block rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-on-primary transition-colors hover:bg-primary-container"
+                // !text-on-primary: leaflet.css's `.leaflet-container a { color: #0078A8 }`
+                // is more specific than a plain Tailwind utility and wins without it.
+                className="mt-2 inline-block rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-on-primary! transition-colors hover:bg-primary-container"
               >
                 Ver detalles
               </Link>

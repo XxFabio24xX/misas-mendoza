@@ -236,7 +236,7 @@ export default function Home() {
                     {place.nombre}
                   </h2>
                   {distanciaValida ? (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#769283] px-3 py-1 text-xs font-medium text-white whitespace-nowrap">
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-medium text-on-primary whitespace-nowrap">
                       <MapPin className="h-3 w-3" />
                       {formatDistancia(place.distancia!)}
                     </span>
