@@ -56,15 +56,19 @@ export default function GlobalMap({ lugares }: { lugares: LugarMapa[] }) {
       {lugares.map((lugar) => (
         <Marker key={lugar.id} position={[lugar.lat, lugar.lng]} icon={icon}>
           <Tooltip>{lugar.nombre}</Tooltip>
+          {/* leaflet.css hardcodes the popup card to a white background regardless of
+              our app theme, so its content is pinned to light-mode colors on purpose —
+              theme-aware tokens here would turn illegible against that fixed white card
+              in dark mode. */}
           <Popup>
             <div className="min-w-40">
-              <p className="text-sm font-semibold text-on-surface">{lugar.nombre}</p>
-              <p className="mt-0.5 text-xs text-on-surface-variant">{lugar.direccion}</p>
+              <p className="text-sm font-semibold text-[#1c1c15]">{lugar.nombre}</p>
+              <p className="mt-0.5 text-xs text-[#424844]">{lugar.direccion}</p>
               <Link
                 href={`/capilla/${lugar.id}`}
-                // !text-on-primary: leaflet.css's `.leaflet-container a { color: #0078A8 }`
+                // text-white!: leaflet.css's `.leaflet-container a { color: #0078A8 }`
                 // is more specific than a plain Tailwind utility and wins without it.
-                className="mt-2 inline-block rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-on-primary! transition-colors hover:bg-primary-container"
+                className="mt-2 inline-block rounded-lg bg-[#476254] px-3 py-1.5 text-xs font-medium text-white! transition-colors hover:bg-[#5f7b6c]"
               >
                 Ver detalles
               </Link>
