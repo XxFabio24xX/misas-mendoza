@@ -1,5 +1,6 @@
 import { cache } from "react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import { supabasePublic } from "@/lib/supabase-public";
 import { BackButton } from "@/app/components/back-button";
 import { FavoriteButton } from "@/app/components/favorite-button";
@@ -194,9 +195,13 @@ export default async function CapillaPage({
     <div className="min-h-screen bg-background">
       <div className="relative h-52 overflow-hidden rounded-b-xl bg-surface-container-high md:h-72">
         {lugar.imagen_url && (
-          <div
-            className="h-full w-full bg-cover bg-center"
-            style={{ backgroundImage: `url(${lugar.imagen_url})` }}
+          <Image
+            src={lugar.imagen_url}
+            alt={lugar.nombre}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
           />
         )}
         <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
