@@ -8,7 +8,7 @@ import {
   Church,
   Calendar,
   LogOut,
-
+  Inbox,
   User,
   Home,
   HelpCircle,
@@ -44,6 +44,12 @@ const adminNavItems: NavItem[] = [
     label: "Voluntarios",
     icon: Users,
     tooltip: "Gestión de usuarios y asignación de roles. Visible solo para Super Admin.",
+  },
+  {
+    href: "/admin/solicitudes",
+    label: "Solicitudes de Baja",
+    icon: Inbox,
+    tooltip: "Pedidos de eliminación de capillas enviados por los editores.",
   },
 ];
 
