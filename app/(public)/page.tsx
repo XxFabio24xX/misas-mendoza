@@ -155,6 +155,9 @@ export default function Home() {
     setHorarioFilter((prev) => (prev === franja ? null : franja));
   };
 
+  // Día actual para el chip "Hoy" (0=Dom … 6=Sáb, como dia_semana en la DB).
+  const hoy = new Date().getDay();
+
   const hasActiveFilters =
     activeFilter !== null ||
     selectedDias.size > 0 ||
@@ -249,6 +252,12 @@ export default function Home() {
               Día de misa
             </p>
             <div className="flex flex-wrap gap-2">
+              <FilterChip
+                active={selectedDias.size === 1 && selectedDias.has(hoy)}
+                onClick={() => toggleGrupoDias([hoy])}
+              >
+                Hoy
+              </FilterChip>
               <FilterChip
                 active={GRUPOS_DIAS.semana.every((d) => selectedDias.has(d)) && selectedDias.size === GRUPOS_DIAS.semana.length}
                 onClick={() => toggleGrupoDias(GRUPOS_DIAS.semana)}
