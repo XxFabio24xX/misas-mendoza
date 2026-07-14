@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabasePublic } from "@/lib/supabase-public";
 import { BackButton } from "@/app/components/back-button";
 import { FavoriteButton } from "@/app/components/favorite-button";
 import MapWrapper from "@/app/components/map-wrapper";
@@ -120,10 +120,16 @@ export default async function CapillaPage({
   const { id } = await params;
 
   const [lugarRes, horariosRes] = await Promise.all([
-    supabase.from("lugares").select("*").eq("id", id).single(),
-    supabase
+    supabasePublic
+      .from("lugares")
+      .select(
+        "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, horario_confesiones, departamento, lat, lng, recibe_caritas",
+      )
+      .eq("id", id)
+      .single(),
+    supabasePublic
       .from("horarios")
-      .select("*")
+      .select("id, lugar_id, dia_semana, dia_mes, hora, tipo_actividad, temporada, observacion")
       .eq("lugar_id", id)
       .order("dia_semana", { ascending: true })
       .order("hora", { ascending: true }),

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, useTransition } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { unstable_rethrow, useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Clock, Loader2, MapPin, Trash2 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -144,9 +144,8 @@ export default function EditarCapillaPage() {
       try {
         await actualizarCapilla(id, formData);
       } catch (e) {
-        if (e instanceof Error && !e.message.includes("NEXT_REDIRECT")) {
-          setError(e.message);
-        }
+        unstable_rethrow(e);
+        setError(e instanceof Error ? e.message : "Error inesperado.");
       }
     });
   }

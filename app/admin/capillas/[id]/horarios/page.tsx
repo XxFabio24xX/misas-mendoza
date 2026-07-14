@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, useTransition } from "react";
-import { useParams } from "next/navigation";
+import { unstable_rethrow, useParams } from "next/navigation";
 import { ArrowLeft, Clock, Loader2, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -185,9 +185,8 @@ export default function HorariosPage() {
         setForm(FORM_DEFAULT);
         setShowPanel(false);
       } catch (e) {
-        if (e instanceof Error && !e.message.includes("NEXT_REDIRECT")) {
-          setError(e.message);
-        }
+        unstable_rethrow(e);
+        setError(e instanceof Error ? e.message : "Error inesperado.");
       }
     });
   }
@@ -534,9 +533,8 @@ export default function HorariosPage() {
                                 setEditingId(null);
                                 await fetchHorarios();
                               } catch (e) {
-                                if (e instanceof Error && !e.message.includes("NEXT_REDIRECT")) {
-                                  setError(e.message);
-                                }
+                                unstable_rethrow(e);
+                                setError(e instanceof Error ? e.message : "Error inesperado.");
                               }
                             });
                           }}

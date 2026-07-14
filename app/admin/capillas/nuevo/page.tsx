@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { unstable_rethrow } from "next/navigation";
 import { ArrowLeft, Loader2, MapPin } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -58,9 +59,8 @@ export default function NuevaCapillaPage() {
       try {
         await crearCapilla(formData);
       } catch (e) {
-        if (e instanceof Error && !e.message.includes("NEXT_REDIRECT")) {
-          setError(e.message);
-        }
+        unstable_rethrow(e);
+        setError(e instanceof Error ? e.message : "Error inesperado.");
       }
     });
   }

@@ -17,7 +17,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import HeroBanner from "@/app/components/hero-banner";
 
 type Lugar = {
-  id: number;
+  id: string;
   nombre: string;
   direccion: string;
   distancia: number | null;
@@ -27,8 +27,8 @@ type Lugar = {
 };
 
 type Horario = {
-  id: number;
-  lugar_id: number;
+  id: string;
+  lugar_id: string;
   dia_semana: number | null;
   hora: string;
 };
@@ -55,7 +55,10 @@ export default function Home() {
   const fetchHorarios = useCallback(async (places: Lugar[]) => {
     if (!places.length) return;
     const ids = places.map((p) => p.id);
-    const { data } = await supabase.from("horarios").select("*").in("lugar_id", ids);
+    const { data } = await supabase
+      .from("horarios")
+      .select("id, lugar_id, dia_semana, hora")
+      .in("lugar_id", ids);
     if (data) setHorarios(data as Horario[]);
   }, []);
 
@@ -82,7 +85,7 @@ export default function Home() {
     setError(null);
     const { data, error: dbError } = await supabase
       .from("lugares")
-      .select("*")
+      .select("id, nombre, direccion, departamento, lat, lng")
       .eq("activo", true)
       .order("nombre")
       .limit(50);
@@ -120,7 +123,7 @@ export default function Home() {
   }, [coords, fetchCercanos]);
 
   const horariosMap = useMemo(() => {
-    const map = new Map<number, Horario[]>();
+    const map = new Map<string, Horario[]>();
     for (const h of horarios) {
       if (!map.has(h.lugar_id)) map.set(h.lugar_id, []);
       map.get(h.lugar_id)!.push(h);
@@ -192,8 +195,8 @@ export default function Home() {
     }
     // Favoritas fijadas primero, preservando el orden (por cercanía) del resto.
     return [...result].sort((a, b) => {
-      const aFav = isFavorite(String(a.id));
-      const bFav = isFavorite(String(b.id));
+      const aFav = isFavorite(a.id);
+      const bFav = isFavorite(b.id);
       return aFav === bFav ? 0 : aFav ? -1 : 1;
     });
   }, [lugares, activeFilter, search, isFavorite, selectedDias, horarioFilter, horariosMap]);
@@ -390,7 +393,7 @@ export default function Home() {
             const misas = horariosMap.get(place.id) ?? [];
             const distanciaValida =
               place.distancia != null && !isNaN(place.distancia);
-            const esFavorita = isFavorite(String(place.id));
+            const esFavorita = isFavorite(place.id);
             return (
               <article
                 key={place.id}

@@ -55,10 +55,11 @@ export default function LoginPage() {
 
         <div className="mt-6 space-y-4">
           <div>
-            <label className="text-xs font-medium text-on-surface-variant">
+            <label htmlFor="login-email" className="text-xs font-medium text-on-surface-variant">
               Correo electrónico
             </label>
             <input
+              id="login-email"
               type="email"
               autoComplete="email"
               value={email}
@@ -69,11 +70,12 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="text-xs font-medium text-on-surface-variant">
+            <label htmlFor="login-password" className="text-xs font-medium text-on-surface-variant">
               Contraseña
             </label>
             <div className="relative mt-1.5">
               <input
+                id="login-password"
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 value={password}
@@ -84,6 +86,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant transition-colors hover:text-on-surface"
               >
                 {showPassword ? (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { unstable_rethrow } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -63,9 +64,8 @@ export default function NuevoEventoPage() {
       try {
         await crearEvento(formData);
       } catch (e) {
-        if (e instanceof Error && !e.message.includes("NEXT_REDIRECT")) {
-          setError(e.message);
-        }
+        unstable_rethrow(e);
+        setError(e instanceof Error ? e.message : "Error inesperado.");
       }
     });
   }

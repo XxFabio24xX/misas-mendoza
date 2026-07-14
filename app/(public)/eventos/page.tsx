@@ -49,12 +49,14 @@ export default function EventosPage() {
       const nowISO = new Date().toISOString();
       const { data } = await supabase
         .from("eventos")
-        .select("*, lugares(nombre)")
+        .select("id, titulo, descripcion, fecha_inicio, fecha_fin, tipo, departamento, lugar_id, activo, lugares(nombre)")
         .eq("activo", true)
         // Oculta eventos pasados: usa fecha_fin cuando existe, si no fecha_inicio.
         .or(`fecha_fin.gte.${nowISO},and(fecha_fin.is.null,fecha_inicio.gte.${nowISO})`)
         .order("fecha_inicio", { ascending: true });
-      if (data) setEventos(data as Evento[]);
+      // La FK lugar_id es many-to-one: `lugares` llega como objeto, pero el
+      // cliente lo infiere como array al no conocer la cardinalidad.
+      if (data) setEventos(data as unknown as Evento[]);
       setLoading(false);
     })();
   }, []);

@@ -1,9 +1,9 @@
-import { supabase } from "@/lib/supabase";
+import { supabasePublic } from "@/lib/supabase-public";
 import GlobalMapWrapper from "@/app/components/global-map-wrapper";
 import type { LugarMapa } from "@/app/components/global-map";
 
 export default async function MapaPage() {
-  const { data } = await supabase
+  const { data } = await supabasePublic
     .from("lugares")
     .select("id, nombre, direccion, lat, lng")
     .eq("activo", true);

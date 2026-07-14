@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabasePublic } from "@/lib/supabase-public";
 import { BackButton } from "@/app/components/back-button";
 import MapWrapper from "@/app/components/map-wrapper";
 import { notFound } from "next/navigation";
@@ -54,9 +54,9 @@ export default async function EventoDetallePage({
 }) {
   const { id } = await params;
 
-  const { data: eventoData, error } = await supabase
+  const { data: eventoData, error } = await supabasePublic
     .from("eventos")
-    .select("*")
+    .select("id, titulo, descripcion, fecha_inicio, fecha_fin, tipo, departamento, lugar_id, activo, ubicacion")
     .eq("id", id)
     .eq("activo", true)
     .single();
@@ -67,7 +67,7 @@ export default async function EventoDetallePage({
 
   let lugar: Lugar | null = null;
   if (evento.lugar_id) {
-    const { data } = await supabase
+    const { data } = await supabasePublic
       .from("lugares")
       .select("id, nombre, direccion, lat, lng")
       .eq("id", evento.lugar_id)
