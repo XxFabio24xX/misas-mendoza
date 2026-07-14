@@ -94,6 +94,24 @@ button {
   background: rgba(37, 40, 38, 0.85);
 }
 
+/* leaflet.css hardcodes a white popup card (`background: white; color: #333;`),
+   which reads washed-out in dark mode since our content inside uses light-on-dark
+   text tokens. Override with our own surface tokens so the card follows the theme. */
+.dark .leaflet-popup-content-wrapper,
+.dark .leaflet-popup-tip {
+  background: var(--color-surface-container-high);
+  color: var(--color-on-surface);
+}
+
+.dark .leaflet-container a.leaflet-popup-close-button {
+  color: var(--color-on-surface-variant);
+}
+
+.dark .leaflet-container a.leaflet-popup-close-button:hover,
+.dark .leaflet-container a.leaflet-popup-close-button:focus {
+  color: var(--color-on-surface);
+}
+
 *:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
