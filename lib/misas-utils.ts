@@ -25,6 +25,14 @@ export function findNextMisa(horarios: HorarioBase[]): string {
   return `${DAYS_SHORT[sorted[0].dia_semana]}, ${fmt(sorted[0])}`;
 }
 
+/** Minúsculas y sin tildes/diacríticos, para búsquedas ("señora" ≈ "senora"). */
+export function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
 export function formatDistancia(meters: number): string {
   if (meters < 1000) return `${Math.round(meters)}m`;
   return `${(meters / 1000).toFixed(1)}km`;

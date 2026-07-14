@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { eliminarCapilla } from "@/app/admin/capillas/actions";
 import ConfirmDialog from "@/app/components/confirm-dialog";
-import { findNextMisa } from "@/lib/misas-utils";
+import { findNextMisa, normalizeText } from "@/lib/misas-utils";
 
 type Lugar = {
   id: string;
@@ -72,7 +72,7 @@ export function QuickList({
     () =>
       search.trim()
         ? initialLugares.filter((l) =>
-            l.nombre.toLowerCase().includes(search.toLowerCase()),
+            normalizeText(l.nombre).includes(normalizeText(search)),
           )
         : initialLugares.slice(0, 4),
     [initialLugares, search],

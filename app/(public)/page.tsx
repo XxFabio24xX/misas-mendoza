@@ -11,6 +11,7 @@ import {
   findNextMisa,
   formatDistancia,
   horaEnFranja,
+  normalizeText,
   type FranjaHoraria,
 } from "@/lib/misas-utils";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -172,11 +173,11 @@ export default function Home() {
         ? lugares
         : lugares.filter((p) => p.departamento === activeFilter);
     if (search.trim()) {
-      const q = search.toLowerCase();
+      const q = normalizeText(search);
       result = result.filter(
         (p) =>
-          p.nombre.toLowerCase().includes(q) ||
-          p.direccion.toLowerCase().includes(q),
+          normalizeText(p.nombre).includes(q) ||
+          normalizeText(p.direccion).includes(q),
       );
     }
     // Solo capillas con al menos una misa que caiga en el día y/o franja elegidos.

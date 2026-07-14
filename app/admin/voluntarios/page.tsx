@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { eliminarVoluntario } from "./actions";
+import { normalizeText } from "@/lib/misas-utils";
 import ConfirmDialog from "@/app/components/confirm-dialog";
 
 type Perfil = {
@@ -93,8 +94,8 @@ export default function VoluntariosPage() {
       search.trim()
         ? perfiles.filter(
             (p) =>
-              (p.nombre_completo ?? "").toLowerCase().includes(search.toLowerCase()) ||
-              (p.email ?? "").toLowerCase().includes(search.toLowerCase()),
+              normalizeText(p.nombre_completo ?? "").includes(normalizeText(search)) ||
+              normalizeText(p.email ?? "").includes(normalizeText(search)),
           )
         : perfiles,
     [perfiles, search],

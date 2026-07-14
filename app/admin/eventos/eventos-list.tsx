@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { eliminarEvento } from "@/app/admin/eventos/actions";
 import { tipoEventoColor, tipoEventoLabel } from "@/lib/eventos-tipos";
+import { normalizeText } from "@/lib/misas-utils";
 import ConfirmDialog from "@/app/components/confirm-dialog";
 
 type Evento = {
@@ -58,7 +59,7 @@ export function EventosList({ initialEventos }: { initialEventos: Evento[] }) {
     () =>
       search.trim()
         ? initialEventos.filter((e) =>
-            e.titulo.toLowerCase().includes(search.toLowerCase()),
+            normalizeText(e.titulo).includes(normalizeText(search)),
           )
         : initialEventos,
     [initialEventos, search],

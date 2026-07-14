@@ -7,7 +7,7 @@ import { Search, Pencil, Trash2, Church, AlertTriangle, MapPin, Clock, FileWarni
 import { eliminarCapilla, solicitarBajaCapilla } from "./actions";
 import ConfirmDialog from "@/app/components/confirm-dialog";
 import SolicitudBajaDialog from "@/app/components/solicitud-baja-dialog";
-import { findNextMisa } from "@/lib/misas-utils";
+import { findNextMisa, normalizeText } from "@/lib/misas-utils";
 
 type Lugar = {
   id: string;
@@ -91,7 +91,7 @@ export function CapillasList({
     () =>
       search.trim()
         ? initialLugares.filter((l) =>
-            l.nombre.toLowerCase().includes(search.toLowerCase()),
+            normalizeText(l.nombre).includes(normalizeText(search)),
           )
         : initialLugares,
     [initialLugares, search],
