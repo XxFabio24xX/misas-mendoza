@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { supabasePublic } from "@/lib/supabase-public";
 import { BackButton } from "@/app/components/back-button";
 import { ShareButton } from "@/app/components/share-button";
+import { AddToCalendarButton } from "@/app/components/add-to-calendar-button";
 import MapWrapper from "@/app/components/map-wrapper";
 import { notFound, permanentRedirect } from "next/navigation";
 import { format } from "date-fns";
@@ -173,6 +174,15 @@ export default async function EventoDetallePage({
                 </p>
               )}
             </div>
+
+            <AddToCalendarButton
+              uid={evento.slug}
+              titulo={evento.titulo}
+              descripcion={evento.descripcion}
+              ubicacion={lugar ? `${lugar.nombre} — ${lugar.direccion}` : evento.ubicacion}
+              inicio={evento.fecha_inicio}
+              fin={evento.fecha_fin}
+            />
 
             <div className="group relative mt-6 overflow-hidden rounded-xl bg-secondary-container p-6">
               <div className="absolute -mr-8 -mt-8 right-0 top-0 h-24 w-24 rounded-bl-full bg-primary/5" />
