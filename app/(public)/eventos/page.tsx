@@ -7,6 +7,7 @@ import { Calendar, ChevronRight, MapPin } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { tipoEventoColor, tipoEventoLabel } from "@/lib/eventos-tipos";
+import { FilterChip } from "@/app/components/filter-chip";
 
 type Evento = {
   id: string;
@@ -93,17 +94,9 @@ export default function EventosPage() {
 
       <div className="mt-6 flex flex-wrap gap-2">
         {tipos.map((tipo) => (
-          <button
-            key={tipo}
-            onClick={() => setTipoFilter(tipo)}
-            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
-              tipoFilter === tipo
-                ? "border border-primary/20 bg-primary/10 text-primary"
-                : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
-            }`}
-          >
+          <FilterChip key={tipo} active={tipoFilter === tipo} onClick={() => setTipoFilter(tipo)}>
             {tipo === "Todos" ? tipo : tipoEventoLabel(tipo)}
-          </button>
+          </FilterChip>
         ))}
       </div>
 
@@ -112,17 +105,9 @@ export default function EventosPage() {
           Departamento:
         </span>
         {departamentos.map((depto) => (
-          <button
-            key={depto}
-            onClick={() => setDeptoFilter(depto)}
-            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
-              deptoFilter === depto
-                ? "border border-primary/20 bg-primary/10 text-primary"
-                : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
-            }`}
-          >
+          <FilterChip key={depto} active={deptoFilter === depto} onClick={() => setDeptoFilter(depto)}>
             {depto}
-          </button>
+          </FilterChip>
         ))}
       </div>
 

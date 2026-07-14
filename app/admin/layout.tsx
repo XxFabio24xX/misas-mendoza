@@ -11,7 +11,6 @@ import {
   Inbox,
   User,
   Home,
-  HelpCircle,
   Users,
   Menu,
   X,
@@ -185,10 +184,6 @@ export default function AdminLayout({
             <span className="text-xs font-medium text-on-surface-variant">Apariencia</span>
             <ThemeToggle />
           </div>
-          <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface">
-            <HelpCircle className="h-5 w-5" />
-            Ayuda
-          </button>
           <Link
             href="/"
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
@@ -349,13 +344,6 @@ export default function AdminLayout({
             </nav>
 
             <div className="border-t border-outline-variant/30 px-3 py-4 space-y-0.5">
-              <button
-                onClick={() => { closeDrawer(); }}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
-              >
-                <HelpCircle className="h-5 w-5" />
-                Ayuda
-              </button>
               <Link
                 href="/"
                 onClick={closeDrawer}

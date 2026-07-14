@@ -16,6 +16,7 @@ import {
 } from "@/lib/misas-utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import HeroBanner from "@/app/components/hero-banner";
+import { FilterChip } from "@/app/components/filter-chip";
 
 type Lugar = {
   id: string;
@@ -227,30 +228,17 @@ export default function Home() {
               Localidad
             </p>
             <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setActiveFilter(null)}
-                aria-pressed={activeFilter === null}
-                className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                  activeFilter === null
-                    ? "bg-primary/10 text-primary border border-primary/20"
-                    : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
-                }`}
-              >
+              <FilterChip active={activeFilter === null} onClick={() => setActiveFilter(null)}>
                 Todas
-              </button>
+              </FilterChip>
               {departments.map((dept) => (
-                <button
+                <FilterChip
                   key={dept}
+                  active={activeFilter === dept}
                   onClick={() => setActiveFilter(dept)}
-                  aria-pressed={activeFilter === dept}
-                  className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                    activeFilter === dept
-                      ? "bg-primary/10 text-primary border border-primary/20"
-                      : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
-                  }`}
                 >
                   {dept}
-                </button>
+                </FilterChip>
               ))}
             </div>
           </div>
@@ -261,39 +249,24 @@ export default function Home() {
               Día de misa
             </p>
             <div className="flex flex-wrap gap-2">
-              <button
+              <FilterChip
+                active={GRUPOS_DIAS.semana.every((d) => selectedDias.has(d)) && selectedDias.size === GRUPOS_DIAS.semana.length}
                 onClick={() => toggleGrupoDias(GRUPOS_DIAS.semana)}
-                aria-pressed={GRUPOS_DIAS.semana.every((d) => selectedDias.has(d)) && selectedDias.size === GRUPOS_DIAS.semana.length}
-                className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                  GRUPOS_DIAS.semana.every((d) => selectedDias.has(d)) && selectedDias.size === GRUPOS_DIAS.semana.length
-                    ? "bg-primary/10 text-primary border border-primary/20"
-                    : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
-                }`}
               >
                 Lun-Vie
-              </button>
-              <button
+              </FilterChip>
+              <FilterChip
+                active={selectedDias.size === 1 && selectedDias.has(6)}
                 onClick={() => toggleGrupoDias(GRUPOS_DIAS.sabado)}
-                aria-pressed={selectedDias.size === 1 && selectedDias.has(6)}
-                className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                  selectedDias.size === 1 && selectedDias.has(6)
-                    ? "bg-primary/10 text-primary border border-primary/20"
-                    : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
-                }`}
               >
                 Sábado
-              </button>
-              <button
+              </FilterChip>
+              <FilterChip
+                active={selectedDias.size === 1 && selectedDias.has(0)}
                 onClick={() => toggleGrupoDias(GRUPOS_DIAS.domingo)}
-                aria-pressed={selectedDias.size === 1 && selectedDias.has(0)}
-                className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                  selectedDias.size === 1 && selectedDias.has(0)
-                    ? "bg-primary/10 text-primary border border-primary/20"
-                    : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
-                }`}
               >
                 Domingo
-              </button>
+              </FilterChip>
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {DIAS_SEMANA.map((dia) => (
@@ -320,18 +293,13 @@ export default function Home() {
             </p>
             <div className="flex flex-wrap gap-2">
               {FRANJAS_HORARIAS.map((franja) => (
-                <button
+                <FilterChip
                   key={franja.value}
+                  active={horarioFilter === franja.value}
                   onClick={() => toggleHorario(franja.value)}
-                  aria-pressed={horarioFilter === franja.value}
-                  className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                    horarioFilter === franja.value
-                      ? "bg-primary/10 text-primary border border-primary/20"
-                      : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
-                  }`}
                 >
                   {franja.label}
-                </button>
+                </FilterChip>
               ))}
             </div>
           </div>
