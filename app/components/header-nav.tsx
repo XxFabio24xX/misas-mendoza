@@ -8,6 +8,7 @@ const navLinks = [
   { href: "/", label: "Inicio" },
   { href: "/eventos", label: "Eventos" },
   { href: "/mapa", label: "Mapa" },
+  { href: "/acerca", label: "Acerca" },
 ];
 
 export function HeaderNav() {
