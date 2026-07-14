@@ -51,6 +51,7 @@ export async function crearCapilla(formData: FormData) {
     p_hay_confesiones: formData.get("hay_confesiones") === "on",
     p_activo: formData.get("activo") === "on",
     p_notas_horarios: formData.get("notas_horarios") || null,
+    p_recibe_caritas: formData.get("recibe_caritas") === "on",
   });
 
   if (error) throw new Error(error.message);
@@ -113,6 +114,7 @@ export async function actualizarCapilla(id: string, formData: FormData) {
     p_hay_confesiones: formData.get("hay_confesiones") === "on",
     p_activo: formData.get("activo") === "on",
     p_notas_horarios: formData.get("notas_horarios") || null,
+    p_recibe_caritas: formData.get("recibe_caritas") === "on",
   });
 
   if (error) throw new Error(error.message);

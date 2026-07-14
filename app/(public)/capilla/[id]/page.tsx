@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { BackButton } from "@/app/components/back-button";
 import { FavoriteButton } from "@/app/components/favorite-button";
 import MapWrapper from "@/app/components/map-wrapper";
-import { Clock, Cross as CrossIcon, MapPin, Navigation, Snowflake, Sun } from "lucide-react";
+import { Clock, Cross as CrossIcon, HandHeart, MapPin, Navigation, Snowflake, Sun } from "lucide-react";
 import { notFound } from "next/navigation";
 
 type Lugar = {
@@ -17,6 +17,7 @@ type Lugar = {
   departamento: string;
   lat: number;
   lng: number;
+  recibe_caritas?: boolean;
 };
 
 type Horario = {
@@ -176,6 +177,13 @@ export default async function CapillaPage({
               <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
               {lugar.direccion}
             </p>
+
+            {lugar.recibe_caritas && (
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#e9dec8] px-3.5 py-1.5 text-xs font-medium text-[#769283]">
+                <HandHeart className="h-3.5 w-3.5 shrink-0" />
+                Recibe donaciones para Cáritas
+              </div>
+            )}
 
             {(lugar.telefono || lugar.email) && (
               <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">

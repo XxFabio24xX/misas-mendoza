@@ -182,6 +182,17 @@ export default function NuevaCapillaPage() {
                 <span className="text-sm font-medium text-on-surface">¿Hay confesiones disponibles?</span>
               </label>
             </div>
+            <div className="flex items-end pb-2">
+              <label className="flex items-center gap-2.5">
+                <input
+                  id="recibe_caritas"
+                  name="recibe_caritas"
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary"
+                />
+                <span className="text-sm font-medium text-on-surface">Recibe donaciones para Cáritas</span>
+              </label>
+            </div>
           </div>
         </section>
 

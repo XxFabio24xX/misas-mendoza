@@ -37,6 +37,7 @@ type Lugar = {
   hay_confesiones: boolean;
   activo: boolean;
   notas_horarios?: string;
+  recibe_caritas?: boolean;
 };
 
 type HorarioRaw = {
@@ -297,6 +298,18 @@ export default function EditarCapillaPage() {
                   className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary"
                 />
                 <span className="text-sm font-medium text-on-surface">¿Hay confesiones disponibles?</span>
+              </label>
+            </div>
+            <div className="flex items-end pb-2">
+              <label className="flex items-center gap-2.5">
+                <input
+                  id="recibe_caritas"
+                  name="recibe_caritas"
+                  type="checkbox"
+                  defaultChecked={lugar?.recibe_caritas}
+                  className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary"
+                />
+                <span className="text-sm font-medium text-on-surface">Recibe donaciones para Cáritas</span>
               </label>
             </div>
           </div>
