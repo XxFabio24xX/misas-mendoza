@@ -5,6 +5,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { TIPO_EVENTO_OPTIONS } from "@/lib/eventos-tipos";
+import DateInputDMY from "@/app/components/date-input-dmy";
 import { crearEvento } from "../actions";
 
 const DEPARTAMENTOS = ["Capital", "Las Heras", "Guaymallén", "Godoy Cruz", "Maipú"];
@@ -144,7 +145,7 @@ export default function NuevoEventoPage() {
 
           <div>
             <label htmlFor="fecha_inicio_date" className="text-sm font-medium text-on-surface">Fecha de Inicio</label>
-            <input id="fecha_inicio_date" name="fecha_inicio_date" type="date" required
+            <DateInputDMY id="fecha_inicio_date" name="fecha_inicio_date" required
               className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors focus:border-primary"
             />
           </div>
@@ -163,7 +164,7 @@ export default function NuevoEventoPage() {
 
           <div>
             <label htmlFor="fecha_fin_date" className="text-sm font-medium text-on-surface">Fecha de Fin <span className="text-on-surface-variant font-normal">(opcional)</span></label>
-            <input id="fecha_fin_date" name="fecha_fin_date" type="date"
+            <DateInputDMY id="fecha_fin_date" name="fecha_fin_date"
               className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors focus:border-primary"
             />
           </div>
