@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -29,7 +29,7 @@ type Evento = {
   lugares?: { nombre: string } | null;
 };
 
-type Lugar = { id: string; nombre: string };
+type Lugar = { id: string; nombre: string; departamento: string };
 
 export default function EditarEventoPage() {
   const params = useParams();
@@ -39,6 +39,8 @@ export default function EditarEventoPage() {
   const [evento, setEvento] = useState<Evento | null>(null);
   const [lugares, setLugares] = useState<Lugar[]>([]);
   const [loading, setLoading] = useState(true);
+  const [departamento, setDepartamento] = useState("");
+  const [lugarId, setLugarId] = useState("");
 
   const fetchData = useCallback(async () => {
     if (!id) {
@@ -48,11 +50,15 @@ export default function EditarEventoPage() {
     }
     const [evRes, lugRes] = await Promise.all([
       supabase.from("eventos").select("*, lugares(nombre)").eq("id", id).maybeSingle(),
-      supabase.from("lugares").select("id,nombre").order("nombre"),
+      supabase.from("lugares").select("id,nombre,departamento").order("nombre"),
     ]);
     if (evRes.error) setError(evRes.error.message);
-    else if (evRes.data) setEvento(evRes.data as Evento);
-    else setError("No se encontró el evento.");
+    else if (evRes.data) {
+      const ev = evRes.data as Evento;
+      setEvento(ev);
+      setDepartamento(ev.departamento);
+      setLugarId(ev.lugar_id ?? "");
+    } else setError("No se encontró el evento.");
     if (lugRes.data) setLugares(lugRes.data);
     setLoading(false);
   }, [id]);
@@ -62,6 +68,16 @@ export default function EditarEventoPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, [fetchData]);
+
+  const lugaresFiltrados = useMemo(
+    () => lugares.filter((l) => l.departamento === departamento),
+    [lugares, departamento],
+  );
+
+  function handleDepartamentoChange(value: string) {
+    setDepartamento(value);
+    setLugarId("");
+  }
 
   const toDateValue = (iso: string) => {
     if (!iso) return "";
@@ -171,7 +187,8 @@ export default function EditarEventoPage() {
 
           <div>
             <label htmlFor="departamento" className="text-sm font-medium text-on-surface">Departamento</label>
-            <select id="departamento" name="departamento" required defaultValue={evento?.departamento}
+            <select id="departamento" name="departamento" required value={departamento}
+              onChange={(e) => handleDepartamentoChange(e.target.value)}
               className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
             >
               <option value="" disabled>Seleccioná...</option>
@@ -181,12 +198,20 @@ export default function EditarEventoPage() {
 
           <div>
             <label htmlFor="lugar_id" className="text-sm font-medium text-on-surface">Capilla asociada <span className="text-on-surface-variant font-normal">(opcional)</span></label>
-            <select id="lugar_id" name="lugar_id" defaultValue={evento?.lugar_id ?? ""}
-              className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
+            <select id="lugar_id" name="lugar_id" value={lugarId}
+              onChange={(e) => setLugarId(e.target.value)}
+              disabled={!departamento}
+              aria-describedby={!departamento ? "lugar_id-hint" : undefined}
+              className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">Sin capilla</option>
-              {lugares.map((l) => (<option key={l.id} value={l.id}>{l.nombre}</option>))}
+              {lugaresFiltrados.map((l) => (<option key={l.id} value={l.id}>{l.nombre}</option>))}
             </select>
+            {!departamento && (
+              <p id="lugar_id-hint" className="mt-1.5 text-xs text-on-surface-variant">
+                Seleccioná primero un departamento.
+              </p>
+            )}
           </div>
 
           <div className="md:col-span-2">

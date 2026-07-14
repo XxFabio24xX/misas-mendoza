@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -15,18 +15,30 @@ const HORARIOS = Array.from({ length: 96 }, (_, i) => {
   return `${h}:${m}`;
 });
 
-type Lugar = { id: string; nombre: string };
+type Lugar = { id: string; nombre: string; departamento: string };
 
 export default function NuevoEventoPage() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [lugares, setLugares] = useState<Lugar[]>([]);
+  const [departamento, setDepartamento] = useState("");
+  const [lugarId, setLugarId] = useState("");
 
   useEffect(() => {
-    supabase.from("lugares").select("id,nombre").order("nombre").then(({ data }) => {
+    supabase.from("lugares").select("id,nombre,departamento").order("nombre").then(({ data }) => {
       if (data) setLugares(data);
     });
   }, []);
+
+  const lugaresFiltrados = useMemo(
+    () => lugares.filter((l) => l.departamento === departamento),
+    [lugares, departamento],
+  );
+
+  function handleDepartamentoChange(value: string) {
+    setDepartamento(value);
+    setLugarId("");
+  }
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -95,7 +107,8 @@ export default function NuevoEventoPage() {
 
           <div>
             <label htmlFor="departamento" className="text-sm font-medium text-on-surface">Departamento</label>
-            <select id="departamento" name="departamento" required defaultValue=""
+            <select id="departamento" name="departamento" required value={departamento}
+              onChange={(e) => handleDepartamentoChange(e.target.value)}
               className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
             >
               <option value="" disabled>Seleccioná...</option>
@@ -105,12 +118,20 @@ export default function NuevoEventoPage() {
 
           <div>
             <label htmlFor="lugar_id" className="text-sm font-medium text-on-surface">Capilla asociada <span className="text-on-surface-variant font-normal">(opcional)</span></label>
-            <select id="lugar_id" name="lugar_id" defaultValue=""
-              className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
+            <select id="lugar_id" name="lugar_id" value={lugarId}
+              onChange={(e) => setLugarId(e.target.value)}
+              disabled={!departamento}
+              aria-describedby={!departamento ? "lugar_id-hint" : undefined}
+              className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">Sin capilla</option>
-              {lugares.map((l) => (<option key={l.id} value={l.id}>{l.nombre}</option>))}
+              {lugaresFiltrados.map((l) => (<option key={l.id} value={l.id}>{l.nombre}</option>))}
             </select>
+            {!departamento && (
+              <p id="lugar_id-hint" className="mt-1.5 text-xs text-on-surface-variant">
+                Seleccioná primero un departamento.
+              </p>
+            )}
           </div>
 
           <div className="md:col-span-2">
