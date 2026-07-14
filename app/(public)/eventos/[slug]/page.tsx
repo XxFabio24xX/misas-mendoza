@@ -1,7 +1,7 @@
 import { supabasePublic } from "@/lib/supabase-public";
 import { BackButton } from "@/app/components/back-button";
 import MapWrapper from "@/app/components/map-wrapper";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Calendar, MapPin, Navigation, Tag } from "lucide-react";
@@ -18,6 +18,7 @@ type Evento = {
   lugar_id?: string;
   activo: boolean;
   ubicacion?: string;
+  slug: string;
 };
 
 type Lugar = {
@@ -47,17 +48,32 @@ function formatFechaCompleta(inicio: string, fin?: string): string {
   return `${format(start, "d 'de' MMMM", { locale: es })} – ${format(end, "d 'de' MMMM 'de' yyyy", { locale: es })}`;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const EVENTO_COLS =
+  "id, titulo, descripcion, fecha_inicio, fecha_fin, tipo, departamento, lugar_id, activo, ubicacion, slug";
+
 export default async function EventoDetallePage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = await params;
+  const { slug } = await params;
+
+  // Links viejos con UUID: redirigir permanentemente a la URL con slug.
+  if (UUID_RE.test(slug)) {
+    const { data } = await supabasePublic
+      .from("eventos")
+      .select("slug")
+      .eq("id", slug)
+      .maybeSingle();
+    if (!data?.slug) notFound();
+    permanentRedirect(`/eventos/${data.slug}`);
+  }
 
   const { data: eventoData, error } = await supabasePublic
     .from("eventos")
-    .select("id, titulo, descripcion, fecha_inicio, fecha_fin, tipo, departamento, lugar_id, activo, ubicacion")
-    .eq("id", id)
+    .select(EVENTO_COLS)
+    .eq("slug", slug)
     .eq("activo", true)
     .single();
 

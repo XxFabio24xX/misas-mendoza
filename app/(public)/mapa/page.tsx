@@ -5,7 +5,7 @@ import type { LugarMapa } from "@/app/components/global-map";
 export default async function MapaPage() {
   const { data } = await supabasePublic
     .from("lugares")
-    .select("id, nombre, direccion, lat, lng")
+    .select("id, nombre, direccion, lat, lng, slug")
     .eq("activo", true);
 
   const lugares = ((data ?? []) as LugarMapa[]).filter(

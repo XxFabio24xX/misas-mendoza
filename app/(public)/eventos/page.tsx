@@ -18,6 +18,7 @@ type Evento = {
   departamento: string;
   lugar_id?: string;
   activo: boolean;
+  slug: string;
   lugares?: { nombre: string } | null;
 };
 
@@ -49,7 +50,7 @@ export default function EventosPage() {
       const nowISO = new Date().toISOString();
       const { data } = await supabase
         .from("eventos")
-        .select("id, titulo, descripcion, fecha_inicio, fecha_fin, tipo, departamento, lugar_id, activo, lugares(nombre)")
+        .select("id, titulo, descripcion, fecha_inicio, fecha_fin, tipo, departamento, lugar_id, activo, slug, lugares(nombre)")
         .eq("activo", true)
         // Oculta eventos pasados: usa fecha_fin cuando existe, si no fecha_inicio.
         .or(`fecha_fin.gte.${nowISO},and(fecha_fin.is.null,fecha_inicio.gte.${nowISO})`)
@@ -175,7 +176,7 @@ export default function EventosPage() {
 
               <div className="relative z-10 mt-auto border-t border-outline-variant/30 pt-4">
                 <Link
-                  href={`/eventos/${evento.id}`}
+                  href={`/eventos/${evento.slug}`}
                   className="flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/70"
                 >
                   Más información

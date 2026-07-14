@@ -141,7 +141,7 @@ export async function actualizarCapilla(id: string, formData: FormData) {
 
   revalidatePath("/admin/capillas");
   revalidatePath(`/admin/capillas/${id}/editar`);
-  revalidatePath(`/capilla/${id}`);
+  revalidatePath("/capilla/[slug]", "page");
   revalidatePath("/");
   revalidatePath("/mapa");
   redirect("/admin/capillas");
@@ -214,7 +214,7 @@ export async function agregarHorario(lugarId: string, formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath(`/admin/capillas/${lugarId}/horarios`);
-  revalidatePath(`/capilla/${lugarId}`);
+  revalidatePath("/capilla/[slug]", "page");
 }
 
 export async function eliminarHorario(horarioId: string, lugarId: string) {
@@ -232,7 +232,7 @@ export async function eliminarHorario(horarioId: string, lugarId: string) {
   if (error) throw new Error(error.message);
 
   revalidatePath(`/admin/capillas/${lugarId}/horarios`);
-  revalidatePath(`/capilla/${lugarId}`);
+  revalidatePath("/capilla/[slug]", "page");
 }
 
 export async function editarHorario(
@@ -264,5 +264,5 @@ export async function editarHorario(
   if (error) throw new Error(error.message);
 
   revalidatePath(`/admin/capillas/${lugarId}/horarios`);
-  revalidatePath(`/capilla/${lugarId}`);
+  revalidatePath("/capilla/[slug]", "page");
 }

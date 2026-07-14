@@ -3,7 +3,7 @@ import { BackButton } from "@/app/components/back-button";
 import { FavoriteButton } from "@/app/components/favorite-button";
 import MapWrapper from "@/app/components/map-wrapper";
 import { Clock, Cross as CrossIcon, HandHeart, MapPin, Navigation, Snowflake, Sun } from "lucide-react";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 type Lugar = {
   id: string;
@@ -17,6 +17,7 @@ type Lugar = {
   lat: number;
   lng: number;
   recibe_caritas?: boolean;
+  slug: string;
 };
 
 type Horario = {
@@ -111,32 +112,45 @@ function groupByDay(horarios: Horario[]) {
   }));
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const LUGAR_COLS =
+  "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, departamento, lat, lng, recibe_caritas, slug";
+
 export default async function CapillaPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = await params;
+  const { slug } = await params;
 
-  const [lugarRes, horariosRes] = await Promise.all([
-    supabasePublic
+  // Links viejos con UUID: redirigir permanentemente a la URL con slug.
+  if (UUID_RE.test(slug)) {
+    const { data } = await supabasePublic
       .from("lugares")
-      .select(
-        "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, departamento, lat, lng, recibe_caritas",
-      )
-      .eq("id", id)
-      .single(),
-    supabasePublic
-      .from("horarios")
-      .select("id, lugar_id, dia_semana, dia_mes, hora, tipo_actividad, temporada, observacion")
-      .eq("lugar_id", id)
-      .order("dia_semana", { ascending: true })
-      .order("hora", { ascending: true }),
-  ]);
+      .select("slug")
+      .eq("id", slug)
+      .maybeSingle();
+    if (!data?.slug) notFound();
+    permanentRedirect(`/capilla/${data.slug}`);
+  }
+
+  const lugarRes = await supabasePublic
+    .from("lugares")
+    .select(LUGAR_COLS)
+    .eq("slug", slug)
+    .single();
 
   if (lugarRes.error) notFound();
 
   const lugar = lugarRes.data as unknown as Lugar;
+
+  const horariosRes = await supabasePublic
+    .from("horarios")
+    .select("id, lugar_id, dia_semana, dia_mes, hora, tipo_actividad, temporada, observacion")
+    .eq("lugar_id", lugar.id)
+    .order("dia_semana", { ascending: true })
+    .order("hora", { ascending: true });
+
   const horarios = (horariosRes.data ?? []) as Horario[];
 
   // Group by temporada

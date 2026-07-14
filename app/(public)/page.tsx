@@ -24,6 +24,7 @@ type Lugar = {
   departamento: string;
   lat: number;
   lng: number;
+  slug: string;
 };
 
 type Horario = {
@@ -85,7 +86,7 @@ export default function Home() {
     setError(null);
     const { data, error: dbError } = await supabase
       .from("lugares")
-      .select("id, nombre, direccion, departamento, lat, lng")
+      .select("id, nombre, direccion, departamento, lat, lng, slug")
       .eq("activo", true)
       .order("nombre")
       .limit(50);
@@ -444,7 +445,7 @@ export default function Home() {
 
                 {/* Botón */}
                 <Link
-                  href={`/capilla/${place.id}`}
+                  href={`/capilla/${place.slug}`}
                   className="relative z-10 w-full rounded-lg border border-outline-variant py-3 text-center text-sm font-semibold text-on-surface transition-colors hover:bg-surface-variant"
                 >
                   Detalles

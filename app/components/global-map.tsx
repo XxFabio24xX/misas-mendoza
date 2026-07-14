@@ -22,6 +22,7 @@ export type LugarMapa = {
   direccion: string;
   lat: number;
   lng: number;
+  slug: string;
 };
 
 // Centro por defecto: Ciudad de Mendoza (mismo default usado en el alta de capillas).
@@ -65,7 +66,7 @@ export default function GlobalMap({ lugares }: { lugares: LugarMapa[] }) {
               <p className="text-sm font-semibold text-[#1c1c15]">{lugar.nombre}</p>
               <p className="mt-0.5 text-xs text-[#424844]">{lugar.direccion}</p>
               <Link
-                href={`/capilla/${lugar.id}`}
+                href={`/capilla/${lugar.slug}`}
                 // text-white!: leaflet.css's `.leaflet-container a { color: #0078A8 }`
                 // is more specific than a plain Tailwind utility and wins without it.
                 className="mt-2 inline-block rounded-lg bg-[#476254] px-3 py-1.5 text-xs font-medium text-white! transition-colors hover:bg-[#5f7b6c]"
