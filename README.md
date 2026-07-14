@@ -2,7 +2,9 @@
 
 Aplicación web para descubrir horarios de misas, capillas, parroquias y eventos católicos en Mendoza, Argentina. Incluye un sitio público para la comunidad y un panel de administración para colaboradores.
 
-> **Stack:** Next.js 16 · Supabase (PostgreSQL + PostGIS) · Tailwind CSS v4 · TypeScript
+> **Stack:** Next.js 16 · Supabase (PostgreSQL + PostGIS) · Tailwind CSS v4 · TypeScript · Vitest
+
+📋 **¿Vas a trabajar en el proyecto desde otra PC?** Seguí el paso a paso en [DESARROLLO.md](DESARROLLO.md).
 
 ---
 
@@ -10,23 +12,11 @@ Aplicación web para descubrir horarios de misas, capillas, parroquias y eventos
 
 ### Inicio — Capillas cercanas
 
-<!-- Agregar screenshot: pantallas/stitch_misas_mendoza_web_app/inicio_misas_mendoza_desktop/screen.png -->
 ![Inicio desktop](pantallas/Home.png)
 
 ### Detalle de Capilla
 
-<!-- Agregar screenshot: pantallas/stitch_misas_mendoza_web_app/detalle_misas_mendoza_desktop/screen.png -->
 ![Detalle capilla desktop](pantallas/Detalle_iglesia.png)
-
-### Mobile
-
-<!-- Agregar capturas del dispositivo móvil en pantallas/ cuando estén disponibles -->
-> _Capturas de mobile próximamente_
-
-### Panel de Administración
-
-<!-- Agregar screenshot del admin cuando esté disponible -->
-> _Capturas del panel admin próximamente_
 
 ---
 
@@ -36,92 +26,73 @@ Aplicación web para descubrir horarios de misas, capillas, parroquias y eventos
 
 | Pantalla | Descripción |
 |---|---|
-| **Inicio (`/`)** | Muestra capillas ordenadas por distancia al usuario (geolocalización + PostGIS). Cards con nombre, dirección y horario de la próxima misa. Filtros por departamento. |
-| **Detalle capilla (`/capilla/[id]`)** | Hero con imagen, datos de contacto, horarios agrupados por temporada (Todo el año / Invierno / Verano) y día, y mapa interactivo con "Cómo llegar". |
-| **Eventos (`/eventos`)** | Listado de eventos con filtros por tipo (Misa especial, Retiro, Jóvenes, etc.) y zona. Fechas formateadas en español. |
+| **Inicio (`/`)** | Hero banner, buscador (insensible a tildes) y capillas ordenadas por distancia al usuario (geolocalización + PostGIS). Filtros combinables por localidad, día de misa (chips Lun-Dom + accesos rápidos Lun-Vie/Sábado/Domingo) y franja horaria (Mañana/Tarde/Noche). Favoritas fijadas arriba. |
+| **Detalle capilla (`/capilla/[slug]`)** | Hero con imagen, botones de favorito y compartir (Web Share API), datos de contacto, badge de Cáritas, horarios agrupados por temporada (Todo el año / Invierno / Verano) y día, y mapa con "Cómo llegar". |
+| **Eventos (`/eventos`)** | Listado de eventos vigentes (los pasados se ocultan solos) con filtros por tipo y departamento. Detalle en `/eventos/[slug]` con mapa si tiene capilla asociada. |
+| **Mapa (`/mapa`)** | Mapa global con pins de todas las capillas activas, tooltips y popups con acceso al detalle. |
+
+Las URLs públicas usan **slugs** legibles (`/capilla/parroquia-santiago-apostol`) generados automáticamente desde el nombre; los links viejos con UUID redirigen con 301. Hay favoritos persistidos en `localStorage` (sin cuenta), modo claro/oscuro, metadata Open Graph por página (vista previa al compartir por WhatsApp), `sitemap.xml` dinámico y `robots.txt`.
 
 ### Panel de Administración (`/admin`)
 
-Acceso protegido por login. Dos roles:
-- **Super Admin:** acceso completo a todas las secciones.
-- **Editor de departamento:** solo puede gestionar capillas y eventos de su departamento asignado.
+Acceso protegido por login (sesión en cookies vía `@supabase/ssr` + `proxy.ts`). Dos roles:
+
+- **Super Admin:** acceso completo a todas las secciones. Puede eliminar capillas directamente.
+- **Editor de departamento:** solo gestiona capillas y eventos de su departamento asignado. No elimina capillas: envía una **solicitud de baja** con motivo, que un admin revisa.
 
 | Sección | Funcionalidades |
 |---|---|
 | **Dashboard** | Resumen por departamento, capillas sin horarios, tabla de acceso rápido. |
-| **Capillas** | CRUD completo. Formulario con: info básica, contacto, descripción, **subida de imagen con recorte interactivo** (Supabase Storage), **grilla dinámica de horarios** (semanales + mensuales fijos), notas de temporada, y selector de ubicación en mapa (Leaflet + PostGIS). |
-| **Eventos** | CRUD completo. Fechas con inicio/fin, tipo, zona, ubicación con mapa. |
-| **Voluntarios** _(solo admin)_ | Crear, editar y desactivar cuentas de colaboradores (crea usuario en Supabase Auth + perfil en DB). |
+| **Capillas** | CRUD completo. Formulario con info básica, contacto, checkbox de Cáritas, **subida de imagen con recorte y compresión** (Supabase Storage), **grilla dinámica de horarios** (semanales + mensuales fijos, por temporada) y selector de ubicación en mapa. |
+| **Eventos** | CRUD completo. Filtro en cascada departamento → capilla, fechas DD/MM/AAAA con datepicker, tipos del enum `tipo_evento`. |
+| **Voluntarios** _(solo admin)_ | Crear, editar y desactivar cuentas de colaboradores (Supabase Auth + perfil). |
+| **Solicitudes de Baja** _(solo admin)_ | Bandeja de pedidos de eliminación: aprobar (elimina la capilla) o rechazar, con historial. |
 
 ---
 
-## Tech Stack
+## Arquitectura
 
-| Tecnología | Uso |
+| Pieza | Detalle |
 |---|---|
-| **Next.js 16** | App Router, Server Components, Server Actions |
-| **TypeScript** | Tipado completo cliente y servidor |
-| **Tailwind CSS v4** | Design system "Serene Organic Minimalist" — tokens en `globals.css` con `@theme {}` |
-| **Supabase** | PostgreSQL + PostGIS para geolocalización, Auth, Storage para imágenes |
-| **react-leaflet** | Mapas interactivos (selector de ubicación y detalle de capilla) |
-| **react-easy-crop** | Recorte interactivo de imágenes antes de subir |
-| **lucide-react** | Íconos |
-| **date-fns** | Formateo de fechas en español |
-
----
+| **Next.js 16** | App Router, Server Components para listados, Server Actions para mutaciones, React Compiler activo. |
+| **Auth** | `@supabase/ssr` con cookies. `proxy.ts` (reemplazo del middleware en Next 16) protege `/admin/*`. |
+| **Clientes Supabase** | `lib/supabase.ts` (browser, componentes cliente) · `lib/supabase-server.ts` (Server Components con sesión) · `lib/supabase-public.ts` (anon server-only, vistas públicas) · `lib/supabase-admin.ts` (service role, **solo** Server Actions). |
+| **Autorización** | Cada Server Action valida con `requirePerfil()` + `assertDepartamentoAccess()` (`lib/auth-server.ts`), leyendo el departamento real desde la DB (nunca del cliente). RLS activa en las tablas sensibles. |
+| **Seguridad** | Content-Security-Policy en `next.config.ts`, scoped al host del proyecto Supabase. |
+| **Mapas** | react-leaflet con `dynamic import { ssr: false }`. El popup del mapa usa colores fijos claros (leaflet.css fuerza card blanca). |
+| **Tests** | Vitest sobre la lógica pura de `lib/` (`npm test`). |
 
 ## Estructura del Proyecto
 
 ```
 app/
-├── (public)/                   # Sitio público (layout con header + bottom nav mobile)
-│   ├── layout.tsx
-│   ├── page.tsx                # Inicio — capillas cercanas
-│   ├── capilla/[id]/page.tsx   # Detalle de capilla (Server Component)
-│   └── eventos/
-│       ├── page.tsx            # Listado de eventos
-│       └── [id]/page.tsx       # Detalle de evento
+├── (public)/                      # Sitio público
+│   ├── page.tsx                   # Inicio: buscador + filtros + capillas cercanas
+│   ├── capilla/[slug]/page.tsx    # Detalle de capilla (Server Component + generateMetadata)
+│   ├── eventos/page.tsx           # Listado de eventos vigentes
+│   ├── eventos/[slug]/page.tsx    # Detalle de evento
+│   └── mapa/page.tsx              # Mapa global
 ├── admin/
-│   ├── layout.tsx              # Sidebar + drawer mobile + auth guard
-│   ├── page.tsx                # Dashboard
-│   ├── capillas/
-│   │   ├── actions.ts          # Server Actions (CRUD + upload imagen)
-│   │   ├── page.tsx            # Lista de capillas
-│   │   ├── nuevo/page.tsx      # Formulario creación
-│   │   ├── [id]/editar/page.tsx
-│   │   └── [id]/horarios/page.tsx  # Editor avanzado de horarios
-│   ├── eventos/
-│   │   ├── actions.ts
-│   │   ├── page.tsx
-│   │   ├── nuevo/page.tsx
-│   │   └── [id]/editar/page.tsx
-│   └── voluntarios/
-│       ├── actions.ts
-│       ├── page.tsx
-│       ├── nuevo/page.tsx
-│       └── [id]/editar/page.tsx
-├── components/
-│   ├── horarios-grid.tsx       # Grilla dinámica de horarios (desktop tabla + mobile cards)
-│   ├── image-uploader.tsx      # File picker con validación de peso y recorte interactivo
-│   ├── location-picker.tsx     # Mapa Leaflet para seleccionar coordenadas
-│   ├── map-wrapper.tsx         # Dynamic import (SSR: false) para Leaflet
-│   ├── bottom-nav.tsx          # Navegación inferior mobile
-│   ├── back-button.tsx
-│   ├── confirm-dialog.tsx
-│   └── theme-toggle.tsx
+│   ├── layout.tsx                 # Sidebar + drawer mobile + guard de sesión
+│   ├── page.tsx                   # Dashboard
+│   ├── capillas/                  # CRUD + editor avanzado de horarios ([id]/horarios)
+│   ├── eventos/                   # CRUD con filtro en cascada
+│   ├── voluntarios/               # Gestión de cuentas (solo admin)
+│   └── solicitudes/               # Bandeja de solicitudes de baja (solo admin)
+├── components/                    # UI compartida (mapas, diálogos <dialog>, chips, share, etc.)
 ├── login/page.tsx
-└── globals.css                 # Tailwind v4: @theme {}, tokens, dark mode, utilities
+├── sitemap.ts / robots.ts         # SEO
+└── globals.css                    # Tailwind v4: @theme, tokens, dark mode
 lib/
-├── supabase.ts                 # Cliente público (anon key)
-├── supabase-admin.ts           # Cliente servidor (service role — solo Server Actions)
-└── misas-utils.ts              # findNextMisa(), formatDistancia()
-supabase/migrations/
-├── 001_create_perfiles.sql     # Tabla perfiles + trigger handle_new_user
-├── 002_set_coordenadas_trigger.sql
-├── 003_lugar_rpc.sql           # RPCs crear_lugar / actualizar_lugar (PostGIS)
-├── 004_add_ubicacion_to_eventos.sql
-├── 005_horarios_avanzados.sql  # notas_horarios en lugares, dia_mes en horarios, RPCs actualizados
-└── 006_get_lugares_cercanos.sql  # RPC PostGIS para búsqueda por proximidad
+├── supabase*.ts                   # Los 4 clientes (ver Arquitectura)
+├── auth-server.ts                 # requirePerfil / assertDepartamentoAccess / assertAdmin
+├── misas-utils.ts                 # findNextMisa, franjas horarias, normalizeText, distancias
+├── eventos-tipos.ts               # Mapeo slug ↔ etiqueta/color del enum tipo_evento
+├── departamentos.ts               # Departamentos habilitados en formularios
+├── date-dmy.ts                    # Conversión DD/MM/AAAA ↔ ISO
+└── *.test.ts                      # Tests de Vitest
+supabase/migrations/               # 001–009, ver DESARROLLO.md para aplicarlas
+proxy.ts                           # Gate de sesión para /admin/*
 ```
 
 ---
@@ -133,43 +104,71 @@ supabase/migrations/
 |---|---|---|
 | `id` | `uuid` | PK |
 | `nombre` | `text` | |
+| `slug` | `text` | Único. Generado por trigger desde `nombre`; estable ante renombres |
 | `tipo` | `tipo_lugar` | enum: `parroquia`, `capilla`, `santuario` |
-| `departamento` | `departamentos_mza` | enum con los 18 dptos. de Mendoza |
+| `departamento` | `departamentos_mza` | enum (9 valores; los formularios habilitan 5 por ahora) |
 | `direccion` | `text` | |
 | `lat`, `lng` | `float8` | |
 | `coordenadas` | `geography(Point,4326)` | Calculado por RPC desde lat/lng |
 | `imagen_url` | `text` | URL pública en Supabase Storage |
-| `notas_horarios` | `text` | Aclaraciones de temporada (migración 005) |
+| `notas_horarios` | `text` | Aclaraciones de temporada |
 | `hay_confesiones` | `boolean` | |
+| `recibe_caritas` | `boolean` | Muestra el badge de Cáritas en el detalle |
 | `activo` | `boolean` | |
 
 ### `horarios`
 | Columna | Tipo | Notas |
 |---|---|---|
 | `lugar_id` | `uuid` | FK → lugares |
-| `dia_semana` | `int2 (nullable)` | 0=Dom … 6=Sáb. Null si es mensual |
-| `dia_mes` | `int2 (nullable)` | 1–31. Para misas mensuales fijas |
+| `dia_semana` | `int (nullable)` | 0=Dom … 6=Sáb. Null si es mensual |
+| `dia_mes` | `int (nullable)` | 1–31, para misas mensuales fijas |
 | `hora` | `time` | |
 | `temporada` | `text` | `'Todo el año'`, `'Invierno'`, `'Verano'` |
-| `tipo_actividad` | `text` | `'Misa'`, `'Confesión'`, etc. |
+| `tipo_actividad` | `text` | `'Misa'`, etc. |
 
 ### `eventos`
-| Columna | Tipo |
-|---|---|
-| `titulo` | `text` |
-| `tipo` | `text` |
-| `zona` | `text` |
-| `ubicacion` | `text` |
-| `fecha_inicio` | `timestamptz` |
-| `fecha_fin` | `timestamptz` |
-| `descripcion` | `text` |
-| `lat`, `lng` | `float8` |
+| Columna | Tipo | Notas |
+|---|---|---|
+| `titulo` | `text` | |
+| `slug` | `text` | Único, generado por trigger |
+| `tipo` | `tipo_evento` | enum: `jovenes`, `aviso`, `retiro`, `especial` (ver `lib/eventos-tipos.ts`) |
+| `departamento` | `departamentos_mza` | |
+| `lugar_id` | `uuid (nullable)` | FK → lugares |
+| `ubicacion` | `text` | Texto libre si no hay capilla asociada |
+| `fecha_inicio`, `fecha_fin` | `timestamptz` | El sitio público oculta eventos vencidos |
+| `descripcion` | `text` | |
+| `activo` | `boolean` | |
 
 ### `perfiles`
 | Columna | Tipo |
 |---|---|
 | `id` | `uuid` (FK → auth.users) |
 | `nombre_completo` | `text` |
-| `rol` | `text` — `'admin'` / `'editor_departamento'` |
+| `rol` | `'admin'` / `'editor_departamento'` |
 | `departamento_asignado` | `text` |
 | `activo` | `boolean` |
+
+### `solicitudes_baja`
+| Columna | Tipo | Notas |
+|---|---|---|
+| `lugar_id` | `uuid` | FK → lugares (`ON DELETE CASCADE`) |
+| `motivo` | `text` | |
+| `estado` | `varchar` | `pendiente` / `aprobada` / `rechazada` |
+| `solicitado_por` | `uuid` | FK → perfiles |
+| `created_at` | `timestamptz` | |
+
+### RPCs
+- `crear_lugar` / `actualizar_lugar` — insert/update con PostGIS y todos los campos.
+- `get_lugares_cercanos(user_lat, user_lng, radio_km)` — capillas activas ordenadas por distancia (incluye `slug`).
+- `slugify` + triggers `set_lugar_slug` / `set_evento_slug` — generación automática de slugs.
+
+---
+
+## Scripts
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Build de producción (incluye chequeo de TypeScript) |
+| `npm run lint` | ESLint |
+| `npm test` | Tests de Vitest (lógica pura de `lib/`) |
