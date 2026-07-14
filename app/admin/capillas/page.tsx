@@ -52,6 +52,7 @@ export default async function CapillasPage() {
       <CapillasList
         initialLugares={lugRes.data ?? []}
         initialHorarios={horRes.data ?? []}
+        rol={perfil?.rol ?? "editor_departamento"}
       />
     </div>
   );

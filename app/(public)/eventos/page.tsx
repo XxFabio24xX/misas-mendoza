@@ -47,10 +47,13 @@ export default function EventosPage() {
 
   useEffect(() => {
     (async () => {
+      const nowISO = new Date().toISOString();
       const { data } = await supabase
         .from("eventos")
         .select("*, lugares(nombre)")
         .eq("activo", true)
+        // Oculta eventos pasados: usa fecha_fin cuando existe, si no fecha_inicio.
+        .or(`fecha_fin.gte.${nowISO},and(fecha_fin.is.null,fecha_inicio.gte.${nowISO})`)
         .order("fecha_inicio", { ascending: true });
       if (data) setEventos(data as Evento[]);
       setLoading(false);

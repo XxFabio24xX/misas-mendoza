@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Pencil, Trash2, Church, AlertTriangle, MapPin, Clock } from "lucide-react";
-import { eliminarCapilla } from "./actions";
+import { Search, Pencil, Trash2, Church, AlertTriangle, MapPin, Clock, FileWarning } from "lucide-react";
+import { eliminarCapilla, solicitarBajaCapilla } from "./actions";
 import ConfirmDialog from "@/app/components/confirm-dialog";
+import SolicitudBajaDialog from "@/app/components/solicitud-baja-dialog";
 import { findNextMisa } from "@/lib/misas-utils";
 
 type Lugar = {
@@ -28,15 +29,21 @@ type Horario = {
 export function CapillasList({
   initialLugares,
   initialHorarios,
+  rol,
 }: {
   initialLugares: Lugar[];
   initialHorarios: Horario[];
+  rol: "admin" | "editor_departamento";
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [bajaTarget, setBajaTarget] = useState<string | null>(null);
+  const [bajaLoading, setBajaLoading] = useState(false);
+  const [bajaError, setBajaError] = useState<string | null>(null);
+  const [bajaSuccess, setBajaSuccess] = useState<string | null>(null);
 
   const handleDelete = async (id: string) => {
     setDeleting(true);
@@ -50,6 +57,26 @@ export function CapillasList({
     setDeleteTarget(null);
     setDeleting(false);
   };
+
+  const handleSolicitarBaja = async (motivo: string) => {
+    if (!bajaTarget) return;
+    setBajaLoading(true);
+    setBajaError(null);
+    try {
+      await solicitarBajaCapilla(bajaTarget, motivo);
+      setBajaTarget(null);
+      setBajaSuccess("Solicitud enviada al administrador.");
+    } catch (e) {
+      setBajaError(e instanceof Error ? e.message : "Error al enviar la solicitud");
+    }
+    setBajaLoading(false);
+  };
+
+  useEffect(() => {
+    if (!bajaSuccess) return;
+    const t = setTimeout(() => setBajaSuccess(null), 5000);
+    return () => clearTimeout(t);
+  }, [bajaSuccess]);
 
   const horMap = useMemo(() => {
     const m = new Map<string, Horario[]>();
@@ -103,6 +130,26 @@ export function CapillasList({
         </div>
       )}
 
+      {bajaError && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mt-4 rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container"
+        >
+          {bajaError}
+        </div>
+      )}
+
+      {bajaSuccess && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mt-4 rounded-lg bg-primary/10 px-4 py-3 text-sm text-primary"
+        >
+          {bajaSuccess}
+        </div>
+      )}
+
       <ConfirmDialog
         open={deleteTarget !== null}
         title="Eliminar capilla"
@@ -110,6 +157,13 @@ export function CapillasList({
         loading={deleting}
         onConfirm={() => deleteTarget && handleDelete(deleteTarget)}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <SolicitudBajaDialog
+        open={bajaTarget !== null}
+        loading={bajaLoading}
+        onConfirm={handleSolicitarBaja}
+        onCancel={() => setBajaTarget(null)}
       />
 
       {filtered.length > 0 && (
@@ -140,13 +194,25 @@ export function CapillasList({
                         >
                           <Pencil className="h-4 w-4" />
                         </Link>
-                        <button
-                          onClick={() => setDeleteTarget(l.id)}
-                          className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-error"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {rol === "admin" ? (
+                          <button
+                            onClick={() => setDeleteTarget(l.id)}
+                            aria-label="Eliminar capilla"
+                            className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-error"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setBajaTarget(l.id)}
+                            aria-label="Solicitar baja de capilla"
+                            className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
+                            title="Solicitar baja"
+                          >
+                            <FileWarning className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                   </div>
                   <div className="mt-2 space-y-1 text-sm text-on-surface-variant">
@@ -222,13 +288,25 @@ export function CapillasList({
                           >
                             <Pencil className="h-4 w-4" />
                           </Link>
-                          <button
-                            onClick={() => setDeleteTarget(l.id)}
-                            className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-error"
-                            title="Eliminar"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          {rol === "admin" ? (
+                            <button
+                              onClick={() => setDeleteTarget(l.id)}
+                              aria-label="Eliminar capilla"
+                              className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-error"
+                              title="Eliminar"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setBajaTarget(l.id)}
+                              aria-label="Solicitar baja de capilla"
+                              className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
+                              title="Solicitar baja"
+                            >
+                              <FileWarning className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

@@ -162,6 +162,25 @@ export async function eliminarCapilla(id: string) {
   revalidatePath("/mapa");
 }
 
+export async function solicitarBajaCapilla(lugarId: string, motivo: string) {
+  const perfil = await requirePerfil();
+  const departamento = await getLugarDepartamento(lugarId);
+  if (!departamento) throw new Error("La capilla no existe.");
+  assertDepartamentoAccess(perfil, departamento);
+
+  const motivoLimpio = motivo.trim();
+  if (!motivoLimpio) throw new Error("El motivo es obligatorio.");
+
+  const { error } = await supabaseAdmin.from("solicitudes_baja").insert({
+    lugar_id: lugarId,
+    motivo: motivoLimpio,
+    solicitado_por: perfil.id,
+  });
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/capillas");
+}
+
 export async function toggleCapillaActiva(id: string, activo: boolean) {
   const perfil = await requirePerfil();
   const departamento = await getLugarDepartamento(id);
