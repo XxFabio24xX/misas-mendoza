@@ -1,3 +1,5 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import { supabasePublic } from "@/lib/supabase-public";
 import { BackButton } from "@/app/components/back-button";
 import { FavoriteButton } from "@/app/components/favorite-button";
@@ -116,6 +118,37 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const LUGAR_COLS =
   "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, departamento, lat, lng, recibe_caritas, slug";
 
+// cache(): generateMetadata y la página comparten la misma consulta por request.
+const getLugarBySlug = cache(async (slug: string): Promise<Lugar | null> => {
+  const { data } = await supabasePublic
+    .from("lugares")
+    .select(LUGAR_COLS)
+    .eq("slug", slug)
+    .maybeSingle();
+  return (data as unknown as Lugar) ?? null;
+});
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  if (UUID_RE.test(slug)) return {};
+  const lugar = await getLugarBySlug(slug);
+  if (!lugar) return {};
+  const description = `Horarios de misa, dirección y contacto de ${lugar.nombre} — ${lugar.direccion}, ${lugar.departamento}, Mendoza.`;
+  return {
+    title: lugar.nombre,
+    description,
+    openGraph: {
+      title: lugar.nombre,
+      description,
+      ...(lugar.imagen_url ? { images: [lugar.imagen_url] } : {}),
+    },
+  };
+}
+
 export default async function CapillaPage({
   params,
 }: {
@@ -134,15 +167,8 @@ export default async function CapillaPage({
     permanentRedirect(`/capilla/${data.slug}`);
   }
 
-  const lugarRes = await supabasePublic
-    .from("lugares")
-    .select(LUGAR_COLS)
-    .eq("slug", slug)
-    .single();
-
-  if (lugarRes.error) notFound();
-
-  const lugar = lugarRes.data as unknown as Lugar;
+  const lugar = await getLugarBySlug(slug);
+  if (!lugar) notFound();
 
   const horariosRes = await supabasePublic
     .from("horarios")

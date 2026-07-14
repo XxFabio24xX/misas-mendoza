@@ -7,8 +7,20 @@ import { ThemeProvider } from "@/app/components/theme-provider";
 const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Misas Mendoza",
-  description: "Horarios de misas y eventos católicos en Mendoza",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://misas-mendoza.vercel.app",
+  ),
+  title: {
+    default: "Misas Mendoza",
+    template: "%s | Misas Mendoza",
+  },
+  description:
+    "Horarios de misas, parroquias, capillas y eventos católicos en Mendoza.",
+  openGraph: {
+    siteName: "Misas Mendoza",
+    locale: "es_AR",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
