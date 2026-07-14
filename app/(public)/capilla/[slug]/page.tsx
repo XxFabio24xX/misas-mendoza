@@ -22,6 +22,7 @@ type Lugar = {
   lng: number;
   recibe_caritas?: boolean;
   slug: string;
+  temporada_actual: "Invierno" | "Verano" | null;
 };
 
 type Horario = {
@@ -33,6 +34,7 @@ type Horario = {
   tipo_actividad: string;
   temporada: string;
   observacion?: string;
+  reemplaza_dia?: boolean | null;
 };
 
 const DAYS_FULL = [
@@ -45,34 +47,37 @@ const DAYS_FULL = [
   "Sábado",
 ];
 
+// Sin meses fijos: cada parroquia define cuándo cambia de temporada; la
+// vigencia sale de lugares.temporada_actual.
 const TEMPORADA_META: Record<
   string,
-  { label: string; months: string; icon: "sun" | "snow" | null; style: string; headerStyle: string }
+  { label: string; icon: "sun" | "snow" | null; style: string; headerStyle: string }
 > = {
   "Todo el año": {
     label: "Todo el año",
-    months: "",
     icon: null,
     style: "bg-surface-container-low",
     headerStyle: "bg-primary/8 text-primary border-primary/20",
   },
   Invierno: {
     label: "Invierno",
-    months: "Marzo · Octubre",
     icon: "snow",
     style: "bg-blue-50/60 dark:bg-blue-950/20",
     headerStyle: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
   },
   Verano: {
     label: "Verano",
-    months: "Noviembre · Febrero",
     icon: "sun",
     style: "bg-amber-50/60 dark:bg-amber-950/20",
     headerStyle: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
   },
 };
 
-const SEASON_ORDER = ["Todo el año", "Invierno", "Verano"];
+/** "Todo el año" primero, después la temporada vigente, al final la otra. */
+function seasonOrder(temporadaActual: string | null): string[] {
+  if (temporadaActual === "Verano") return ["Todo el año", "Verano", "Invierno"];
+  return ["Todo el año", "Invierno", "Verano"];
+}
 
 function groupByDay(horarios: Horario[]) {
   const byDay = new Map<number, { times: string[]; tipos: string[]; obs: string[] }>();
@@ -118,7 +123,7 @@ function groupByDay(horarios: Horario[]) {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const LUGAR_COLS =
-  "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, departamento, lat, lng, recibe_caritas, slug";
+  "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, departamento, lat, lng, recibe_caritas, slug, temporada_actual";
 
 // cache(): generateMetadata y la página comparten la misma consulta por request.
 const getLugarBySlug = cache(async (slug: string): Promise<Lugar | null> => {
@@ -174,7 +179,7 @@ export default async function CapillaPage({
 
   const horariosRes = await supabasePublic
     .from("horarios")
-    .select("id, lugar_id, dia_semana, dia_mes, hora, tipo_actividad, temporada, observacion")
+    .select("id, lugar_id, dia_semana, dia_mes, hora, tipo_actividad, temporada, observacion, reemplaza_dia")
     .eq("lugar_id", lugar.id)
     .order("dia_semana", { ascending: true })
     .order("hora", { ascending: true });
@@ -189,7 +194,9 @@ export default async function CapillaPage({
     byTemporada.get(key)!.push(h);
   }
 
-  const temporadasPresentes = SEASON_ORDER.filter((s) => byTemporada.has(s));
+  const temporadasPresentes = seasonOrder(lugar.temporada_actual).filter((s) =>
+    byTemporada.has(s),
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -304,13 +311,21 @@ export default async function CapillaPage({
                         <div className={`flex items-center gap-2.5 border-b border-outline-variant/20 px-4 py-3 ${meta.headerStyle}`}>
                           {meta.icon === "snow" && <Snowflake className="h-4 w-4 shrink-0" />}
                           {meta.icon === "sun" && <Sun className="h-4 w-4 shrink-0" />}
-                          <div>
+                          <div className="flex flex-wrap items-baseline gap-x-2">
                             <span className="text-sm font-bold">{meta.label}</span>
-                            {meta.months && (
-                              <span className="ml-2 text-xs font-normal opacity-75">
-                                {meta.months}
-                              </span>
-                            )}
+                            {temporada !== "Todo el año" &&
+                              lugar.temporada_actual === temporada && (
+                                <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-on-primary">
+                                  Vigente ahora
+                                </span>
+                              )}
+                            {temporada !== "Todo el año" &&
+                              lugar.temporada_actual != null &&
+                              lugar.temporada_actual !== temporada && (
+                                <span className="text-xs font-normal opacity-75">
+                                  Vigente cuando la parroquia anuncie el cambio
+                                </span>
+                              )}
                           </div>
                         </div>
 
@@ -346,12 +361,29 @@ export default async function CapillaPage({
                               key={h.id}
                               className="flex items-baseline justify-between gap-4 py-3"
                             >
-                              <p className="shrink-0 text-sm font-medium text-on-surface">
-                                Día {h.dia_mes} de cada mes
-                              </p>
-                              <p className="text-sm tabular-nums text-on-surface-variant">
-                                {h.hora.slice(0, 5)} hs
-                              </p>
+                              <div className="shrink-0">
+                                <p className="text-sm font-medium text-on-surface">
+                                  Día {h.dia_mes} de cada mes
+                                </p>
+                                {h.tipo_actividad !== "Misa" && (
+                                  <p className="text-xs text-on-surface-variant">{h.tipo_actividad}</p>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm tabular-nums text-on-surface-variant">
+                                  {h.hora.slice(0, 5)} hs
+                                </p>
+                                {h.reemplaza_dia && (
+                                  <p className="mt-0.5 text-xs italic text-on-surface-variant/70">
+                                    Ese día es la única misa
+                                  </p>
+                                )}
+                                {h.observacion && (
+                                  <p className="mt-0.5 text-xs italic text-on-surface-variant/70">
+                                    {h.observacion}
+                                  </p>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>

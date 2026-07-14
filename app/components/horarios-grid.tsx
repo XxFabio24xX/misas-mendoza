@@ -14,6 +14,10 @@ export type HorarioData = {
   dia_mes: number;
   hora: string;
   temporada: Temporada;
+  /** Solo mensuales: esta misa cancela las misas normales del día. */
+  reemplaza_dia?: boolean;
+  /** No se edita acá, pero se preserva en el round-trip guardar/cargar. */
+  observacion?: string | null;
 };
 
 type HorarioRow = HorarioData & { _key: string };
@@ -98,16 +102,27 @@ export function HorariosGrid({ initialHorarios = [], name = "horarios_json" }: P
                         ))}
                       </select>
                     ) : (
-                      <div className="flex items-center gap-1">
-                        <input
-                          type="number"
-                          min={1}
-                          max={31}
-                          value={row.dia_mes}
-                          onChange={(e) => updateRow(row._key, { dia_mes: Number(e.target.value) })}
-                          className={`${INPUT_CLS} w-20`}
-                        />
-                        <span className="text-xs text-on-surface-variant">del mes</span>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            min={1}
+                            max={31}
+                            value={row.dia_mes}
+                            onChange={(e) => updateRow(row._key, { dia_mes: Number(e.target.value) })}
+                            className={`${INPUT_CLS} w-20`}
+                          />
+                          <span className="text-xs text-on-surface-variant">del mes</span>
+                        </div>
+                        <label className="flex items-center gap-1.5 text-xs text-on-surface-variant">
+                          <input
+                            type="checkbox"
+                            checked={row.reemplaza_dia ?? false}
+                            onChange={(e) => updateRow(row._key, { reemplaza_dia: e.target.checked })}
+                            className="h-3.5 w-3.5 rounded border-outline-variant text-primary"
+                          />
+                          Reemplaza las misas del día
+                        </label>
                       </div>
                     )}
                   </td>
@@ -212,6 +227,17 @@ export function HorariosGrid({ initialHorarios = [], name = "horarios_json" }: P
                   />
                 )}
               </div>
+              {row.tipo === "mensual" && (
+                <label className="col-span-2 flex items-center gap-2 text-xs text-on-surface-variant">
+                  <input
+                    type="checkbox"
+                    checked={row.reemplaza_dia ?? false}
+                    onChange={(e) => updateRow(row._key, { reemplaza_dia: e.target.checked })}
+                    className="h-3.5 w-3.5 rounded border-outline-variant text-primary"
+                  />
+                  Reemplaza las misas normales del día
+                </label>
+              )}
               <div>
                 <label className="text-xs font-medium text-on-surface-variant">Hora</label>
                 <input

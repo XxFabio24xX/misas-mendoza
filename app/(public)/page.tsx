@@ -12,6 +12,7 @@ import {
   formatDistancia,
   horaEnFranja,
   normalizeText,
+  temporadaVigente,
   type FranjaHoraria,
 } from "@/lib/misas-utils";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -27,13 +28,17 @@ type Lugar = {
   lat: number;
   lng: number;
   slug: string;
+  temporada_actual: string | null;
 };
 
 type Horario = {
   id: string;
   lugar_id: string;
   dia_semana: number | null;
+  dia_mes: number | null;
   hora: string;
+  temporada: string | null;
+  reemplaza_dia: boolean | null;
 };
 
 export default function Home() {
@@ -60,7 +65,7 @@ export default function Home() {
     const ids = places.map((p) => p.id);
     const { data } = await supabase
       .from("horarios")
-      .select("id, lugar_id, dia_semana, hora")
+      .select("id, lugar_id, dia_semana, dia_mes, hora, temporada, reemplaza_dia")
       .in("lugar_id", ids);
     if (data) setHorarios(data as Horario[]);
   }, []);
@@ -88,7 +93,7 @@ export default function Home() {
     setError(null);
     const { data, error: dbError } = await supabase
       .from("lugares")
-      .select("id, nombre, direccion, departamento, lat, lng, slug")
+      .select("id, nombre, direccion, departamento, lat, lng, slug, temporada_actual")
       .eq("activo", true)
       .order("nombre")
       .limit(50);
@@ -184,11 +189,13 @@ export default function Home() {
           normalizeText(p.direccion).includes(q),
       );
     }
-    // Solo capillas con al menos una misa que caiga en el día y/o franja elegidos.
+    // Solo capillas con al menos una misa que caiga en el día y/o franja
+    // elegidos, considerando únicamente horarios de la temporada vigente.
     if (selectedDias.size > 0 || horarioFilter !== null) {
       result = result.filter((p) => {
         const misas = horariosMap.get(p.id) ?? [];
         return misas.some((h) => {
+          if (!temporadaVigente(h, p.temporada_actual)) return false;
           if (selectedDias.size > 0 && (h.dia_semana == null || !selectedDias.has(h.dia_semana))) {
             return false;
           }
@@ -417,7 +424,7 @@ export default function Home() {
                   </p>
                   <p className="flex items-center gap-2 text-base font-medium text-primary">
                     <Clock className="h-4 w-4" />
-                    {findNextMisa(misas)}
+                    {findNextMisa(misas, { temporadaActual: place.temporada_actual })}
                   </p>
                 </div>
 

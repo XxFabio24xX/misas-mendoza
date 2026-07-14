@@ -46,6 +46,8 @@ type HorarioRaw = {
   dia_mes: number | null;
   hora: string;
   temporada: string;
+  reemplaza_dia: boolean | null;
+  observacion: string | null;
 };
 
 export default function EditarCapillaPage() {
@@ -74,7 +76,7 @@ export default function EditarCapillaPage() {
       supabase.from("lugares").select("*").eq("id", id).maybeSingle(),
       supabase
         .from("horarios")
-        .select("id, dia_semana, dia_mes, hora, temporada")
+        .select("id, dia_semana, dia_mes, hora, temporada, reemplaza_dia, observacion")
         .eq("lugar_id", id)
         .order("dia_semana", { ascending: true }),
     ]);
@@ -98,6 +100,8 @@ export default function EditarCapillaPage() {
           dia_mes: h.dia_mes ?? 1,
           hora: h.hora.slice(0, 5),
           temporada: (h.temporada as HorarioData["temporada"]) ?? "Todo el año",
+          reemplaza_dia: h.reemplaza_dia ?? false,
+          observacion: h.observacion ?? null,
         }))
       );
     }

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Map as MapIcon } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "Inicio" },
@@ -28,7 +27,6 @@ export function HeaderNav() {
               isActive ? "text-primary" : "text-on-surface-variant"
             }`}
           >
-            {href === "/mapa" && <MapIcon className="h-4 w-4" />}
             {label}
           </Link>
         );

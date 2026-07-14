@@ -70,6 +70,8 @@ export async function crearCapilla(formData: FormData) {
           hora: h.hora,
           temporada: h.temporada,
           tipo_actividad: "Misa",
+          reemplaza_dia: h.tipo === "mensual" ? (h.reemplaza_dia ?? false) : false,
+          observacion: h.observacion ?? null,
         }));
         const { error: horError } = await supabaseAdmin.from("horarios").insert(rows);
         if (horError) throw new Error(horError.message);
@@ -133,6 +135,8 @@ export async function actualizarCapilla(id: string, formData: FormData) {
         hora: h.hora,
         temporada: h.temporada,
         tipo_actividad: "Misa",
+        reemplaza_dia: h.tipo === "mensual" ? (h.reemplaza_dia ?? false) : false,
+        observacion: h.observacion ?? null,
       }));
       const { error: horError } = await supabaseAdmin.from("horarios").insert(rows);
       if (horError) throw new Error(horError.message);
@@ -178,6 +182,26 @@ export async function solicitarBajaCapilla(lugarId: string, motivo: string) {
   });
   if (error) throw new Error(error.message);
 
+  revalidatePath("/admin/capillas");
+}
+
+export async function setTemporadaActual(
+  id: string,
+  temporada: "Invierno" | "Verano" | null,
+) {
+  const perfil = await requirePerfil();
+  const departamento = await getLugarDepartamento(id);
+  if (!departamento) throw new Error("La capilla no existe.");
+  assertDepartamentoAccess(perfil, departamento);
+
+  const { error } = await supabaseAdmin
+    .from("lugares")
+    .update({ temporada_actual: temporada })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/capilla/[slug]", "page");
+  revalidatePath("/");
   revalidatePath("/admin/capillas");
 }
 

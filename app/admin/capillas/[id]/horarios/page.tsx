@@ -5,7 +5,7 @@ import { unstable_rethrow, useParams } from "next/navigation";
 import { ArrowLeft, Clock, Loader2, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { agregarHorario, editarHorario, eliminarHorario } from "../../actions";
+import { agregarHorario, editarHorario, eliminarHorario, setTemporadaActual } from "../../actions";
 
 const DIAS = [
   { value: 0, label: "Domingo", short: "Dom" },
@@ -28,10 +28,11 @@ const TIPOS_ACTIVIDAD = [
   "Otro",
 ];
 
+// Sin meses en las etiquetas: cada parroquia define cuándo cambia de temporada.
 const TEMPORADAS = [
   { value: "Todo el año", label: "Todo el año" },
-  { value: "Invierno", label: "Invierno (Jun–Ago)" },
-  { value: "Verano", label: "Verano (Dic–Feb)" },
+  { value: "Invierno", label: "Invierno" },
+  { value: "Verano", label: "Verano" },
 ];
 
 const TEMP_CHIP: Record<string, string> = {
@@ -58,7 +59,7 @@ type Horario = {
   observacion?: string;
 };
 
-type Lugar = { id: string; nombre: string };
+type Lugar = { id: string; nombre: string; temporada_actual: "Invierno" | "Verano" | null };
 
 type FormState = {
   dias: number[];
@@ -97,7 +98,7 @@ export default function HorariosPage() {
 
   const fetchLugar = useCallback(async () => {
     if (!id) return;
-    const { data } = await supabase.from("lugares").select("id,nombre").eq("id", id).maybeSingle();
+    const { data } = await supabase.from("lugares").select("id,nombre,temporada_actual").eq("id", id).maybeSingle();
     if (data) setLugar(data as Lugar);
     else setError("No se encontró la capilla.");
   }, [id]);
@@ -223,6 +224,27 @@ export default function HorariosPage() {
   const weekdaysSelected = [1, 2, 3, 4, 5].every(d => form.dias.includes(d));
   const weekendSelected = [6, 0].every(d => form.dias.includes(d));
 
+  const usaTemporadas =
+    horarios.some(h => h.temporada && h.temporada !== "Todo el año") ||
+    lugar.temporada_actual != null;
+
+  async function handleTemporada(t: "Invierno" | "Verano" | null) {
+    if (!lugar || lugar.temporada_actual === t) return;
+    setError(null);
+    setSuccess(null);
+    try {
+      await setTemporadaActual(id, t);
+      setLugar({ ...lugar, temporada_actual: t });
+      setSuccess(
+        t
+          ? `Temporada vigente actualizada: ${t}. El sitio público ya muestra estos horarios.`
+          : "Temporada vigente sin definir: se muestran todos los horarios.",
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al cambiar la temporada");
+    }
+  }
+
   return (
     <div className="mx-auto max-w-4xl">
       {/* Header */}
@@ -254,6 +276,45 @@ export default function HorariosPage() {
       )}
       {success && (
         <div role="status" aria-live="polite" className="mt-4 rounded-lg bg-primary/10 px-4 py-3 text-sm font-medium text-primary">{success}</div>
+      )}
+
+      {/* ── Temporada vigente ── */}
+      {usaTemporadas && (
+        <div className="mt-6 flex flex-col gap-2 rounded-xl border border-outline-variant/30 bg-surface-container px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-on-surface">Temporada vigente</p>
+            <p className="text-xs text-on-surface-variant">
+              Cambiala cuando la parroquia anuncie el cambio de horarios.
+            </p>
+          </div>
+          <div role="group" aria-label="Temporada vigente" className="flex gap-1.5">
+            {(["Invierno", "Verano"] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => handleTemporada(t)}
+                aria-pressed={lugar.temporada_actual === t}
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  lugar.temporada_actual === t
+                    ? TEMP_BTN_ACTIVE[t]
+                    : "border-outline-variant/50 text-on-surface-variant hover:bg-surface-container-high"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+            <button
+              onClick={() => handleTemporada(null)}
+              aria-pressed={lugar.temporada_actual === null}
+              className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                lugar.temporada_actual === null
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-outline-variant/50 text-on-surface-variant hover:bg-surface-container-high"
+              }`}
+            >
+              Sin definir
+            </button>
+          </div>
+        </div>
       )}
 
       {/* ── Visual week overview ── */}

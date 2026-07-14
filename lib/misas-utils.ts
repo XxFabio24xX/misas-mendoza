@@ -3,26 +3,67 @@ export const DAYS_SHORT = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 export type HorarioBase = {
   dia_semana: number | null;
   hora: string;
+  dia_mes?: number | null;
+  temporada?: string | null;
+  reemplaza_dia?: boolean | null;
 };
 
-export function findNextMisa(horarios: HorarioBase[]): string {
-  if (!horarios.length) return "—";
-  // Solo horarios semanales pueden usarse para calcular "próxima misa"
-  const weekly = horarios.filter(
-    (h): h is HorarioBase & { dia_semana: number } => h.dia_semana != null
-  );
-  if (!weekly.length) return "—";
-  const today = new Date().getDay();
-  const sorted = [...weekly].sort((a, b) => {
-    if (a.dia_semana !== b.dia_semana) return a.dia_semana - b.dia_semana;
-    return a.hora.localeCompare(b.hora);
-  });
+export type FindNextMisaOpts = {
+  /** Temporada vigente de la capilla ('Invierno' / 'Verano'); null si no usa temporadas. */
+  temporadaActual?: string | null;
+  /** Inyectable para tests. */
+  ahora?: Date;
+};
+
+/** Un horario aplica si es de todo el año, o si coincide con la temporada vigente.
+ *  Si la capilla no tiene temporada definida, no se oculta nada. */
+export function temporadaVigente(
+  horario: Pick<HorarioBase, "temporada">,
+  temporadaActual: string | null | undefined,
+): boolean {
+  if (!horario.temporada || horario.temporada === "Todo el año") return true;
+  if (!temporadaActual) return true;
+  return horario.temporada === temporadaActual;
+}
+
+/**
+ * Próxima misa recorriendo fechas concretas: respeta la temporada vigente,
+ * incluye misas mensuales fijas (dia_mes) y aplica el reemplazo del día
+ * cuando una mensual está marcada con reemplaza_dia (ej.: misa de los
+ * enfermos que cancela las misas normales cuando cae sábado o domingo).
+ */
+export function findNextMisa(horarios: HorarioBase[], opts?: FindNextMisaOpts): string {
+  const ahora = opts?.ahora ?? new Date();
+  const vigentes = horarios.filter((h) => temporadaVigente(h, opts?.temporadaActual));
+  if (!vigentes.length) return "—";
+
   const fmt = (h: { hora: string }) => h.hora.slice(0, 5);
-  const todayH = sorted.find((h) => h.dia_semana === today);
-  if (todayH) return `Hoy, ${fmt(todayH)}`;
-  const next = sorted.find((h) => h.dia_semana > today);
-  if (next) return `${DAYS_SHORT[next.dia_semana]}, ${fmt(next)}`;
-  return `${DAYS_SHORT[sorted[0].dia_semana]}, ${fmt(sorted[0])}`;
+  const horaActual = `${String(ahora.getHours()).padStart(2, "0")}:${String(
+    ahora.getMinutes(),
+  ).padStart(2, "0")}`;
+
+  // 62 días cubre dos ciclos mensuales completos (incluye dia_mes = 31).
+  for (let offset = 0; offset < 62; offset++) {
+    const fecha = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + offset);
+    const mensuales = vigentes.filter((h) => h.dia_mes != null && h.dia_mes === fecha.getDate());
+    const semanales = vigentes.filter(
+      (h) => h.dia_semana != null && h.dia_semana === fecha.getDay(),
+    );
+
+    const hayReemplazo = mensuales.some((h) => h.reemplaza_dia);
+    let candidatas = hayReemplazo ? mensuales : [...semanales, ...mensuales];
+
+    if (offset === 0) {
+      candidatas = candidatas.filter((h) => h.hora.slice(0, 5) > horaActual);
+    }
+    if (!candidatas.length) continue;
+
+    candidatas.sort((a, b) => a.hora.localeCompare(b.hora));
+    const label = offset === 0 ? "Hoy" : DAYS_SHORT[fecha.getDay()];
+    return `${label}, ${fmt(candidatas[0])}`;
+  }
+
+  return "—";
 }
 
 /** Minúsculas y sin tildes/diacríticos, para búsquedas ("señora" ≈ "senora"). */

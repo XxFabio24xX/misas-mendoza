@@ -23,14 +23,18 @@ type Lugar = {
   telefono?: string | null;
   decanato?: string | null;
   descripcion?: string | null;
+  temporada_actual?: string | null;
   created_at: string;
 };
 
 type Horario = {
   id: string;
   lugar_id: string;
-  dia_semana: number;
+  dia_semana: number | null;
+  dia_mes?: number | null;
   hora: string;
+  temporada?: string | null;
+  reemplaza_dia?: boolean | null;
 };
 
 export function QuickList({
@@ -127,7 +131,7 @@ export function QuickList({
           <div className="mt-3 space-y-3 md:hidden">
             {filtered.map((lugar) => {
               const misas = horariosMap.get(lugar.id) ?? [];
-              const nextMisa = findNextMisa(misas);
+              const nextMisa = findNextMisa(misas, { temporadaActual: lugar.temporada_actual });
               const needsReview = nextMisa === "—";
               return (
                 <div key={lugar.id} className="w-full rounded-xl bg-secondary-container p-4 shadow-[0_4px_16px_rgba(118,146,131,0.06)]">
@@ -203,7 +207,7 @@ export function QuickList({
               <tbody className="divide-y divide-outline-variant/10">
                 {filtered.map((lugar) => {
                   const misas = horariosMap.get(lugar.id) ?? [];
-                  const nextMisa = findNextMisa(misas);
+                  const nextMisa = findNextMisa(misas, { temporadaActual: lugar.temporada_actual });
                   const needsReview = nextMisa === "—";
                   return (
                     <tr

@@ -17,13 +17,17 @@ type Lugar = {
   telefono?: string;
   email?: string;
   created_at: string;
+  temporada_actual?: string | null;
 };
 
 type Horario = {
   id: string;
   lugar_id: string;
-  dia_semana: number;
+  dia_semana: number | null;
+  dia_mes?: number | null;
   hora: string;
+  temporada?: string | null;
+  reemplaza_dia?: boolean | null;
 };
 
 export function CapillasList({
@@ -171,7 +175,7 @@ export function CapillasList({
           <div className="mt-4 space-y-3 md:hidden">
             {filtered.map((l) => {
               const misas = horMap.get(l.id) ?? [];
-              const next = findNextMisa(misas);
+              const next = findNextMisa(misas, { temporadaActual: l.temporada_actual });
               return (
                 <div key={l.id} className="rounded-xl bg-secondary-container p-4 shadow-[0_4px_16px_rgba(118,146,131,0.06)]">
                   <div className="flex items-start justify-between gap-2">
@@ -251,7 +255,7 @@ export function CapillasList({
               <tbody className="divide-y divide-outline-variant/10">
                 {filtered.map((l) => {
                   const misas = horMap.get(l.id) ?? [];
-                  const next = findNextMisa(misas);
+                  const next = findNextMisa(misas, { temporadaActual: l.temporada_actual });
                   return (
                     <tr key={l.id} className="transition-colors hover:bg-surface-container-low">
                       <td className="px-4 py-3">
