@@ -8,16 +8,15 @@ import { Calendar, MapPin, Navigation, Tag } from "lucide-react";
 import { tipoEventoColor, tipoEventoLabel } from "@/lib/eventos-tipos";
 
 type Evento = {
-  id: number;
+  id: string;
   titulo: string;
   descripcion: string;
   fecha_inicio: string;
   fecha_fin?: string;
   tipo: string;
-  zona: string;
+  departamento: string;
   lugar_id?: string;
   activo: boolean;
-  imagen_url?: string;
   ubicacion?: string;
 };
 
@@ -81,12 +80,6 @@ export default async function EventoDetallePage({
   return (
     <div className="min-h-screen">
       <div className="relative h-44 overflow-hidden rounded-b-xl bg-surface-container-high md:h-64">
-        {evento.imagen_url && (
-          <div
-            className="h-full w-full bg-cover bg-center"
-            style={{ backgroundImage: `url(${evento.imagen_url})` }}
-          />
-        )}
         <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
         <div className="absolute left-4 top-4 z-10">
           <BackButton />
@@ -123,10 +116,10 @@ export default async function EventoDetallePage({
                 </p>
               )}
 
-              {evento.zona && (
+              {evento.departamento && (
                 <p className="flex items-center gap-2 text-sm text-on-surface-variant">
                   <Tag className="h-4 w-4 shrink-0 text-primary" />
-                  {evento.zona}
+                  {evento.departamento}
                 </p>
               )}
             </div>

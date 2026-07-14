@@ -9,16 +9,15 @@ import { supabase } from "@/lib/supabase";
 import { tipoEventoColor, tipoEventoLabel } from "@/lib/eventos-tipos";
 
 type Evento = {
-  id: number;
+  id: string;
   titulo: string;
   descripcion: string;
   fecha_inicio: string;
   fecha_fin?: string;
   tipo: string;
-  zona: string;
+  departamento: string;
   lugar_id?: string;
   activo: boolean;
-  imagen_url?: string;
   lugares?: { nombre: string } | null;
 };
 
@@ -43,7 +42,7 @@ export default function EventosPage() {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(true);
   const [tipoFilter, setTipoFilter] = useState("Todos");
-  const [zonaFilter, setZonaFilter] = useState("Todas");
+  const [deptoFilter, setDeptoFilter] = useState("Todos");
 
   useEffect(() => {
     (async () => {
@@ -65,9 +64,9 @@ export default function EventosPage() {
     return ["Todos", ...[...set].sort()];
   }, [eventos]);
 
-  const zonas = useMemo(() => {
-    const set = new Set(eventos.map((e) => e.zona).filter(Boolean));
-    return ["Todas", ...[...set].sort()];
+  const departamentos = useMemo(() => {
+    const set = new Set(eventos.map((e) => e.departamento).filter(Boolean));
+    return ["Todos", ...[...set].sort()];
   }, [eventos]);
 
   const filtered = useMemo(
@@ -75,9 +74,9 @@ export default function EventosPage() {
       eventos.filter(
         (e) =>
           (tipoFilter === "Todos" || e.tipo === tipoFilter) &&
-          (zonaFilter === "Todas" || e.zona === zonaFilter),
+          (deptoFilter === "Todos" || e.departamento === deptoFilter),
       ),
-    [eventos, tipoFilter, zonaFilter],
+    [eventos, tipoFilter, deptoFilter],
   );
 
   return (
@@ -107,19 +106,19 @@ export default function EventosPage() {
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span className="text-xs font-medium text-on-surface-variant">
-          Zonas:
+          Departamento:
         </span>
-        {zonas.map((zona) => (
+        {departamentos.map((depto) => (
           <button
-            key={zona}
-            onClick={() => setZonaFilter(zona)}
+            key={depto}
+            onClick={() => setDeptoFilter(depto)}
             className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
-              zonaFilter === zona
+              deptoFilter === depto
                 ? "border border-primary/20 bg-primary/10 text-primary"
                 : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
             }`}
           >
-            {zona}
+            {depto}
           </button>
         ))}
       </div>

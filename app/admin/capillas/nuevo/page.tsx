@@ -8,6 +8,7 @@ import { crearCapilla } from "../actions";
 import { HorariosGrid } from "@/app/components/horarios-grid";
 import { ImageUploader } from "@/app/components/image-uploader";
 import { supabase } from "@/lib/supabase";
+import { DEPARTAMENTOS } from "@/lib/departamentos";
 import imageCompression from "browser-image-compression";
 
 const LocationPicker = dynamic(
@@ -16,7 +17,6 @@ const LocationPicker = dynamic(
 );
 
 const TIPOS_LUGAR = ["parroquia", "capilla", "santuario"];
-const DEPARTAMENTOS = ["Capital", "Las Heras", "Guaymallén", "Godoy Cruz", "Maipú"];
 
 export default function NuevaCapillaPage() {
   const [isPending, startTransition] = useTransition();

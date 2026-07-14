@@ -6,6 +6,7 @@ import { ArrowLeft, Clock, Loader2, MapPin, Trash2 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
+import { DEPARTAMENTOS } from "@/lib/departamentos";
 import imageCompression from "browser-image-compression";
 import { actualizarCapilla, eliminarCapilla } from "../../actions";
 import { HorariosGrid, type HorarioData } from "@/app/components/horarios-grid";
@@ -17,7 +18,6 @@ const LocationPicker = dynamic(
 );
 
 const TIPOS_LUGAR = ["parroquia", "capilla", "santuario"];
-const DEPARTAMENTOS = ["Capital", "Las Heras", "Guaymallén", "Godoy Cruz", "Maipú"];
 
 type Lugar = {
   id: string;

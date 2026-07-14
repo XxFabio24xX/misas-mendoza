@@ -5,10 +5,9 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { TIPO_EVENTO_OPTIONS } from "@/lib/eventos-tipos";
+import { DEPARTAMENTOS } from "@/lib/departamentos";
 import DateInputDMY from "@/app/components/date-input-dmy";
 import { crearEvento } from "../actions";
-
-const DEPARTAMENTOS = ["Capital", "Las Heras", "Guaymallén", "Godoy Cruz", "Maipú"];
 
 const HORARIOS = Array.from({ length: 96 }, (_, i) => {
   const h = String(Math.floor(i / 4)).padStart(2, "0");
