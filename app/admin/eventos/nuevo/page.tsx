@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { ArrowLeft, Loader2, MapPin } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { crearEvento } from "../actions";
@@ -169,7 +169,7 @@ export default function NuevoEventoPage() {
         </div>
 
         {error && (
-          <div className="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container">{error}</div>
+          <div role="status" aria-live="polite" className="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container">{error}</div>
         )}
 
         <div className="flex items-center gap-3 pt-2">

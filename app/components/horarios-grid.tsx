@@ -31,7 +31,7 @@ export function HorariosGrid({ initialHorarios = [], name = "horarios_json" }: P
   const makeKey = () => `h${counter.current++}`;
 
   const [rows, setRows] = useState<HorarioRow[]>(() =>
-    initialHorarios.map((h) => ({ ...h, _key: makeKey() }))
+    initialHorarios.map((h, i) => ({ ...h, _key: `init-${i}` }))
   );
 
   const addRow = () =>
@@ -46,6 +46,7 @@ export function HorariosGrid({ initialHorarios = [], name = "horarios_json" }: P
   const updateRow = (key: string, patch: Partial<HorarioRow>) =>
     setRows((prev) => prev.map((r) => (r._key === key ? { ...r, ...patch } : r)));
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const jsonValue = JSON.stringify(rows.map(({ _key, ...rest }) => rest));
 
   return (

@@ -96,7 +96,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="rounded-lg bg-error-container px-4 py-2.5 text-sm text-on-error-container">
+            <div role="status" aria-live="polite" className="rounded-lg bg-error-container px-4 py-2.5 text-sm text-on-error-container">
               {error}
             </div>
           )}

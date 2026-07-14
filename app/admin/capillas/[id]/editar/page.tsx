@@ -103,7 +103,11 @@ export default function EditarCapillaPage() {
     setLoading(false);
   }, [id]);
 
-  useEffect(() => { fetchLugar(); }, [fetchLugar]);
+  useEffect(() => {
+    // Initial data load on mount — fetchLugar manages its own loading/error state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchLugar();
+  }, [fetchLugar]);
 
   async function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -380,7 +384,7 @@ export default function EditarCapillaPage() {
         </section>
 
         {error && (
-          <div className="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container">{error}</div>
+          <div role="status" aria-live="polite" className="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container">{error}</div>
         )}
 
         <div className="flex items-center gap-3 pt-2 pb-6">

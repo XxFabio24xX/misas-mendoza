@@ -57,7 +57,11 @@ export default function EditarEventoPage() {
     setLoading(false);
   }, [id]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    // Initial data load on mount — fetchData manages its own loading/error state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+  }, [fetchData]);
 
   const toDateValue = (iso: string) => {
     if (!iso) return "";
@@ -252,7 +256,7 @@ export default function EditarEventoPage() {
         </div>
 
         {error && (
-          <div className="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container">{error}</div>
+          <div role="status" aria-live="polite" className="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container">{error}</div>
         )}
 
         <div className="flex items-center gap-3 pt-2">

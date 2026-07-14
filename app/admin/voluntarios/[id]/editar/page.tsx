@@ -39,7 +39,11 @@ export default function EditarVoluntarioPage() {
     setLoading(false);
   }, [id]);
 
-  useEffect(() => { fetchPerfil(); }, [fetchPerfil]);
+  useEffect(() => {
+    // Initial data load on mount — fetchPerfil manages its own loading/error state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchPerfil();
+  }, [fetchPerfil]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -137,7 +141,7 @@ export default function EditarVoluntarioPage() {
         </div>
 
         {error && (
-          <div className="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container">{error}</div>
+          <div role="status" aria-live="polite" className="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container">{error}</div>
         )}
 
         <div className="flex items-center gap-3 pt-2">

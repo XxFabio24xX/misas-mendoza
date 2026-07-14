@@ -112,6 +112,8 @@ export default function HorariosPage() {
   }, [id]);
 
   useEffect(() => {
+    // Initial data load on mount — fetchLugar/fetchHorarios manage their own state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     Promise.all([fetchLugar(), fetchHorarios()]).finally(() => setLoading(false));
   }, [fetchLugar, fetchHorarios]);
 
@@ -249,10 +251,10 @@ export default function HorariosPage() {
 
       {/* Alerts */}
       {error && (
-        <div className="mt-4 rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container">{error}</div>
+        <div role="status" aria-live="polite" className="mt-4 rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container">{error}</div>
       )}
       {success && (
-        <div className="mt-4 rounded-lg bg-primary/10 px-4 py-3 text-sm font-medium text-primary">{success}</div>
+        <div role="status" aria-live="polite" className="mt-4 rounded-lg bg-primary/10 px-4 py-3 text-sm font-medium text-primary">{success}</div>
       )}
 
       {/* ── Visual week overview ── */}
@@ -413,7 +415,7 @@ export default function HorariosPage() {
             <div>
               <label className="text-sm font-medium text-on-surface">Temporada</label>
               <p className="mt-0.5 text-xs text-on-surface-variant">
-                Usá "Invierno" o "Verano" si la capilla cambia el horario según la época del año.
+                Usá &quot;Invierno&quot; o &quot;Verano&quot; si la capilla cambia el horario según la época del año.
               </p>
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {TEMPORADAS.map(temp => (
@@ -443,7 +445,7 @@ export default function HorariosPage() {
                     Observación <span className="font-normal text-on-surface-variant">(opcional)</span>
                   </label>
                   <p className="mt-0.5 text-xs text-on-surface-variant">
-                    Ej: "Todos los días 11 de cada mes — Misa de Enfermos", "Solo en Semana Santa", etc.
+                    Ej: &quot;Todos los días 11 de cada mes — Misa de Enfermos&quot;, &quot;Solo en Semana Santa&quot;, etc.
                   </p>
                   <input id="obs-input" type="text" value={form.observacion}
                     onChange={e => setForm(f => ({ ...f, observacion: e.target.value }))}
@@ -497,7 +499,7 @@ export default function HorariosPage() {
           <div className="mt-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-outline-variant/50 py-14 text-center">
             <Clock className="h-10 w-10 text-on-surface-variant/30" />
             <p className="mt-3 text-sm font-medium text-on-surface-variant">Sin horarios registrados</p>
-            <p className="mt-1 text-xs text-on-surface-variant/70">Usá el botón "Agregar" para cargar el primer horario.</p>
+            <p className="mt-1 text-xs text-on-surface-variant/70">Usá el botón &quot;Agregar&quot; para cargar el primer horario.</p>
             <button onClick={() => openAddFor()}
               className="mt-4 inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-on-primary transition-colors hover:bg-primary-container hover:text-on-primary-container">
               <Plus className="h-4 w-4" /> Agregar horario

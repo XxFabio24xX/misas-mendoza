@@ -141,6 +141,8 @@ export function ImageUploader({ value, onChange, maxMB = 2, aspect = 3 / 2 }: Pr
           className="relative w-full overflow-hidden rounded-xl border border-outline-variant"
           style={{ aspectRatio: aspect }}
         >
+          {/* value can be a blob: object URL (local crop preview), which next/image cannot optimize */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={value} alt="Preview" className="h-full w-full object-cover" />
           <button
             type="button"

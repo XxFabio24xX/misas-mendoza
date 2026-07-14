@@ -257,7 +257,7 @@ export default function NuevaCapillaPage() {
         </section>
 
         {error && (
-          <div className="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container">{error}</div>
+          <div role="status" aria-live="polite" className="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container">{error}</div>
         )}
 
         <div className="flex items-center gap-3 pt-2 pb-6">

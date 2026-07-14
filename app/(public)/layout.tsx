@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Church, User } from "lucide-react";
 import { ThemeToggle } from "@/app/components/theme-toggle";
 import { BottomNav } from "@/app/components/bottom-nav";
+import { HeaderNav } from "@/app/components/header-nav";
 
 export default function PublicLayout({
   children,
@@ -12,27 +13,14 @@ export default function PublicLayout({
     <>
       <header className="sticky top-0 z-50 border-b border-outline-variant/30 bg-surface-container/95 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-280 items-center justify-between px-5 md:px-6">
-          <a href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <Church className="h-5 w-5 text-primary" strokeWidth={1.75} />
             <span className="text-lg font-semibold tracking-tight text-primary">
               Misas Mendoza
             </span>
-          </a>
+          </Link>
 
-          <nav className="hidden items-center gap-8 md:flex">
-            <a
-              href="/"
-              className="text-sm font-medium text-on-surface-variant transition-colors duration-300 hover:text-primary"
-            >
-              Inicio
-            </a>
-            <a
-              href="/eventos"
-              className="text-sm font-medium text-on-surface-variant transition-colors duration-300 hover:text-primary"
-            >
-              Eventos
-            </a>
-          </nav>
+          <HeaderNav />
 
           <div className="hidden items-center gap-3 md:flex">
             <ThemeToggle />

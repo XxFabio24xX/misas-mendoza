@@ -1,0 +1,75 @@
+"use client";
+
+import { useEffect } from "react";
+import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import Link from "next/link";
+
+const icon = L.icon({
+  iconUrl: "/marker-icon.png",
+  iconRetinaUrl: "/marker-icon-2x.png",
+  shadowUrl: "/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+export type LugarMapa = {
+  id: string;
+  nombre: string;
+  direccion: string;
+  lat: number;
+  lng: number;
+};
+
+// Centro por defecto: Ciudad de Mendoza (mismo default usado en el alta de capillas).
+const MENDOZA_CENTER: [number, number] = [-32.8908, -68.8272];
+
+function FitBounds({ lugares }: { lugares: LugarMapa[] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (lugares.length === 0) return;
+    const bounds = L.latLngBounds(lugares.map((l) => [l.lat, l.lng] as [number, number]));
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }, [lugares, map]);
+
+  return null;
+}
+
+export default function GlobalMap({ lugares }: { lugares: LugarMapa[] }) {
+  return (
+    <MapContainer
+      center={MENDOZA_CENTER}
+      zoom={11}
+      className="h-full w-full"
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+
+      <FitBounds lugares={lugares} />
+
+      {lugares.map((lugar) => (
+        <Marker key={lugar.id} position={[lugar.lat, lugar.lng]} icon={icon}>
+          <Tooltip>{lugar.nombre}</Tooltip>
+          <Popup>
+            <div className="min-w-40">
+              <p className="text-sm font-semibold text-on-surface">{lugar.nombre}</p>
+              <p className="mt-0.5 text-xs text-on-surface-variant">{lugar.direccion}</p>
+              <Link
+                href={`/capilla/${lugar.id}`}
+                className="mt-2 inline-block rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-on-primary transition-colors hover:bg-primary-container"
+              >
+                Ver detalles
+              </Link>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </MapContainer>
+  );
+}

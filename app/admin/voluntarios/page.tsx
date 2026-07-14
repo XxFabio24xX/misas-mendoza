@@ -74,6 +74,8 @@ export default function VoluntariosPage() {
   }, [router]);
 
   useEffect(() => {
+    // Initial data load on mount — fetchPerfiles manages its own loading/auth state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchPerfiles();
   }, [fetchPerfiles]);
 

@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { BackButton } from "@/app/components/back-button";
+import { FavoriteButton } from "@/app/components/favorite-button";
 import MapWrapper from "@/app/components/map-wrapper";
 import { Clock, Cross as CrossIcon, MapPin, Navigation, Snowflake, Sun } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -154,6 +155,9 @@ export default async function CapillaPage({
         <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
         <div className="absolute left-4 top-4 z-10">
           <BackButton />
+        </div>
+        <div className="absolute right-4 top-4 z-10">
+          <FavoriteButton id={lugar.id} />
         </div>
       </div>
 

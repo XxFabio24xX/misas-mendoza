@@ -2,8 +2,15 @@
 
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { revalidatePath } from "next/cache";
+import { requirePerfil, assertAdmin, AuthError } from "@/lib/auth-server";
 
 export async function crearVoluntario(formData: FormData) {
+  try {
+    assertAdmin(await requirePerfil());
+  } catch (e) {
+    return { error: e instanceof AuthError ? e.message : "No autorizado." };
+  }
+
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const nombre = formData.get("nombre") as string;
@@ -44,6 +51,12 @@ export async function crearVoluntario(formData: FormData) {
 }
 
 export async function actualizarVoluntario(id: string, formData: FormData) {
+  try {
+    assertAdmin(await requirePerfil());
+  } catch (e) {
+    return { error: e instanceof AuthError ? e.message : "No autorizado." };
+  }
+
   const nombre = formData.get("nombre") as string;
   const email = formData.get("email") as string;
   const departamento = formData.get("departamento") as string;
@@ -73,6 +86,12 @@ export async function actualizarVoluntario(id: string, formData: FormData) {
 }
 
 export async function eliminarVoluntario(id: string) {
+  try {
+    assertAdmin(await requirePerfil());
+  } catch (e) {
+    return { error: e instanceof AuthError ? e.message : "No autorizado." };
+  }
+
   const { error: perfilError } = await supabaseAdmin
     .from("perfiles")
     .delete()

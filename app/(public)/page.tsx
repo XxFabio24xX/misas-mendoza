@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Clock, MapPin, Search } from "lucide-react";
+import { Clock, Heart, MapPin, Search } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { findNextMisa, formatDistancia } from "@/lib/misas-utils";
+import { useFavorites } from "@/hooks/useFavorites";
 
 type Lugar = {
   id: number;
@@ -33,6 +34,7 @@ export default function Home() {
   const [noLocation, setNoLocation] = useState(false);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const { isFavorite } = useFavorites();
 
   const departments = useMemo(() => {
     const set = new Set(lugares.map((l) => l.departamento).filter(Boolean));
@@ -84,6 +86,8 @@ export default function Home() {
 
   // On mount: show fallback immediately and start geolocation in parallel
   useEffect(() => {
+    // Initial data load on mount — fetchFallback manages its own loading/error state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchFallback();
 
     navigator.geolocation.getCurrentPosition(
@@ -97,6 +101,8 @@ export default function Home() {
   // When coords arrive: silently upgrade to location-sorted results
   useEffect(() => {
     if (!coords) return;
+    // Reacting to a new `coords` value from the geolocation callback, not deriving it from render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNoLocation(false);
     setIsLocating(true);
     fetchCercanos(coords.lat, coords.lng).finally(() => setIsLocating(false));
@@ -124,8 +130,13 @@ export default function Home() {
           p.direccion.toLowerCase().includes(q),
       );
     }
-    return result;
-  }, [lugares, activeFilter, search]);
+    // Favoritas fijadas primero, preservando el orden (por cercanía) del resto.
+    return [...result].sort((a, b) => {
+      const aFav = isFavorite(String(a.id));
+      const bFav = isFavorite(String(b.id));
+      return aFav === bFav ? 0 : aFav ? -1 : 1;
+    });
+  }, [lugares, activeFilter, search, isFavorite]);
 
   return (
     <div className="mx-auto max-w-280 px-5 py-10 md:px-6 md:py-16">
@@ -190,7 +201,7 @@ export default function Home() {
       )}
 
       {error && (
-        <div className="mt-6 rounded-xl bg-error-container p-4 text-center text-sm text-on-error-container">
+        <div role="status" aria-live="polite" className="mt-6 rounded-xl bg-error-container p-4 text-center text-sm text-on-error-container">
           {error}
         </div>
       )}
@@ -201,6 +212,7 @@ export default function Home() {
             const misas = horariosMap.get(place.id) ?? [];
             const distanciaValida =
               place.distancia != null && !isNaN(place.distancia);
+            const esFavorita = isFavorite(String(place.id));
             return (
               <article
                 key={place.id}
@@ -211,7 +223,13 @@ export default function Home() {
 
                 {/* Header */}
                 <div className="relative z-10 flex items-start justify-between gap-3">
-                  <h2 className="text-lg font-semibold leading-tight text-on-surface">
+                  <h2 className="flex items-center gap-1.5 text-lg font-semibold leading-tight text-on-surface">
+                    {esFavorita && (
+                      <Heart
+                        className="h-4 w-4 shrink-0 text-primary"
+                        fill="currentColor"
+                      />
+                    )}
                     {place.nombre}
                   </h2>
                   {distanciaValida ? (

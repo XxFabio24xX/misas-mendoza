@@ -1,11 +1,13 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Calendar, Home, User } from "lucide-react";
+import Link from "next/link";
+import { Calendar, Home, Map as MapIcon, User } from "lucide-react";
 
 const links = [
   { href: "/", label: "Inicio", Icon: Home },
   { href: "/eventos", label: "Eventos", Icon: Calendar },
+  { href: "/mapa", label: "Mapa", Icon: MapIcon },
   { href: "/login", label: "Perfil", Icon: User },
 ];
 
@@ -19,9 +21,11 @@ export function BottomNav() {
           const isActive =
             href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
-            <a
+            <Link
               key={href}
               href={href}
+              aria-label={label}
+              aria-current={isActive ? "page" : undefined}
               className={`flex flex-col items-center justify-center gap-0.5 transition-all duration-150 active:scale-90 ${
                 isActive
                   ? "rounded-full bg-primary-container/20 px-4 py-1 text-primary"
@@ -35,7 +39,7 @@ export function BottomNav() {
                   : { strokeWidth: 1.75 })}
               />
               <span className="text-[10px] font-medium">{label}</span>
-            </a>
+            </Link>
           );
         })}
       </div>

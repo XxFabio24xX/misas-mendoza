@@ -155,10 +155,12 @@ export default function AdminLayout({
                 ? pathname === "/admin"
                 : pathname.startsWith(item.href);
             return (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 title={item.tooltip}
+                aria-label={item.label}
+                aria-current={isActive ? "page" : undefined}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-primary/10 text-primary"
@@ -167,7 +169,7 @@ export default function AdminLayout({
               >
                 <item.icon className="h-5 w-5 shrink-0" />
                 <span className="flex-1">{item.label}</span>
-              </a>
+              </Link>
             );
           })}
         </nav>
@@ -181,13 +183,13 @@ export default function AdminLayout({
             <HelpCircle className="h-5 w-5" />
             Ayuda
           </button>
-          <a
+          <Link
             href="/"
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
           >
             <Home className="h-5 w-5" />
             Volver al Inicio
-          </a>
+          </Link>
           <button
             onClick={handleLogout}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-error"
@@ -225,21 +227,25 @@ export default function AdminLayout({
                   ? pathname === "/admin"
                   : pathname.startsWith(tab.href);
               return (
-                <a
+                <Link
                   key={tab.href}
                   href={tab.href}
+                  aria-label={tab.label}
+                  aria-current={isActive ? "page" : undefined}
                   className={`flex flex-col items-center gap-0.5 px-3 py-1 ${
                     isActive ? "text-primary" : "text-on-surface-variant"
                   }`}
                 >
                   <tab.icon className="h-5 w-5" />
                   <span className="text-[10px] font-medium">{tab.label}</span>
-                </a>
+                </Link>
               );
             })}
             {isAdmin && (
               <Link
                 href="/admin/voluntarios"
+                aria-label="Voluntarios"
+                aria-current={pathname.startsWith("/admin/voluntarios") ? "page" : undefined}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1 ${
                   pathname.startsWith("/admin/voluntarios")
                     ? "text-primary"
@@ -316,11 +322,13 @@ export default function AdminLayout({
                     ? pathname === "/admin"
                     : pathname.startsWith(item.href);
                 return (
-                  <a
+                  <Link
                     key={item.href}
                     href={item.href}
                     onClick={closeDrawer}
                     title={item.tooltip}
+                    aria-label={item.label}
+                    aria-current={isActive ? "page" : undefined}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                       isActive
                         ? "bg-primary/10 text-primary"
@@ -329,7 +337,7 @@ export default function AdminLayout({
                   >
                     <item.icon className="h-5 w-5 shrink-0" />
                     <span className="flex-1">{item.label}</span>
-                  </a>
+                  </Link>
                 );
               })}
             </nav>
@@ -342,14 +350,14 @@ export default function AdminLayout({
                 <HelpCircle className="h-5 w-5" />
                 Ayuda
               </button>
-              <a
+              <Link
                 href="/"
                 onClick={closeDrawer}
                 className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
               >
                 <Home className="h-5 w-5" />
                 Volver al Inicio
-              </a>
+              </Link>
               <button
                 onClick={() => { handleLogout(); }}
                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container hover:text-error"

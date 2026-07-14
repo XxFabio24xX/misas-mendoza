@@ -3,11 +3,24 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requirePerfil, assertDepartamentoAccess } from "@/lib/auth-server";
+
+/** Ground-truth department for an evento — never trust a department string from the client. */
+async function getEventoDepartamento(eventoId: string): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from("eventos")
+    .select("departamento")
+    .eq("id", eventoId)
+    .maybeSingle();
+  return data?.departamento ?? null;
+}
 
 export async function crearEvento(formData: FormData) {
+  const perfil = await requirePerfil();
   const titulo = formData.get("titulo") as string;
   const tipo = formData.get("tipo") as string;
   const departamento = formData.get("departamento") as string;
+  assertDepartamentoAccess(perfil, departamento);
   const lugar_id = (formData.get("lugar_id") as string) || null;
   const ubicacion = formData.get("ubicacion") as string;
   const fecha_inicio = formData.get("fecha_inicio") as string;
@@ -34,9 +47,15 @@ export async function crearEvento(formData: FormData) {
 }
 
 export async function actualizarEvento(id: string, formData: FormData) {
+  const perfil = await requirePerfil();
+  const departamentoActual = await getEventoDepartamento(id);
+  if (!departamentoActual) throw new Error("El evento no existe.");
+  assertDepartamentoAccess(perfil, departamentoActual);
+
   const titulo = formData.get("titulo") as string;
   const tipo = formData.get("tipo") as string;
   const departamento = formData.get("departamento") as string;
+  assertDepartamentoAccess(perfil, departamento);
   const lugar_id = (formData.get("lugar_id") as string) || null;
   const ubicacion = formData.get("ubicacion") as string;
   const fecha_inicio = formData.get("fecha_inicio") as string;
@@ -68,6 +87,11 @@ export async function actualizarEvento(id: string, formData: FormData) {
 }
 
 export async function eliminarEvento(id: string) {
+  const perfil = await requirePerfil();
+  const departamento = await getEventoDepartamento(id);
+  if (!departamento) throw new Error("El evento no existe.");
+  assertDepartamentoAccess(perfil, departamento);
+
   const { error } = await supabaseAdmin.from("eventos").delete().eq("id", id);
 
   if (error) throw new Error(error.message);

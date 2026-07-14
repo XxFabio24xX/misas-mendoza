@@ -4,8 +4,33 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { HorarioData } from "@/app/components/horarios-grid";
+import { requirePerfil, assertDepartamentoAccess } from "@/lib/auth-server";
+
+/** Ground-truth department for a lugar — never trust a department string from the client. */
+async function getLugarDepartamento(lugarId: string): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from("lugares")
+    .select("departamento")
+    .eq("id", lugarId)
+    .maybeSingle();
+  return data?.departamento ?? null;
+}
+
+/** Ground-truth parent lugar for a horario — never trust a lugarId string from the client. */
+async function getHorarioLugarId(horarioId: string): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from("horarios")
+    .select("lugar_id")
+    .eq("id", horarioId)
+    .maybeSingle();
+  return data?.lugar_id ?? null;
+}
 
 export async function crearCapilla(formData: FormData) {
+  const perfil = await requirePerfil();
+  const departamento = formData.get("departamento") as string;
+  assertDepartamentoAccess(perfil, departamento);
+
   const lat = parseFloat(formData.get("lat") as string) || null;
   const lng = parseFloat(formData.get("lng") as string) || null;
 
@@ -54,10 +79,19 @@ export async function crearCapilla(formData: FormData) {
   revalidatePath("/admin/capillas");
   revalidatePath("/admin");
   revalidatePath("/");
+  revalidatePath("/mapa");
   redirect("/admin/capillas");
 }
 
 export async function actualizarCapilla(id: string, formData: FormData) {
+  const perfil = await requirePerfil();
+  const departamentoActual = await getLugarDepartamento(id);
+  if (!departamentoActual) throw new Error("La capilla no existe.");
+  assertDepartamentoAccess(perfil, departamentoActual);
+
+  const departamentoNuevo = formData.get("departamento") as string;
+  assertDepartamentoAccess(perfil, departamentoNuevo);
+
   const lat = parseFloat(formData.get("lat") as string) || null;
   const lng = parseFloat(formData.get("lng") as string) || null;
 
@@ -107,25 +141,43 @@ export async function actualizarCapilla(id: string, formData: FormData) {
   revalidatePath(`/admin/capillas/${id}/editar`);
   revalidatePath(`/capilla/${id}`);
   revalidatePath("/");
+  revalidatePath("/mapa");
   redirect("/admin/capillas");
 }
 
 export async function eliminarCapilla(id: string) {
+  const perfil = await requirePerfil();
+  const departamento = await getLugarDepartamento(id);
+  if (!departamento) throw new Error("La capilla no existe.");
+  assertDepartamentoAccess(perfil, departamento);
+
   const { error } = await supabaseAdmin.from("lugares").delete().eq("id", id);
   if (error) throw new Error(error.message);
 
   revalidatePath("/admin/capillas");
   revalidatePath("/admin");
   revalidatePath("/");
+  revalidatePath("/mapa");
 }
 
 export async function toggleCapillaActiva(id: string, activo: boolean) {
+  const perfil = await requirePerfil();
+  const departamento = await getLugarDepartamento(id);
+  if (!departamento) throw new Error("La capilla no existe.");
+  assertDepartamentoAccess(perfil, departamento);
+
   await supabaseAdmin.from("lugares").update({ activo }).eq("id", id);
   revalidatePath("/admin/capillas");
   revalidatePath("/");
+  revalidatePath("/mapa");
 }
 
 export async function agregarHorario(lugarId: string, formData: FormData) {
+  const perfil = await requirePerfil();
+  const departamento = await getLugarDepartamento(lugarId);
+  if (!departamento) throw new Error("La capilla no existe.");
+  assertDepartamentoAccess(perfil, departamento);
+
   const diaSemanaRaw = formData.get("dia_semana") as string;
   const diaMesRaw = formData.get("dia_mes") as string;
 
@@ -145,6 +197,13 @@ export async function agregarHorario(lugarId: string, formData: FormData) {
 }
 
 export async function eliminarHorario(horarioId: string, lugarId: string) {
+  const perfil = await requirePerfil();
+  const realLugarId = await getHorarioLugarId(horarioId);
+  if (!realLugarId) throw new Error("El horario no existe.");
+  const departamento = await getLugarDepartamento(realLugarId);
+  if (!departamento) throw new Error("La capilla no existe.");
+  assertDepartamentoAccess(perfil, departamento);
+
   const { error } = await supabaseAdmin
     .from("horarios")
     .delete()
@@ -160,6 +219,13 @@ export async function editarHorario(
   lugarId: string,
   formData: FormData,
 ) {
+  const perfil = await requirePerfil();
+  const realLugarId = await getHorarioLugarId(horarioId);
+  if (!realLugarId) throw new Error("El horario no existe.");
+  const departamento = await getLugarDepartamento(realLugarId);
+  if (!departamento) throw new Error("La capilla no existe.");
+  assertDepartamentoAccess(perfil, departamento);
+
   const diaSemanaRaw = formData.get("dia_semana") as string;
   const diaMesRaw = formData.get("dia_mes") as string;
 
