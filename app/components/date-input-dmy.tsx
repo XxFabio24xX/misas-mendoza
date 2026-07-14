@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import { CalendarDays } from "lucide-react";
+import { displayToISO, isoToDisplay } from "@/lib/date-dmy";
 
 type Props = {
   id: string;
@@ -11,28 +12,6 @@ type Props = {
   className?: string;
   "aria-describedby"?: string;
 };
-
-function isoToDisplay(iso: string): string {
-  const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (!match) return "";
-  const [, y, m, d] = match;
-  return `${d}/${m}/${y}`;
-}
-
-function displayToISO(display: string): string {
-  const match = display.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!match) return "";
-  const [, d, m, y] = match;
-  const day = Number(d);
-  const month = Number(m);
-  const year = Number(y);
-  const date = new Date(year, month - 1, day);
-  const isValid =
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day;
-  return isValid ? `${y}-${m}-${d}` : "";
-}
 
 /**
  * Campo de fecha que siempre muestra/acepta DD/MM/AAAA (tecleado o vía el
