@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
+import { CalendarDays } from "lucide-react";
 
 type Props = {
   id: string;
@@ -33,7 +34,11 @@ function displayToISO(display: string): string {
   return isValid ? `${y}-${m}-${d}` : "";
 }
 
-/** Text input masked as DD/MM/AAAA that submits an ISO (YYYY-MM-DD) value via a hidden field. */
+/**
+ * Campo de fecha que siempre muestra/acepta DD/MM/AAAA (tecleado o vía el
+ * datepicker nativo, disparado con showPicker() desde el ícono de calendario)
+ * y envía el valor en ISO por un input oculto.
+ */
 export default function DateInputDMY({
   id,
   name,
@@ -44,8 +49,9 @@ export default function DateInputDMY({
 }: Props) {
   const [display, setDisplay] = useState(() => isoToDisplay(defaultValueISO));
   const [iso, setIso] = useState(defaultValueISO);
+  const nativeDateRef = useRef<HTMLInputElement>(null);
 
-  function handleChange(e: ChangeEvent<HTMLInputElement>) {
+  function handleTextChange(e: ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, "").slice(0, 8);
     let formatted = digits;
     if (digits.length > 4) {
@@ -64,8 +70,23 @@ export default function DateInputDMY({
     );
   }
 
+  function handleNativeDateChange(e: ChangeEvent<HTMLInputElement>) {
+    setIso(e.target.value);
+    setDisplay(isoToDisplay(e.target.value));
+  }
+
+  function openPicker() {
+    const el = nativeDateRef.current;
+    if (!el) return;
+    if (typeof el.showPicker === "function") {
+      el.showPicker();
+    } else {
+      el.focus();
+    }
+  }
+
   return (
-    <>
+    <div className="relative">
       <input
         id={id}
         type="text"
@@ -74,12 +95,30 @@ export default function DateInputDMY({
         pattern="\d{2}/\d{2}/\d{4}"
         maxLength={10}
         value={display}
-        onChange={handleChange}
+        onChange={handleTextChange}
         required={required}
         aria-describedby={ariaDescribedBy}
+        style={{ paddingRight: "2.5rem" }}
         className={className}
       />
+      <button
+        type="button"
+        onClick={openPicker}
+        aria-label="Elegir fecha desde el calendario"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant transition-colors hover:text-primary"
+      >
+        <CalendarDays className="h-4 w-4" />
+      </button>
+      <input
+        ref={nativeDateRef}
+        type="date"
+        value={iso}
+        onChange={handleNativeDateChange}
+        tabIndex={-1}
+        aria-hidden="true"
+        className="sr-only"
+      />
       <input type="hidden" name={name} value={iso} />
-    </>
+    </div>
   );
 }
