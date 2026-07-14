@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { supabasePublic } from "@/lib/supabase-public";
 import { BackButton } from "@/app/components/back-button";
 import { FavoriteButton } from "@/app/components/favorite-button";
+import { ShareButton } from "@/app/components/share-button";
 import MapWrapper from "@/app/components/map-wrapper";
 import { Clock, Cross as CrossIcon, HandHeart, MapPin, Navigation, Snowflake, Sun } from "lucide-react";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -202,7 +203,11 @@ export default async function CapillaPage({
         <div className="absolute left-4 top-4 z-10">
           <BackButton />
         </div>
-        <div className="absolute right-4 top-4 z-10">
+        <div className="absolute right-4 top-4 z-10 flex gap-2">
+          <ShareButton
+            title={lugar.nombre}
+            text={`Horarios de misa de ${lugar.nombre} — ${lugar.direccion}`}
+          />
           <FavoriteButton id={lugar.id} />
         </div>
       </div>

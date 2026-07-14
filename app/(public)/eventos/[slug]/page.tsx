@@ -2,6 +2,7 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import { supabasePublic } from "@/lib/supabase-public";
 import { BackButton } from "@/app/components/back-button";
+import { ShareButton } from "@/app/components/share-button";
 import MapWrapper from "@/app/components/map-wrapper";
 import { notFound, permanentRedirect } from "next/navigation";
 import { format } from "date-fns";
@@ -126,6 +127,12 @@ export default async function EventoDetallePage({
         <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
         <div className="absolute left-4 top-4 z-10">
           <BackButton />
+        </div>
+        <div className="absolute right-4 top-4 z-10">
+          <ShareButton
+            title={evento.titulo}
+            text={`${evento.titulo} — evento en ${evento.departamento}, Mendoza`}
+          />
         </div>
       </div>
 
