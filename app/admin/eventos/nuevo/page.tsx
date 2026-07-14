@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
-import { unstable_rethrow } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState, useTransition } from "react";
+import { unstable_rethrow, useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -18,18 +18,67 @@ const HORARIOS = Array.from({ length: 96 }, (_, i) => {
 
 type Lugar = { id: string; nombre: string; departamento: string };
 
+type EventoBase = {
+  titulo: string;
+  tipo: string;
+  departamento: string;
+  lugar_id: string | null;
+  ubicacion: string | null;
+  descripcion: string | null;
+};
+
+// useSearchParams exige un boundary de Suspense en páginas estáticas.
 export default function NuevoEventoPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[40vh] items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <NuevoEventoForm />
+    </Suspense>
+  );
+}
+
+function NuevoEventoForm() {
+  const searchParams = useSearchParams();
+  const duplicarId = searchParams.get("duplicar");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [lugares, setLugares] = useState<Lugar[]>([]);
   const [departamento, setDepartamento] = useState("");
   const [lugarId, setLugarId] = useState("");
+  const [base, setBase] = useState<EventoBase | null>(null);
+  const [baseLoading, setBaseLoading] = useState(duplicarId !== null);
 
   useEffect(() => {
     supabase.from("lugares").select("id,nombre,departamento").order("nombre").then(({ data }) => {
       if (data) setLugares(data);
     });
   }, []);
+
+  // Modo duplicar: precarga todo menos las fechas. El form se renderiza recién
+  // cuando llegan los datos, así los defaultValue de los inputs no controlados
+  // toman el valor correcto.
+  useEffect(() => {
+    if (!duplicarId) return;
+    supabase
+      .from("eventos")
+      .select("titulo, tipo, departamento, lugar_id, ubicacion, descripcion")
+      .eq("id", duplicarId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          const evento = data as EventoBase;
+          setBase(evento);
+          setDepartamento(evento.departamento);
+          setLugarId(evento.lugar_id ?? "");
+        }
+        setBaseLoading(false);
+      });
+  }, [duplicarId]);
 
   const lugaresFiltrados = useMemo(
     () => lugares.filter((l) => l.departamento === departamento),
@@ -70,6 +119,14 @@ export default function NuevoEventoPage() {
     });
   }
 
+  if (baseLoading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-2xl">
       <div className="flex items-center gap-3">
@@ -81,7 +138,11 @@ export default function NuevoEventoPage() {
         </Link>
         <div>
           <h1 className="text-xl font-semibold text-on-surface md:text-2xl">Nuevo Evento</h1>
-          <p className="mt-0.5 text-sm text-on-surface-variant">Creá un nuevo evento o aviso para la comunidad.</p>
+          <p className="mt-0.5 text-sm text-on-surface-variant">
+            {base
+              ? "Duplicando un evento existente: revisá los datos y completá las fechas."
+              : "Creá un nuevo evento o aviso para la comunidad."}
+          </p>
         </div>
       </div>
 
@@ -89,7 +150,7 @@ export default function NuevoEventoPage() {
         <div className="grid gap-5 md:grid-cols-2">
           <div className="md:col-span-2">
             <label htmlFor="titulo" className="text-sm font-medium text-on-surface">Título</label>
-            <input id="titulo" name="titulo" type="text" required
+            <input id="titulo" name="titulo" type="text" required defaultValue={base?.titulo}
               placeholder="Ej: Retiro Espiritual de Cuaresma"
               className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
             />
@@ -97,7 +158,7 @@ export default function NuevoEventoPage() {
 
           <div>
             <label htmlFor="tipo" className="text-sm font-medium text-on-surface">Tipo</label>
-            <select id="tipo" name="tipo" required defaultValue=""
+            <select id="tipo" name="tipo" required defaultValue={base?.tipo ?? ""}
               className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
             >
               <option value="" disabled>Seleccioná...</option>
@@ -136,7 +197,7 @@ export default function NuevoEventoPage() {
 
           <div className="md:col-span-2">
             <label htmlFor="ubicacion" className="text-sm font-medium text-on-surface">Ubicación <span className="text-on-surface-variant font-normal">(se completa automáticamente si seleccionás una capilla)</span></label>
-            <input id="ubicacion" name="ubicacion" type="text"
+            <input id="ubicacion" name="ubicacion" type="text" defaultValue={base?.ubicacion ?? ""}
               placeholder="Ej: Parroquia Santiago Apóstol, Godoy Cruz"
               className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
             />
@@ -182,7 +243,7 @@ export default function NuevoEventoPage() {
 
           <div className="md:col-span-2">
             <label htmlFor="descripcion" className="text-sm font-medium text-on-surface">Descripción</label>
-            <textarea id="descripcion" name="descripcion" rows={4}
+            <textarea id="descripcion" name="descripcion" rows={4} defaultValue={base?.descripcion ?? ""}
               placeholder="Describí los detalles del evento..."
               className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary resize-y"
             />

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Pencil, Trash2, Calendar, MapPin, Clock } from "lucide-react";
+import { Search, Pencil, Trash2, Calendar, MapPin, Clock, Copy } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { eliminarEvento } from "@/app/admin/eventos/actions";
@@ -119,6 +119,13 @@ export function EventosList({ initialEventos }: { initialEventos: Evento[] }) {
                   </div>
                   <div className="flex shrink-0 gap-1">
                     <Link
+                      href={`/admin/eventos/nuevo?duplicar=${e.id}`}
+                      className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
+                      title="Duplicar"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Link>
+                    <Link
                       href={`/admin/eventos/${e.id}/editar`}
                       className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
                       title="Editar"
@@ -198,6 +205,13 @@ export function EventosList({ initialEventos }: { initialEventos: Evento[] }) {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <Link
+                          href={`/admin/eventos/nuevo?duplicar=${e.id}`}
+                          className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
+                          title="Duplicar"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Link>
                         <Link
                           href={`/admin/eventos/${e.id}/editar`}
                           className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
