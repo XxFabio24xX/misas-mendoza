@@ -6,6 +6,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { findNextMisa, formatDistancia } from "@/lib/misas-utils";
 import { useFavorites } from "@/hooks/useFavorites";
+import HeroBanner from "@/app/components/hero-banner";
 
 type Lugar = {
   id: number;
@@ -140,6 +141,8 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-280 px-5 py-10 md:px-6 md:py-16">
+      <HeroBanner />
+
       {/* Search */}
       <div className="mx-auto max-w-xl">
         <div className="group relative">
