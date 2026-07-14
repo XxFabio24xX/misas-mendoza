@@ -74,6 +74,7 @@ export default function AdminLayout({
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [pendientes, setPendientes] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -100,6 +101,17 @@ export default function AdminLayout({
       setLoading(false);
     })();
   }, [router]);
+
+  // Contador para el badge de Solicitudes de Baja (RLS: admin lee todas).
+  // Se refresca en cada navegación para reflejar solicitudes resueltas/nuevas.
+  useEffect(() => {
+    if (perfil?.rol !== "admin") return;
+    supabase
+      .from("solicitudes_baja")
+      .select("id", { count: "exact", head: true })
+      .eq("estado", "pendiente")
+      .then(({ count }) => setPendientes(count ?? 0));
+  }, [perfil, pathname]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -174,6 +186,11 @@ export default function AdminLayout({
               >
                 <item.icon className="h-5 w-5 shrink-0" />
                 <span className="flex-1">{item.label}</span>
+                {item.href === "/admin/solicitudes" && pendientes > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-on-primary">
+                    {pendientes}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -338,6 +355,11 @@ export default function AdminLayout({
                   >
                     <item.icon className="h-5 w-5 shrink-0" />
                     <span className="flex-1">{item.label}</span>
+                    {item.href === "/admin/solicitudes" && pendientes > 0 && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-on-primary">
+                        {pendientes}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
