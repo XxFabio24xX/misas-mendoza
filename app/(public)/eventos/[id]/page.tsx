@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Calendar, MapPin, Navigation, Tag } from "lucide-react";
+import { tipoEventoColor, tipoEventoLabel } from "@/lib/eventos-tipos";
 
 type Evento = {
   id: number;
@@ -26,13 +27,6 @@ type Lugar = {
   direccion: string;
   lat: number;
   lng: number;
-};
-
-const TIPO_COLORS: Record<string, string> = {
-  Jóvenes: "bg-secondary-container text-on-secondary-container",
-  Avisos: "bg-surface-container-highest text-on-surface",
-  Aviso: "bg-surface-container-highest text-on-surface",
-  Especial: "bg-primary-container text-on-primary-container",
 };
 
 function formatFechaCompleta(inicio: string, fin?: string): string {
@@ -82,8 +76,7 @@ export default async function EventoDetallePage({
     if (data) lugar = data as Lugar;
   }
 
-  const tipoColor =
-    TIPO_COLORS[evento.tipo] ?? "bg-tertiary-container text-on-tertiary-container";
+  const tipoColor = tipoEventoColor(evento.tipo);
 
   return (
     <div className="min-h-screen">
@@ -106,7 +99,7 @@ export default async function EventoDetallePage({
             <span
               className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${tipoColor}`}
             >
-              {evento.tipo}
+              {tipoEventoLabel(evento.tipo)}
             </span>
 
             <h1 className="mt-3 text-2xl font-semibold text-on-surface md:text-3xl">

@@ -7,6 +7,7 @@ import { Search, Pencil, Trash2, Calendar, MapPin, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { eliminarEvento } from "@/app/admin/eventos/actions";
+import { tipoEventoColor, tipoEventoLabel } from "@/lib/eventos-tipos";
 import ConfirmDialog from "@/app/components/confirm-dialog";
 
 type Evento = {
@@ -32,13 +33,6 @@ function formatFecha(inicio: string, fin?: string): string {
   if (sameDay) return `${format(s, "EEE d MMM", { locale: es })} • ${format(s, "HH:mm")} - ${format(e, "HH:mm")}`;
   return `${format(s, "EEE d MMM", { locale: es })} - ${format(e, "EEE d MMM", { locale: es })}`;
 }
-
-const tipoColors: Record<string, string> = {
-  Jóvenes: "bg-primary/10 text-primary",
-  Aviso: "bg-surface-container-highest text-on-surface",
-  Retiro: "bg-tertiary-container text-on-tertiary-container",
-  Especial: "bg-primary-container text-on-primary-container",
-};
 
 export function EventosList({ initialEventos }: { initialEventos: Evento[] }) {
   const router = useRouter();
@@ -141,8 +135,8 @@ export function EventosList({ initialEventos }: { initialEventos: Evento[] }) {
                 </div>
                 <div className="mt-2 space-y-1.5 text-sm text-on-surface-variant">
                   <p className="flex items-center gap-1.5">
-                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${tipoColors[e.tipo] ?? "bg-surface-container text-on-surface-variant"}`}>
-                      {e.tipo}
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${tipoEventoColor(e.tipo)}`}>
+                      {tipoEventoLabel(e.tipo)}
                     </span>
                     <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{e.departamento}</span>
                   </p>
@@ -188,8 +182,8 @@ export function EventosList({ initialEventos }: { initialEventos: Evento[] }) {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${tipoColors[e.tipo] ?? "bg-surface-container text-on-surface-variant"}`}>
-                        {e.tipo}
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${tipoEventoColor(e.tipo)}`}>
+                        {tipoEventoLabel(e.tipo)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-on-surface-variant">{e.departamento}</td>

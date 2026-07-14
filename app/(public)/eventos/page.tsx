@@ -6,6 +6,7 @@ import { es } from "date-fns/locale";
 import { Calendar, ChevronRight, MapPin } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { tipoEventoColor, tipoEventoLabel } from "@/lib/eventos-tipos";
 
 type Evento = {
   id: number;
@@ -96,7 +97,7 @@ export default function EventosPage() {
                 : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
             }`}
           >
-            {tipo}
+            {tipo === "Todos" ? tipo : tipoEventoLabel(tipo)}
           </button>
         ))}
       </div>
@@ -144,17 +145,9 @@ export default function EventosPage() {
 
               <div className="relative z-10">
                 <span
-                  className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-                    evento.tipo === "Jóvenes"
-                      ? "bg-primary/10 text-primary"
-                      : evento.tipo === "Avisos" || evento.tipo === "Aviso"
-                        ? "bg-surface-container-highest text-on-surface"
-                        : evento.tipo === "Especial"
-                          ? "bg-primary-container text-on-primary-container"
-                          : "bg-tertiary-container text-on-tertiary-container"
-                  }`}
+                  className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${tipoEventoColor(evento.tipo)}`}
                 >
-                  {evento.tipo}
+                  {tipoEventoLabel(evento.tipo)}
                 </span>
 
                 <h2 className="mt-3 text-lg font-semibold text-on-surface">

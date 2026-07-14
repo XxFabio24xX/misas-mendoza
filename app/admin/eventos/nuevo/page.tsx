@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { TIPO_EVENTO_OPTIONS } from "@/lib/eventos-tipos";
 import { crearEvento } from "../actions";
 
-const TIPOS_EVENTO = ["Jóvenes", "Aviso", "Retiro", "Especial"];
 const DEPARTAMENTOS = ["Capital", "Las Heras", "Guaymallén", "Godoy Cruz", "Maipú"];
 
 const HORARIOS = Array.from({ length: 96 }, (_, i) => {
@@ -101,7 +101,7 @@ export default function NuevoEventoPage() {
               className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
             >
               <option value="" disabled>Seleccioná...</option>
-              {TIPOS_EVENTO.map((t) => (<option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>))}
+              {TIPO_EVENTO_OPTIONS.map((t) => (<option key={t.value} value={t.value}>{t.label}</option>))}
             </select>
           </div>
 
