@@ -1,10 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Clock, Heart, MapPin, Search } from "lucide-react";
+import { Clock, Heart, MapPin, Search, X } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { findNextMisa, formatDistancia } from "@/lib/misas-utils";
+import {
+  DIAS_SEMANA,
+  FRANJAS_HORARIAS,
+  GRUPOS_DIAS,
+  findNextMisa,
+  formatDistancia,
+  horaEnFranja,
+  type FranjaHoraria,
+} from "@/lib/misas-utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import HeroBanner from "@/app/components/hero-banner";
 
@@ -35,6 +43,8 @@ export default function Home() {
   const [noLocation, setNoLocation] = useState(false);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [selectedDias, setSelectedDias] = useState<Set<number>>(new Set());
+  const [horarioFilter, setHorarioFilter] = useState<FranjaHoraria | null>(null);
   const { isFavorite } = useFavorites();
 
   const departments = useMemo(() => {
@@ -118,6 +128,40 @@ export default function Home() {
     return map;
   }, [horarios]);
 
+  const toggleDia = (dia: number) => {
+    setSelectedDias((prev) => {
+      const next = new Set(prev);
+      if (next.has(dia)) next.delete(dia);
+      else next.add(dia);
+      return next;
+    });
+  };
+
+  const toggleGrupoDias = (dias: readonly number[]) => {
+    setSelectedDias((prev) => {
+      const isExactMatch =
+        prev.size === dias.length && dias.every((d) => prev.has(d));
+      return isExactMatch ? new Set() : new Set(dias);
+    });
+  };
+
+  const toggleHorario = (franja: FranjaHoraria) => {
+    setHorarioFilter((prev) => (prev === franja ? null : franja));
+  };
+
+  const hasActiveFilters =
+    activeFilter !== null ||
+    selectedDias.size > 0 ||
+    horarioFilter !== null ||
+    search.trim() !== "";
+
+  const clearFilters = () => {
+    setActiveFilter(null);
+    setSelectedDias(new Set());
+    setHorarioFilter(null);
+    setSearch("");
+  };
+
   const filtered = useMemo(() => {
     let result =
       activeFilter === null
@@ -131,13 +175,28 @@ export default function Home() {
           p.direccion.toLowerCase().includes(q),
       );
     }
+    // Solo capillas con al menos una misa que caiga en el día y/o franja elegidos.
+    if (selectedDias.size > 0 || horarioFilter !== null) {
+      result = result.filter((p) => {
+        const misas = horariosMap.get(p.id) ?? [];
+        return misas.some((h) => {
+          if (selectedDias.size > 0 && (h.dia_semana == null || !selectedDias.has(h.dia_semana))) {
+            return false;
+          }
+          if (horarioFilter !== null && !horaEnFranja(h.hora, horarioFilter)) {
+            return false;
+          }
+          return true;
+        });
+      });
+    }
     // Favoritas fijadas primero, preservando el orden (por cercanía) del resto.
     return [...result].sort((a, b) => {
       const aFav = isFavorite(String(a.id));
       const bFav = isFavorite(String(b.id));
       return aFav === bFav ? 0 : aFav ? -1 : 1;
     });
-  }, [lugares, activeFilter, search, isFavorite]);
+  }, [lugares, activeFilter, search, isFavorite, selectedDias, horarioFilter, horariosMap]);
 
   return (
     <div className="mx-auto max-w-280 px-5 py-10 md:px-6 md:py-16">
@@ -158,30 +217,133 @@ export default function Home() {
       </div>
 
       {/* Filtros */}
-      <div className="mt-6 flex flex-wrap justify-center gap-2">
-        <button
-          onClick={() => setActiveFilter(null)}
-          className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
-            activeFilter === null
-              ? "bg-primary/10 text-primary border border-primary/20"
-              : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
-          }`}
-        >
-          Todas
-        </button>
-        {departments.map((dept) => (
-          <button
-            key={dept}
-            onClick={() => setActiveFilter(dept)}
-            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
-              activeFilter === dept
-                ? "bg-primary/10 text-primary border border-primary/20"
-                : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
-            }`}
-          >
-            {dept}
-          </button>
-        ))}
+      <div className="mx-auto mt-6 max-w-2xl space-y-4">
+        {/* Localidad */}
+        <div>
+          <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+            Localidad
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <button
+              onClick={() => setActiveFilter(null)}
+              aria-pressed={activeFilter === null}
+              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                activeFilter === null
+                  ? "bg-primary/10 text-primary border border-primary/20"
+                  : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
+              }`}
+            >
+              Todas
+            </button>
+            {departments.map((dept) => (
+              <button
+                key={dept}
+                onClick={() => setActiveFilter(dept)}
+                aria-pressed={activeFilter === dept}
+                className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                  activeFilter === dept
+                    ? "bg-primary/10 text-primary border border-primary/20"
+                    : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
+                }`}
+              >
+                {dept}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Día de misa */}
+        <div>
+          <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+            Día de misa
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <button
+              onClick={() => toggleGrupoDias(GRUPOS_DIAS.semana)}
+              aria-pressed={GRUPOS_DIAS.semana.every((d) => selectedDias.has(d)) && selectedDias.size === GRUPOS_DIAS.semana.length}
+              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                GRUPOS_DIAS.semana.every((d) => selectedDias.has(d)) && selectedDias.size === GRUPOS_DIAS.semana.length
+                  ? "bg-primary/10 text-primary border border-primary/20"
+                  : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
+              }`}
+            >
+              Lun-Vie
+            </button>
+            <button
+              onClick={() => toggleGrupoDias(GRUPOS_DIAS.sabado)}
+              aria-pressed={selectedDias.size === 1 && selectedDias.has(6)}
+              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                selectedDias.size === 1 && selectedDias.has(6)
+                  ? "bg-primary/10 text-primary border border-primary/20"
+                  : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
+              }`}
+            >
+              Sábado
+            </button>
+            <button
+              onClick={() => toggleGrupoDias(GRUPOS_DIAS.domingo)}
+              aria-pressed={selectedDias.size === 1 && selectedDias.has(0)}
+              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                selectedDias.size === 1 && selectedDias.has(0)
+                  ? "bg-primary/10 text-primary border border-primary/20"
+                  : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
+              }`}
+            >
+              Domingo
+            </button>
+          </div>
+          <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+            {DIAS_SEMANA.map((dia) => (
+              <button
+                key={dia.value}
+                onClick={() => toggleDia(dia.value)}
+                aria-pressed={selectedDias.has(dia.value)}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                  selectedDias.has(dia.value)
+                    ? "bg-primary text-on-primary"
+                    : "border border-outline-variant/50 text-on-surface-variant hover:bg-outline-variant/40"
+                }`}
+              >
+                {dia.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Horario */}
+        <div>
+          <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+            Horario
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {FRANJAS_HORARIAS.map((franja) => (
+              <button
+                key={franja.value}
+                onClick={() => toggleHorario(franja.value)}
+                aria-pressed={horarioFilter === franja.value}
+                className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                  horarioFilter === franja.value
+                    ? "bg-primary/10 text-primary border border-primary/20"
+                    : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
+                }`}
+              >
+                {franja.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {hasActiveFilters && (
+          <div className="flex justify-center">
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider text-on-surface-variant transition-colors hover:text-primary"
+            >
+              <X className="h-3.5 w-3.5" />
+              Limpiar filtros
+            </button>
+          </div>
+        )}
       </div>
 
       {loading && (
@@ -209,7 +371,23 @@ export default function Home() {
         </div>
       )}
 
-      {!loading && !error && (
+      {!loading && !error && filtered.length === 0 && (
+        <div className="mt-16 text-center">
+          <p className="text-sm text-on-surface-variant">
+            No encontramos capillas que coincidan con esos filtros.
+          </p>
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="mt-3 text-sm font-medium text-primary hover:underline"
+            >
+              Limpiar filtros
+            </button>
+          )}
+        </div>
+      )}
+
+      {!loading && !error && filtered.length > 0 && (
         <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((place) => {
             const misas = horariosMap.get(place.id) ?? [];

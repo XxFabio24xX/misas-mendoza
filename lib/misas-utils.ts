@@ -29,3 +29,40 @@ export function formatDistancia(meters: number): string {
   if (meters < 1000) return `${Math.round(meters)}m`;
   return `${(meters / 1000).toFixed(1)}km`;
 }
+
+// dia_semana sigue la convención de Date.getDay() (0 = domingo), pero se
+// muestra empezando el lunes para que coincida con el uso cotidiano.
+export const DIAS_SEMANA = [
+  { value: 1, label: "Lun" },
+  { value: 2, label: "Mar" },
+  { value: 3, label: "Mié" },
+  { value: 4, label: "Jue" },
+  { value: 5, label: "Vie" },
+  { value: 6, label: "Sáb" },
+  { value: 0, label: "Dom" },
+] as const;
+
+export const GRUPOS_DIAS = {
+  semana: [1, 2, 3, 4, 5],
+  sabado: [6],
+  domingo: [0],
+} as const;
+
+export type FranjaHoraria = "manana" | "tarde" | "noche";
+
+export const FRANJAS_HORARIAS: {
+  value: FranjaHoraria;
+  label: string;
+  start: string;
+  end: string;
+}[] = [
+  { value: "manana", label: "Mañana", start: "00:00:00", end: "12:00:00" },
+  { value: "tarde", label: "Tarde", start: "12:00:00", end: "19:00:00" },
+  { value: "noche", label: "Noche", start: "19:00:00", end: "24:00:00" },
+];
+
+export function horaEnFranja(hora: string, franja: FranjaHoraria): boolean {
+  const banda = FRANJAS_HORARIAS.find((f) => f.value === franja);
+  if (!banda) return false;
+  return hora >= banda.start && hora < banda.end;
+}
