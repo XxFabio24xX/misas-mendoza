@@ -124,21 +124,16 @@ export default async function EventoDetallePage({
 
   return (
     <div className="min-h-screen">
-      <div className="relative h-44 overflow-hidden rounded-b-xl bg-surface-container-high md:h-64">
-        <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
-        <div className="absolute left-4 top-4 z-10">
+      <div className="mx-auto max-w-280 px-5 py-6 md:px-6 md:py-8">
+        <div className="flex items-center justify-between">
           <BackButton />
-        </div>
-        <div className="absolute right-4 top-4 z-10">
           <ShareButton
             title={evento.titulo}
             text={`${evento.titulo} — evento en ${evento.departamento}, Mendoza`}
           />
         </div>
-      </div>
 
-      <div className="mx-auto max-w-280 px-5 py-6 md:px-6 md:py-8">
-        <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+        <div className="mt-6 lg:grid lg:grid-cols-3 lg:gap-8">
           <div className="lg:col-span-2">
             <span
               className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${tipoColor}`}
