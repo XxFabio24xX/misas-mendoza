@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, Marker, Popup, TileLayer, Tooltip, ZoomControl, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Link from "next/link";
@@ -45,8 +45,12 @@ export default function GlobalMap({ lugares }: { lugares: LugarMapa[] }) {
     <MapContainer
       center={MENDOZA_CENTER}
       zoom={11}
+      // El zoom va abajo a la derecha: en su posición default (arriba-izquierda)
+      // quedaba superpuesto al título "Mapa de Iglesias".
+      zoomControl={false}
       className="h-full w-full"
     >
+      <ZoomControl position="bottomright" />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
