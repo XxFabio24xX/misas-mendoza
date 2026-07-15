@@ -26,12 +26,19 @@ Aplicación web para descubrir horarios de misas, capillas, parroquias y eventos
 
 | Pantalla | Descripción |
 |---|---|
-| **Inicio (`/`)** | Hero banner, buscador (insensible a tildes) y capillas ordenadas por distancia al usuario (geolocalización + PostGIS). Filtros combinables por localidad, día de misa (chips Lun-Dom + accesos rápidos Lun-Vie/Sábado/Domingo) y franja horaria (Mañana/Tarde/Noche). Favoritas fijadas arriba. |
-| **Detalle capilla (`/capilla/[slug]`)** | Hero con imagen, botones de favorito y compartir (Web Share API), datos de contacto, badge de Cáritas, horarios agrupados por temporada (Todo el año / Invierno / Verano) y día, y mapa con "Cómo llegar". |
-| **Eventos (`/eventos`)** | Listado de eventos vigentes (los pasados se ocultan solos) con filtros por tipo y departamento. Detalle en `/eventos/[slug]` con mapa si tiene capilla asociada. |
+| **Inicio (`/`)** | Hero banner, buscador (insensible a tildes) y capillas ordenadas por distancia al usuario (geolocalización + PostGIS). Filtros combinables por localidad, día de misa (chips **Hoy**/Lun-Vie/Sábado/Domingo + días individuales) y franja horaria (Mañana/Tarde/Noche). Favoritas fijadas arriba. La "Próxima Misa" respeta la temporada vigente y las misas mensuales con reemplazo. |
+| **Detalle capilla (`/capilla/[slug]`)** | Foto optimizada (`next/image`), botones de favorito y compartir (Web Share API), datos de contacto, badge de Cáritas, horarios por temporada con la vigente destacada ("Vigente ahora"), misas mensuales fijas, y mapa con "Cómo llegar". |
+| **Eventos (`/eventos`)** | Listado de eventos vigentes (los pasados se ocultan solos) con filtros por tipo y departamento. Detalle en `/eventos/[slug]` con botón **"Agregar al calendario"** (.ics) y mapa si tiene capilla asociada. |
 | **Mapa (`/mapa`)** | Mapa global con pins de todas las capillas activas, tooltips y popups con acceso al detalle. |
+| **Acerca (`/acerca`)** | Qué es el proyecto y cómo colaborar como voluntario. |
 
-Las URLs públicas usan **slugs** legibles (`/capilla/parroquia-santiago-apostol`) generados automáticamente desde el nombre; los links viejos con UUID redirigen con 301. Hay favoritos persistidos en `localStorage` (sin cuenta), modo claro/oscuro, metadata Open Graph por página (vista previa al compartir por WhatsApp), `sitemap.xml` dinámico y `robots.txt`.
+Las URLs públicas usan **slugs** legibles (`/capilla/parroquia-santiago-apostol`) generados automáticamente desde el nombre; los links viejos con UUID redirigen con 301. Hay favoritos persistidos en `localStorage` (sin cuenta), modo claro/oscuro, **PWA instalable** (agregar a la pantalla de inicio), metadata Open Graph por página (vista previa al compartir por WhatsApp), `sitemap.xml` dinámico, `robots.txt` y Vercel Analytics.
+
+#### Temporadas y casos especiales de horarios
+
+- Cada parroquia define **cuándo** cambia sus horarios de invierno/verano, así que la vigencia es un switch manual (`temporada_actual`) que el voluntario actualiza desde el editor de horarios cuando la parroquia lo anuncia.
+- Las **misas mensuales fijas** (ej. misa de los enfermos los 11) pueden marcarse con "reemplaza las misas del día": esa fecha se ofrece como única misa.
+- Los horarios especiales puntuales (que no siguen ninguna regla) se difunden como **Eventos**.
 
 ### Panel de Administración (`/admin`)
 
@@ -43,10 +50,10 @@ Acceso protegido por login (sesión en cookies vía `@supabase/ssr` + `proxy.ts`
 | Sección | Funcionalidades |
 |---|---|
 | **Dashboard** | Resumen por departamento, capillas sin horarios, tabla de acceso rápido. |
-| **Capillas** | CRUD completo. Formulario con info básica, contacto, checkbox de Cáritas, **subida de imagen con recorte y compresión** (Supabase Storage), **grilla dinámica de horarios** (semanales + mensuales fijos, por temporada) y selector de ubicación en mapa. |
-| **Eventos** | CRUD completo. Filtro en cascada departamento → capilla, fechas DD/MM/AAAA con datepicker, tipos del enum `tipo_evento`. |
+| **Capillas** | CRUD completo. Formulario con info básica, contacto, checkbox de Cáritas, **subida de imagen con recorte y compresión** (Supabase Storage), **grilla dinámica de horarios** (semanales + mensuales fijos con opción de reemplazo del día, por temporada) y selector de ubicación en mapa. El editor de horarios incluye el **switch de temporada vigente** (Invierno/Verano). |
+| **Eventos** | CRUD completo. Filtro en cascada departamento → capilla, fechas DD/MM/AAAA con datepicker, tipos del enum `tipo_evento`, y botón **Duplicar** para eventos recurrentes (precarga todo menos las fechas). |
 | **Voluntarios** _(solo admin)_ | Crear, editar y desactivar cuentas de colaboradores (Supabase Auth + perfil). |
-| **Solicitudes de Baja** _(solo admin)_ | Bandeja de pedidos de eliminación: aprobar (elimina la capilla) o rechazar, con historial. |
+| **Solicitudes de Baja** _(solo admin)_ | Bandeja de pedidos de eliminación: aprobar (elimina la capilla) o rechazar, con historial. El menú muestra un badge con las pendientes. |
 
 ---
 
@@ -60,7 +67,8 @@ Acceso protegido por login (sesión en cookies vía `@supabase/ssr` + `proxy.ts`
 | **Autorización** | Cada Server Action valida con `requirePerfil()` + `assertDepartamentoAccess()` (`lib/auth-server.ts`), leyendo el departamento real desde la DB (nunca del cliente). RLS activa en las tablas sensibles. |
 | **Seguridad** | Content-Security-Policy en `next.config.ts`, scoped al host del proyecto Supabase. |
 | **Mapas** | react-leaflet con `dynamic import { ssr: false }`. El popup del mapa usa colores fijos claros (leaflet.css fuerza card blanca). |
-| **Tests** | Vitest sobre la lógica pura de `lib/` (`npm test`). |
+| **Tests** | Vitest sobre la lógica pura de `lib/` (`npm test`): próxima misa con temporadas y reemplazos, franjas horarias, fechas, ICS. |
+| **CI** | GitHub Actions corre lint + tests + build en cada push (`.github/workflows/ci.yml`). |
 
 ## Estructura del Proyecto
 
@@ -70,28 +78,32 @@ app/
 │   ├── page.tsx                   # Inicio: buscador + filtros + capillas cercanas
 │   ├── capilla/[slug]/page.tsx    # Detalle de capilla (Server Component + generateMetadata)
 │   ├── eventos/page.tsx           # Listado de eventos vigentes
-│   ├── eventos/[slug]/page.tsx    # Detalle de evento
+│   ├── eventos/[slug]/page.tsx    # Detalle de evento (+ .ics)
+│   ├── acerca/page.tsx            # Acerca del proyecto / colaborar
 │   └── mapa/page.tsx              # Mapa global
 ├── admin/
 │   ├── layout.tsx                 # Sidebar + drawer mobile + guard de sesión
 │   ├── page.tsx                   # Dashboard
-│   ├── capillas/                  # CRUD + editor avanzado de horarios ([id]/horarios)
-│   ├── eventos/                   # CRUD con filtro en cascada
+│   ├── capillas/                  # CRUD + editor de horarios y temporada ([id]/horarios)
+│   ├── eventos/                   # CRUD con filtro en cascada + duplicar
 │   ├── voluntarios/               # Gestión de cuentas (solo admin)
 │   └── solicitudes/               # Bandeja de solicitudes de baja (solo admin)
 ├── components/                    # UI compartida (mapas, diálogos <dialog>, chips, share, etc.)
 ├── login/page.tsx
+├── manifest.ts                    # PWA
 ├── sitemap.ts / robots.ts         # SEO
 └── globals.css                    # Tailwind v4: @theme, tokens, dark mode
 lib/
 ├── supabase*.ts                   # Los 4 clientes (ver Arquitectura)
 ├── auth-server.ts                 # requirePerfil / assertDepartamentoAccess / assertAdmin
-├── misas-utils.ts                 # findNextMisa, franjas horarias, normalizeText, distancias
+├── misas-utils.ts                 # findNextMisa (temporadas/reemplazos), franjas, normalizeText
 ├── eventos-tipos.ts               # Mapeo slug ↔ etiqueta/color del enum tipo_evento
 ├── departamentos.ts               # Departamentos habilitados en formularios
 ├── date-dmy.ts                    # Conversión DD/MM/AAAA ↔ ISO
+├── ics.ts                         # Generación de archivos iCalendar
 └── *.test.ts                      # Tests de Vitest
-supabase/migrations/               # 001–009, ver DESARROLLO.md para aplicarlas
+supabase/migrations/               # 001–010, ver DESARROLLO.md para aplicarlas
+.github/workflows/ci.yml           # CI: lint + tests + build
 proxy.ts                           # Gate de sesión para /admin/*
 ```
 
@@ -114,6 +126,7 @@ proxy.ts                           # Gate de sesión para /admin/*
 | `notas_horarios` | `text` | Aclaraciones de temporada |
 | `hay_confesiones` | `boolean` | |
 | `recibe_caritas` | `boolean` | Muestra el badge de Cáritas en el detalle |
+| `temporada_actual` | `text (nullable)` | `'Invierno'` / `'Verano'`. Switch manual de la temporada vigente; NULL si no usa temporadas |
 | `activo` | `boolean` | |
 
 ### `horarios`
@@ -125,6 +138,8 @@ proxy.ts                           # Gate de sesión para /admin/*
 | `hora` | `time` | |
 | `temporada` | `text` | `'Todo el año'`, `'Invierno'`, `'Verano'` |
 | `tipo_actividad` | `text` | `'Misa'`, etc. |
+| `reemplaza_dia` | `boolean` | Solo mensuales: esa fecha cancela las misas normales del día |
+| `observacion` | `text (nullable)` | Aclaración libre que se muestra en el detalle |
 
 ### `eventos`
 | Columna | Tipo | Notas |
@@ -159,7 +174,7 @@ proxy.ts                           # Gate de sesión para /admin/*
 
 ### RPCs
 - `crear_lugar` / `actualizar_lugar` — insert/update con PostGIS y todos los campos.
-- `get_lugares_cercanos(user_lat, user_lng, radio_km)` — capillas activas ordenadas por distancia (incluye `slug`).
+- `get_lugares_cercanos(user_lat, user_lng, radio_km)` — capillas activas ordenadas por distancia (incluye `slug` y `temporada_actual`).
 - `slugify` + triggers `set_lugar_slug` / `set_evento_slug` — generación automática de slugs.
 
 ---

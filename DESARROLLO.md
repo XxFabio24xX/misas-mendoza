@@ -72,12 +72,12 @@ Si las cuatro pasan, la PC quedó lista.
 
 ## 7. Migraciones de base de datos
 
-Las migraciones viven en `supabase/migrations/` numeradas (001–009) y **se
+Las migraciones viven en `supabase/migrations/` numeradas (001–010) y **se
 aplican a mano** en el dashboard de Supabase → **SQL Editor** (no hay CLI
 configurada). Reglas:
 
 - Se corren **en orden** y una sola vez cada una. Las ya aplicadas en el
-  proyecto actual son la 001 a la 009.
+  proyecto actual son la 001 a la 010.
 - Si un cambio de código depende de una migración nueva, **primero se corre la
   migración en Supabase y después se pushea el código** — al revés, producción
   queda rota entre el deploy y la migración.
