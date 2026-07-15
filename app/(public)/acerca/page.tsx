@@ -51,10 +51,11 @@ export default function AcercaPage() {
 
         <div className="rounded-xl border border-outline-variant/50 bg-secondary-container p-6">
           <Users className="h-6 w-6 text-primary" />
-          <h2 className="mt-3 font-semibold text-on-surface">Hecho por voluntarios</h2>
+          <h2 className="mt-3 font-semibold text-on-surface">Hecho a pulmón</h2>
           <p className="mt-1.5 text-sm leading-relaxed text-on-surface-variant">
-            El proyecto es gratuito y sin fines de lucro, desarrollado y
-            mantenido por voluntarios.
+            El proyecto es gratuito y sin fines de lucro. Fue creado y es
+            mantenido por un único voluntario, con la esperanza de sumar más
+            manos para cuidar los datos de cada zona.
           </p>
         </div>
       </div>

@@ -212,15 +212,18 @@ export default async function CapillaPage({
           />
         )}
         <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
-        <div className="absolute left-4 top-4 z-10">
-          <BackButton />
-        </div>
-        <div className="absolute right-4 top-4 z-10 flex gap-2">
-          <ShareButton
-            title={lugar.nombre}
-            text={`Horarios de misa de ${lugar.nombre} — ${lugar.direccion}`}
-          />
-          <FavoriteButton id={lugar.id} />
+        {/* Alineados a la columna de contenido (max-w-280), no a los bordes de la pantalla */}
+        <div className="absolute inset-x-0 top-4 z-10">
+          <div className="mx-auto flex max-w-280 items-center justify-between px-4 md:px-6">
+            <BackButton />
+            <div className="flex gap-2">
+              <ShareButton
+                title={lugar.nombre}
+                text={`Horarios de misa de ${lugar.nombre} — ${lugar.direccion}`}
+              />
+              <FavoriteButton id={lugar.id} />
+            </div>
+          </div>
         </div>
       </div>
 

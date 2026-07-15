@@ -1,6 +1,10 @@
 # Misas Mendoza
 
-Aplicación web para descubrir horarios de misas, capillas, parroquias y eventos católicos en Mendoza, Argentina. Incluye un sitio público para la comunidad y un panel de administración para colaboradores.
+**Misas Mendoza** nace para responder una pregunta simple que hoy no tiene una respuesta fácil: *¿a qué hora hay misa cerca mío?* Los horarios de las parroquias y capillas de Mendoza están dispersos entre carteleras, redes sociales y el boca a boca; esta aplicación web los reúne en un solo lugar, gratuito y accesible desde cualquier celular, sin necesidad de registrarse ni descargar nada.
+
+El proyecto tiene dos caras: un **sitio público** donde cualquier persona encuentra misas por cercanía, día y horario, y un **panel de administración** donde voluntarios autorizados mantienen los datos de su zona al día. Contempla las realidades concretas de las parroquias mendocinas: horarios que cambian entre invierno y verano (cuando cada parroquia lo decide), misas mensuales especiales que reemplazan a las del día, y eventos de la comunidad.
+
+Fue creado y es mantenido por **un único voluntario** ([@XxFabio24xX](https://github.com/XxFabio24xX)), sin fines de lucro y con infraestructura de costo cero, con la idea de sumar voluntarios por zona a medida que crezca la cobertura.
 
 > **Stack:** Next.js 16 · Supabase (PostgreSQL + PostGIS) · Tailwind CSS v4 · TypeScript · Vitest
 
@@ -24,6 +28,8 @@ Aplicación web para descubrir horarios de misas, capillas, parroquias y eventos
 
 ### Sitio Público
 
+Es la cara visible del proyecto: está pensado para que cualquier persona —sin importar su edad o manejo de la tecnología— encuentre una misa en segundos. Al abrirlo, las capillas más cercanas aparecen primero (si la persona comparte su ubicación) con la hora de su próxima misa ya calculada.
+
 | Pantalla | Descripción |
 |---|---|
 | **Inicio (`/`)** | Hero banner, buscador (insensible a tildes) y capillas ordenadas por distancia al usuario (geolocalización + PostGIS). Filtros combinables por localidad, día de misa (chips **Hoy**/Lun-Vie/Sábado/Domingo + días individuales) y franja horaria (Mañana/Tarde/Noche). Favoritas fijadas arriba. La "Próxima Misa" respeta la temporada vigente y las misas mensuales con reemplazo. |
@@ -42,6 +48,8 @@ Las URLs públicas usan **slugs** legibles (`/capilla/parroquia-santiago-apostol
 
 ### Panel de Administración (`/admin`)
 
+Detrás del sitio público hay un panel al que solo acceden voluntarios con usuario y contraseña, desde el celular o la computadora. El diseño sigue un principio de prudencia: cada voluntario solo edita lo que le corresponde, y las acciones destructivas requieren una segunda aprobación — así un error local nunca borra datos de forma permanente.
+
 Acceso protegido por login (sesión en cookies vía `@supabase/ssr` + `proxy.ts`). Dos roles:
 
 - **Super Admin:** acceso completo a todas las secciones. Puede eliminar capillas directamente.
@@ -58,6 +66,8 @@ Acceso protegido por login (sesión en cookies vía `@supabase/ssr` + `proxy.ts`
 ---
 
 ## Arquitectura
+
+Las decisiones técnicas apuntan a dos cosas: **costo cero** de infraestructura (planes gratuitos de Vercel y Supabase alcanzan de sobra para esta escala) y **seguridad por capas** — la autorización nunca confía en lo que manda el navegador, sino que se re-verifica en el servidor contra la base de datos en cada acción.
 
 | Pieza | Detalle |
 |---|---|
@@ -110,6 +120,8 @@ proxy.ts                           # Gate de sesión para /admin/*
 ---
 
 ## Base de Datos (Supabase)
+
+El modelo gira alrededor de tres tablas: `lugares` (los templos), `horarios` (una fila por misa, lo que permite que una capilla grande tenga tantas misas como necesite) y `eventos`. Las tablas `perfiles` y `solicitudes_baja` sostienen el sistema de roles del panel. Las migraciones SQL numeradas en `supabase/migrations/` son la historia completa del esquema.
 
 ### `lugares`
 | Columna | Tipo | Notas |
