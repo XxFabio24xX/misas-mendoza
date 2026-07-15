@@ -133,7 +133,7 @@ export default function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-surface-container-low">
-      <aside className="hidden lg:flex lg:w-64 lg:shrink-0 lg:flex-col lg:border-r lg:border-outline-variant/30 lg:bg-surface-container">
+      <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:self-start lg:overflow-y-auto lg:border-r lg:border-outline-variant/30 lg:bg-surface-container">
         <Link
           href="/"
           className="flex items-center gap-2 border-b border-outline-variant/30 px-6 py-5"
@@ -237,7 +237,8 @@ export default function AdminLayout({
           {children}
         </main>
 
-        <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-outline-variant/30 bg-surface-container lg:hidden">
+        {/* z-1100: por encima de los panes de Leaflet del minimapa de ubicación */}
+        <nav className="fixed bottom-0 left-0 right-0 z-1100 border-t border-outline-variant/30 bg-surface-container lg:hidden">
           <div className="flex items-center justify-around py-1.5">
             {mobileTabs.map((tab) => {
               const isActive =
@@ -286,7 +287,7 @@ export default function AdminLayout({
       </div>
 
       {drawerOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-1200 lg:hidden">
           <div
             className="absolute inset-0 bg-black/40"
             onClick={closeDrawer}

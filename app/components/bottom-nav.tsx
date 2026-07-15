@@ -15,8 +15,10 @@ const links = [
 export function BottomNav() {
   const pathname = usePathname();
 
+  // z-1100: por encima de los panes de Leaflet (llegan a ~1000), si no el
+  // mapa de "Cómo llegar" tapa la barra al scrollear.
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 h-20 rounded-t-xl border-t border-outline-variant/20 bg-surface-container shadow-[0_-4px_24px_rgba(118,146,131,0.06)] md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-1100 h-20 rounded-t-xl border-t border-outline-variant/20 bg-surface-container shadow-[0_-4px_24px_rgba(118,146,131,0.06)] md:hidden">
       <div className="flex h-full items-center justify-around px-4 pb-safe">
         {links.map(({ href, label, Icon }) => {
           const isActive =
