@@ -19,12 +19,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem("theme") as Theme | null;
-    const preferred =
-      saved === "dark" || saved === "light"
-        ? saved
-        : window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light";
+    const preferred = saved === "dark" || saved === "light" ? saved : "light";
     // One-time sync from browser-only state (localStorage/matchMedia) that isn't
     // available during SSR; can't be a lazy useState initializer for that reason.
     // eslint-disable-next-line react-hooks/set-state-in-effect
