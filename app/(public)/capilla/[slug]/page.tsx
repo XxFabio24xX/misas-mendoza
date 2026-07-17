@@ -200,7 +200,7 @@ export default async function CapillaPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="relative h-52 overflow-hidden rounded-b-xl bg-surface-container-high md:h-72">
+      <div className="relative h-52 overflow-hidden rounded-b-xl bg-surface-container-high md:h-80">
         {lugar.imagen_url && (
           <Image
             src={lugar.imagen_url}
