@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { Church, Calendar, Inbox, Users, CheckCircle } from "lucide-react";
+import { Church, Calendar, Inbox, Users, Clock, Trash2 } from "lucide-react";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
@@ -17,42 +15,54 @@ type Lugar = {
 
 type Solicitud = {
   id: string;
+  motivo: string;
   created_at: string;
   lugares: { nombre: string; slug: string } | null;
 };
 
+function tiempoRelativo(fecha: string): string {
+  const diff = Date.now() - new Date(fecha).getTime();
+  const horas = Math.floor(diff / 3_600_000);
+  if (horas < 1) return "hace un momento";
+  if (horas < 24) return `hace ${horas}h`;
+  const dias = Math.floor(horas / 24);
+  if (dias === 1) return "ayer";
+  return `hace ${dias} días`;
+}
+
 function StatCard({
   icon: Icon,
-  count,
   label,
-  highlight,
+  sublabel,
+  count,
+  error,
 }: {
   icon: typeof Church;
-  count: number;
   label: string;
-  highlight?: boolean;
+  sublabel: string;
+  count: number;
+  error?: boolean;
 }) {
   return (
     <div
-      className={`rounded-xl border border-outline-variant/30 p-5 ${
-        highlight ? "bg-error-container text-on-error-container" : "bg-surface-container"
+      className={`rounded-2xl bg-surface-container-high p-4 md:p-5 ${
+        error ? "ring-1 ring-error/30" : ""
       }`}
     >
-      <Icon
-        className={`h-5 w-5 float-right opacity-50 ${
-          highlight ? "text-on-error-container" : "text-on-surface-variant"
-        }`}
-      />
-      <p className={`text-3xl font-bold ${highlight ? "text-on-error-container" : "text-primary"}`}>
+      <div className="mb-3 flex items-start justify-between">
+        <span
+          className={`text-xs font-semibold uppercase tracking-wider ${
+            error ? "text-error" : "text-on-surface-variant"
+          }`}
+        >
+          {label}
+        </span>
+        <Icon className="h-4 w-4 text-on-surface-variant/50" />
+      </div>
+      <p className={`text-3xl font-bold md:text-4xl ${error ? "text-error" : "text-on-surface"}`}>
         {count}
       </p>
-      <p
-        className={`text-xs font-semibold uppercase tracking-wider ${
-          highlight ? "text-on-error-container" : "text-on-surface-variant"
-        }`}
-      >
-        {label}
-      </p>
+      <p className="mt-1 text-sm text-on-surface-variant">{sublabel}</p>
     </div>
   );
 }
@@ -102,7 +112,7 @@ export default async function AdminDashboard() {
           .eq("estado", "pendiente"),
         supabase
           .from("solicitudes_baja")
-          .select("id, created_at, lugares(nombre, slug)")
+          .select("id, motivo, created_at, lugares(nombre, slug)")
           .eq("estado", "pendiente")
           .order("created_at", { ascending: false })
           .limit(5),
@@ -139,128 +149,124 @@ export default async function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-on-surface md:text-2xl">
-        Hola, {perfil?.nombre_completo ?? "Voluntario"} 👋
-      </h1>
-      <p className="mt-0.5 text-sm text-on-surface-variant">
-        {isAdmin
-          ? "Vista general de toda la arquidiócesis"
-          : `Vista de ${perfil?.departamento_asignado ?? "tu departamento"}`}
-      </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-semibold text-on-surface">
+            Hola, {perfil?.nombre_completo ?? "Voluntario"}
+          </h1>
+          <p className="mt-1 text-sm text-on-surface-variant">
+            Resumen de la actividad en Misas Mendoza.
+          </p>
+        </div>
+        <Link
+          href="/admin/capillas/nuevo"
+          className="shrink-0 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-on-primary transition-colors hover:bg-primary-container hover:text-on-primary-container"
+        >
+          + Agregar capilla
+        </Link>
+      </div>
 
-      <section
-        className={`mt-6 grid grid-cols-2 gap-3 ${isAdmin ? "md:grid-cols-4" : ""}`}
-      >
+      <div className={`mt-6 grid grid-cols-1 gap-3 md:gap-4 ${isAdmin ? "md:grid-cols-4" : "md:grid-cols-2"}`}>
         {isAdmin ? (
           <>
-            <StatCard icon={Church} count={lugares.length} label="Capillas activas" />
-            <StatCard icon={Calendar} count={totalEventos} label="Eventos activos" />
+            <StatCard icon={Church} label="Activas" sublabel="Capillas" count={lugares.length} />
+            <StatCard icon={Calendar} label="Próximos" sublabel="Eventos" count={totalEventos} />
             <StatCard
               icon={Inbox}
-              count={totalSolicitudes ?? 0}
-              label="Solicitudes pendientes"
-              highlight={(totalSolicitudes ?? 0) > 0}
+              label="Pendientes"
+              sublabel="Solicitudes"
+              count={totalSolicitudes}
+              error={totalSolicitudes > 0}
             />
-            <StatCard icon={Users} count={totalVoluntarios} label="Voluntarios activos" />
+            <StatCard icon={Users} label="Registrados" sublabel="Voluntarios" count={totalVoluntarios} />
           </>
         ) : (
           <>
             <StatCard
               icon={Church}
+              label={`En ${perfil?.departamento_asignado ?? "tu zona"}`}
+              sublabel="Capillas"
               count={lugares.length}
-              label={`Capillas en ${perfil?.departamento_asignado ?? "tu zona"}`}
             />
-            <StatCard icon={Calendar} count={totalEventos} label="Eventos activos en tu zona" />
+            <StatCard icon={Calendar} label="Activos" sublabel="Eventos" count={totalEventos} />
           </>
         )}
-      </section>
+      </div>
 
-      <section className="mt-8">
-        <h2 className="text-sm font-semibold text-on-surface">⚠️ Capillas sin horarios</h2>
-        <p className="mt-0.5 text-xs text-on-surface-variant">
-          {isAdmin ? "De toda la arquidiócesis" : perfil?.departamento_asignado}
-        </p>
+      <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="rounded-2xl bg-surface-container-high p-6">
+          <div className="mb-4 flex items-center gap-2">
+            <Clock className="h-4 w-4 text-on-surface-variant" />
+            <h2 className="text-base font-semibold text-on-surface">Capillas sin horarios</h2>
+          </div>
 
-        {capillasSinHorarios.length === 0 ? (
-          <p className="mt-4 flex items-center gap-1.5 text-sm text-primary">
-            <CheckCircle className="h-4 w-4 shrink-0" />
-            Todas las capillas tienen horarios cargados ✓
-          </p>
-        ) : (
-          <>
-            <div className="mt-3 divide-y divide-outline-variant/20 rounded-xl bg-surface-container px-4">
-              {capillasSinHorarios.slice(0, 10).map((lugar) => (
-                <div key={lugar.id} className="flex items-center justify-between gap-3 py-3">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-on-surface">{lugar.nombre}</p>
-                    <p className="text-xs text-on-surface-variant">{lugar.departamento}</p>
+          {capillasSinHorarios.length === 0 ? (
+            <p className="py-2 text-sm text-on-surface-variant">
+              Todas las capillas tienen horarios cargados.
+            </p>
+          ) : (
+            <div className="divide-y divide-outline-variant/20">
+              {capillasSinHorarios.map((lugar) => (
+                <div key={lugar.id} className="flex items-center gap-3 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-on-surface">{lugar.nombre}</p>
+                    <p className="text-xs text-on-surface-variant">Sin horarios cargados</p>
                   </div>
                   <Link
                     href={`/admin/capillas/${lugar.id}/horarios`}
-                    className="shrink-0 text-sm text-primary hover:underline"
+                    className="ml-auto shrink-0 text-sm text-primary hover:underline"
                   >
-                    Cargar horarios →
+                    Cargar →
                   </Link>
                 </div>
               ))}
             </div>
-            {capillasSinHorarios.length > 10 && (
-              <Link
-                href="/admin/capillas"
-                className="mt-3 inline-block text-sm text-primary hover:underline"
-              >
-                Ver todas ({capillasSinHorarios.length})
+          )}
+        </div>
+
+        {isAdmin ? (
+          <div className="rounded-2xl bg-surface-container-high p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Inbox className="h-4 w-4 text-on-surface-variant" />
+                <h2 className="text-base font-semibold text-on-surface">Solicitudes pendientes</h2>
+              </div>
+              <Link href="/admin/solicitudes" className="text-xs text-primary hover:underline">
+                Ver todas
               </Link>
-            )}
-          </>
-        )}
-      </section>
+            </div>
 
-      {isAdmin && (
-        <section className="mt-8">
-          <h2 className="text-sm font-semibold text-on-surface">
-            📋 Solicitudes de baja pendientes
-          </h2>
-
-          {solicitudes.length === 0 ? (
-            <p className="mt-4 flex items-center gap-1.5 text-sm text-primary">
-              <CheckCircle className="h-4 w-4 shrink-0" />
-              No hay solicitudes pendientes ✓
-            </p>
-          ) : (
-            <>
-              <div className="mt-3 divide-y divide-outline-variant/20 rounded-xl bg-surface-container px-4">
-                {solicitudes.slice(0, 5).map((solicitud) => (
-                  <div key={solicitud.id} className="flex items-center justify-between gap-3 py-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-on-surface">
+            {solicitudes.length === 0 ? (
+              <p className="py-2 text-sm text-on-surface-variant">
+                No hay solicitudes pendientes.
+              </p>
+            ) : (
+              <div className="divide-y divide-outline-variant/20">
+                {solicitudes.map((solicitud) => (
+                  <div key={solicitud.id} className="flex items-start gap-3 py-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-container">
+                      <Trash2 className="h-4 w-4 text-on-surface-variant" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-on-surface">
                         {solicitud.lugares?.nombre ?? "Capilla eliminada"}
                       </p>
-                      <p className="text-xs text-on-surface-variant">
-                        {format(new Date(solicitud.created_at), "d MMM yyyy", { locale: es })}
-                      </p>
+                      <p className="truncate text-xs text-on-surface-variant">{solicitud.motivo}</p>
                     </div>
-                    <Link
-                      href="/admin/solicitudes"
-                      className="shrink-0 text-sm text-primary hover:underline"
-                    >
-                      Revisar →
-                    </Link>
+                    <span className="ml-auto shrink-0 rounded-full bg-surface-container px-2 py-0.5 text-xs text-on-surface-variant">
+                      {tiempoRelativo(solicitud.created_at)}
+                    </span>
                   </div>
                 ))}
               </div>
-              {totalSolicitudes > 5 && (
-                <Link
-                  href="/admin/solicitudes"
-                  className="mt-3 inline-block text-sm text-primary hover:underline"
-                >
-                  Ver todas en Solicitudes →
-                </Link>
-              )}
-            </>
-          )}
-        </section>
-      )}
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-on-surface-variant">
+            Contactá al administrador para gestionar solicitudes.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
