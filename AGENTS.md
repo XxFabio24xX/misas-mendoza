@@ -103,6 +103,35 @@ Ningún archivo `"use client"` debe importar `supabase-admin` — rompería el b
 | [lib/misas-utils.ts](lib/misas-utils.ts) | `findNextMisa` — lógica de "próxima misa" con temporadas y reemplazos, la parte más delicada del dominio |
 | [supabase/migrations/](supabase/migrations/) | Historial de schema — leer antes de asumir la forma de una tabla |
 
+## Agentes y skills instalados
+
+Instalados con `npx claude-code-templates@latest` (paquete de terceros, no escrito para este proyecto). Viven en `.claude/agents/` y `.claude/skills/`, no son parte del código de la app.
+
+**Agentes** (`.claude/agents/*.md`):
+
+| Agente | Para qué |
+|---|---|
+| `frontend-developer` | Desarrollo frontend completo, multi-framework (React/Vue/Angular) |
+| `fullstack-developer` | Features que cruzan DB + API + frontend como una unidad |
+| `backend-architect` | Diseño de arquitectura backend: APIs, límites de servicio, event-driven |
+| `database-architect` | Diseño de esquemas, modelado de datos, selección de tecnología de BD |
+| `ui-ux-designer` | Revisión de UI/UX, accesibilidad, crítica de diseño visual |
+| `code-reviewer` | Revisión de código: calidad, seguridad, mantenibilidad |
+| `security-auditor` | Auditorías de seguridad y compliance |
+
+**Skills** (`.claude/skills/*/SKILL.md`):
+
+| Skill | Para qué |
+|---|---|
+| `frontend-design` | Interfaces frontend de alta calidad, evita estética genérica de IA |
+| `ui-ux-pro-max` | Base de estilos/paletas/tipografías/gráficos para decisiones de diseño |
+| `senior-backend` | Scaffolding de APIs, optimización de queries, seguridad backend |
+| `senior-frontend` | Scaffolding de componentes, performance, bundle analysis |
+| `senior-architect` | Diagramas de arquitectura, decisiones de stack, trade-offs |
+| `code-reviewer` | Análisis automatizado de código, checklist de revisión |
+
+Son genéricos y no conocen las particularidades de este repo. Cuando se invoquen acá, las convenciones de este `AGENTS.md` (roles, RLS, los tres clientes de Supabase, paleta de diseño en `pantallas/DESIGN.md`/`DESIGNdark.md`, etc.) tienen prioridad sobre cualquier recomendación genérica que hagan.
+
 ## Lo que NO tocar sin mostrar el SQL/diff primero
 
 - **RLS policies** — no reescribir por intuición. Antes de tocar una policy, consultar `pg_policies` vía MCP para ver el estado real (el repo puede no coincidir con la BD viva) y mostrar el SQL al usuario antes de aplicarlo.
