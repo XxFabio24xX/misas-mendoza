@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { unstable_rethrow, useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Clock, Loader2, MapPin, Trash2 } from "lucide-react";
+import { Clock, Loader2, MapPin, Trash2 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
@@ -11,6 +11,7 @@ import imageCompression from "browser-image-compression";
 import { actualizarCapilla, eliminarCapilla } from "../../actions";
 import { HorariosGrid, type HorarioData } from "@/app/components/horarios-grid";
 import { ImageUploader } from "@/app/components/image-uploader";
+import { Breadcrumb } from "@/app/admin/components/breadcrumb";
 
 const LocationPicker = dynamic(
   () => import("@/app/components/location-picker"),
@@ -66,6 +67,22 @@ export default function EditarCapillaPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [esEditor, setEsEditor] = useState(false);
+  const [hayCambios, setHayCambios] = useState(false);
+
+  const marcarCambio = () => {
+    if (!hayCambios) setHayCambios(true);
+  };
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hayCambios) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hayCambios]);
 
   useEffect(() => {
     (async () => {
@@ -130,7 +147,33 @@ export default function EditarCapillaPage() {
     fetchLugar();
   }, [fetchLugar]);
 
+  function validar(formData: FormData): string | null {
+    const nombre = ((formData.get("nombre") as string) ?? "").trim();
+    const direccion = ((formData.get("direccion") as string) ?? "").trim();
+    const departamento = formData.get("departamento") as string;
+    const email = ((formData.get("email") as string) ?? "").trim();
+    const sitio_web = ((formData.get("sitio_web") as string) ?? "").trim();
+
+    if (!nombre) return "El nombre es obligatorio.";
+    if (!direccion) return "La dirección es obligatoria.";
+    if (!departamento) return "Seleccioná un departamento.";
+    if (!lat || !lng) return "Marcá la ubicación en el mapa.";
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return "El email no tiene un formato válido.";
+    }
+    if (sitio_web && sitio_web.length > 0 && !sitio_web.startsWith("http")) {
+      return "El sitio web debe comenzar con http:// o https://";
+    }
+    return null;
+  }
+
   async function handleSubmit(formData: FormData) {
+    const errorValidacion = validar(formData);
+    if (errorValidacion) {
+      setError(errorValidacion);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     startTransition(async () => {
       setError(null);
       formData.set("lat", String(lat));
@@ -163,6 +206,7 @@ export default function EditarCapillaPage() {
 
       try {
         await actualizarCapilla(id, formData);
+        setHayCambios(false);
       } catch (e) {
         unstable_rethrow(e);
         setError(e instanceof Error ? e.message : "Error inesperado.");
@@ -202,17 +246,13 @@ export default function EditarCapillaPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="flex items-center gap-3">
-        <Link
-          href="/admin/capillas"
-          className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-xl font-semibold text-on-surface md:text-2xl">Editar Capilla</h1>
-          <p className="mt-0.5 text-sm text-on-surface-variant">Modificá los datos de la capilla.</p>
-        </div>
+      <Breadcrumb items={[
+        { label: "Capillas", href: "/admin/capillas" },
+        { label: lugar?.nombre ?? "Editar" },
+      ]} />
+      <div className="flex-1">
+        <h1 className="text-xl font-semibold text-on-surface md:text-2xl">Editar Capilla</h1>
+        <p className="mt-0.5 text-sm text-on-surface-variant">Modificá los datos de la capilla.</p>
       </div>
 
       {esEditor && (
@@ -231,12 +271,14 @@ export default function EditarCapillaPage() {
               <label htmlFor="nombre" className="text-sm font-medium text-on-surface">Nombre</label>
               <input id="nombre" name="nombre" type="text" required defaultValue={lugar?.nombre}
                 placeholder="Ej: Parroquia Santiago Apóstol"
+                onChange={marcarCambio}
                 className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
               />
             </div>
             <div>
               <label htmlFor="tipo" className="text-sm font-medium text-on-surface">Tipo</label>
               <select id="tipo" name="tipo" required defaultValue={lugar?.tipo}
+                onChange={marcarCambio}
                 className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
               >
                 <option value="" disabled>Seleccioná...</option>
@@ -248,6 +290,7 @@ export default function EditarCapillaPage() {
             <div>
               <label htmlFor="departamento" className="text-sm font-medium text-on-surface">Departamento</label>
               <select id="departamento" name="departamento" required defaultValue={lugar?.departamento}
+                onChange={marcarCambio}
                 className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
               >
                 <option value="" disabled>Seleccioná...</option>
@@ -258,6 +301,7 @@ export default function EditarCapillaPage() {
               <label htmlFor="decanato" className="text-sm font-medium text-on-surface">Decanato <span className="text-on-surface-variant font-normal">(opcional)</span></label>
               <input id="decanato" name="decanato" type="text" defaultValue={lugar?.decanato ?? ""}
                 placeholder="Ej: Decanato Centro"
+                onChange={marcarCambio}
                 className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
               />
             </div>
@@ -268,6 +312,7 @@ export default function EditarCapillaPage() {
                   name="activo"
                   type="checkbox"
                   defaultChecked={lugar?.activo ?? true}
+                  onChange={marcarCambio}
                   className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary"
                 />
                 <span className="text-sm font-medium text-on-surface">Activo</span>
@@ -283,6 +328,7 @@ export default function EditarCapillaPage() {
               <label htmlFor="direccion" className="text-sm font-medium text-on-surface">Dirección</label>
               <input id="direccion" name="direccion" type="text" required defaultValue={lugar?.direccion}
                 placeholder="Ej: Av. San Martín 1234, Ciudad"
+                onChange={marcarCambio}
                 className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
               />
             </div>
@@ -290,6 +336,7 @@ export default function EditarCapillaPage() {
               <label htmlFor="telefono" className="text-sm font-medium text-on-surface">Teléfono <span className="text-on-surface-variant font-normal">(opcional)</span></label>
               <input id="telefono" name="telefono" type="text" defaultValue={lugar?.telefono ?? ""}
                 placeholder="Ej: 261 123-4567"
+                onChange={marcarCambio}
                 className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
               />
             </div>
@@ -297,6 +344,7 @@ export default function EditarCapillaPage() {
               <label htmlFor="email" className="text-sm font-medium text-on-surface">Email <span className="text-on-surface-variant font-normal">(opcional)</span></label>
               <input id="email" name="email" type="email" defaultValue={lugar?.email ?? ""}
                 placeholder="secretaria@ejemplo.com"
+                onChange={marcarCambio}
                 className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
               />
             </div>
@@ -304,6 +352,7 @@ export default function EditarCapillaPage() {
               <label htmlFor="sitio_web" className="text-sm font-medium text-on-surface">Sitio Web <span className="text-on-surface-variant font-normal">(opcional)</span></label>
               <input id="sitio_web" name="sitio_web" type="url" defaultValue={lugar?.sitio_web ?? ""}
                 placeholder="https://ejemplo.com"
+                onChange={marcarCambio}
                 className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
               />
             </div>
@@ -311,6 +360,7 @@ export default function EditarCapillaPage() {
               <label htmlFor="horario_secretaria" className="text-sm font-medium text-on-surface">Horario Secretaría <span className="text-on-surface-variant font-normal">(opcional)</span></label>
               <input id="horario_secretaria" name="horario_secretaria" type="text" defaultValue={lugar?.horario_secretaria ?? ""}
                 placeholder="Ej: Lun a Vie 9-13 y 16-20"
+                onChange={marcarCambio}
                 className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
               />
             </div>
@@ -321,6 +371,7 @@ export default function EditarCapillaPage() {
                   name="hay_confesiones"
                   type="checkbox"
                   defaultChecked={lugar?.hay_confesiones}
+                  onChange={marcarCambio}
                   className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary"
                 />
                 <span className="text-sm font-medium text-on-surface">¿Hay confesiones disponibles?</span>
@@ -333,6 +384,7 @@ export default function EditarCapillaPage() {
                   name="recibe_caritas"
                   type="checkbox"
                   defaultChecked={lugar?.recibe_caritas}
+                  onChange={marcarCambio}
                   className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary"
                 />
                 <span className="text-sm font-medium text-on-surface">Recibe donaciones para Cáritas</span>
@@ -348,6 +400,7 @@ export default function EditarCapillaPage() {
               <label htmlFor="descripcion" className="text-sm font-medium text-on-surface">Descripción <span className="text-on-surface-variant font-normal">(opcional)</span></label>
               <textarea id="descripcion" name="descripcion" rows={3} defaultValue={lugar?.descripcion ?? ""}
                 placeholder="Breve descripción de la capilla..."
+                onChange={marcarCambio}
                 className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary resize-y"
               />
             </div>
@@ -357,7 +410,7 @@ export default function EditarCapillaPage() {
               </label>
               <ImageUploader
                 value={imagePreview}
-                onChange={(file, preview) => { setImageFile(file); setImagePreview(preview); }}
+                onChange={(file, preview) => { setImageFile(file); setImagePreview(preview); marcarCambio(); }}
                 aspect={768 / 288}
               />
             </div>
@@ -389,6 +442,7 @@ export default function EditarCapillaPage() {
               rows={3}
               defaultValue={lugar?.notas_horarios ?? ""}
               placeholder="Ej: En verano se agrega una misa a las 20:30 los sábados. En invierno se suspende la misa de las 7:00..."
+              onChange={marcarCambio}
               className="mt-1.5 block w-full resize-y rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
             />
           </div>
@@ -399,7 +453,7 @@ export default function EditarCapillaPage() {
           <div className="grid gap-5 md:grid-cols-2">
             <div className="flex flex-col gap-4 md:col-span-2">
               <p className="text-sm text-on-surface-variant">Hacé clic en el mapa para ajustar la ubicación.</p>
-              <LocationPicker lat={lat} lng={lng} onChange={(newLat, newLng) => { setLat(newLat); setLng(newLng); }} />
+              <LocationPicker lat={lat} lng={lng} onChange={(newLat, newLng) => { setLat(newLat); setLng(newLng); marcarCambio(); }} />
             </div>
             <div>
               <label htmlFor="lat_input" className="text-sm font-medium text-on-surface">Latitud</label>

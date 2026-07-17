@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { unstable_rethrow, useParams } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { TIPO_EVENTO_OPTIONS } from "@/lib/eventos-tipos";
 import { DEPARTAMENTOS } from "@/lib/departamentos";
 import DateInputDMY from "@/app/components/date-input-dmy";
 import { actualizarEvento } from "@/app/admin/eventos/actions";
+import { Breadcrumb } from "@/app/admin/components/breadcrumb";
 
 const HORARIOS = Array.from({ length: 96 }, (_, i) => {
   const h = String(Math.floor(i / 4)).padStart(2, "0");
@@ -41,6 +42,35 @@ export default function EditarEventoPage() {
   const [loading, setLoading] = useState(true);
   const [departamento, setDepartamento] = useState("");
   const [lugarId, setLugarId] = useState("");
+  const [esEditor, setEsEditor] = useState(false);
+  const [hayCambios, setHayCambios] = useState(false);
+
+  const marcarCambio = () => {
+    if (!hayCambios) setHayCambios(true);
+  };
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("perfiles")
+        .select("rol")
+        .eq("id", user.id)
+        .single();
+      setEsEditor(data?.rol === "editor");
+    });
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hayCambios) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hayCambios]);
 
   const fetchData = useCallback(async () => {
     if (!id) {
@@ -126,6 +156,7 @@ export default function EditarEventoPage() {
       }
       try {
         await actualizarEvento(id, formData);
+        setHayCambios(false);
       } catch (e) {
         unstable_rethrow(e);
         setError(e instanceof Error ? e.message : "Error inesperado.");
@@ -152,24 +183,30 @@ export default function EditarEventoPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="flex items-center gap-3">
-        <Link
-          href="/admin/eventos"
-          className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div>
-          <h1 className="text-xl font-semibold text-on-surface md:text-2xl">Editar Evento</h1>
-          <p className="mt-0.5 text-sm text-on-surface-variant">Modificá los datos del evento.</p>
-        </div>
+      <Breadcrumb items={[
+        { label: "Eventos", href: "/admin/eventos" },
+        { label: evento?.titulo ?? "Editar" },
+      ]} />
+      <div>
+        <h1 className="text-xl font-semibold text-on-surface md:text-2xl">Editar Evento</h1>
+        <p className="mt-0.5 text-sm text-on-surface-variant">Modificá los datos del evento.</p>
       </div>
+
+      {esEditor && (
+        <div className="mt-6 rounded-xl bg-secondary-container
+                        px-5 py-4 text-sm text-on-secondary-container">
+          <strong>Modo editor:</strong> Los eventos que propongas
+          serán revisados por el administrador de tu departamento
+          antes de publicarse.
+        </div>
+      )}
 
       <form action={handleSubmit} className="mt-6 space-y-5">
         <div className="grid gap-5 md:grid-cols-2">
           <div className="md:col-span-2">
             <label htmlFor="titulo" className="text-sm font-medium text-on-surface">Título</label>
             <input id="titulo" name="titulo" type="text" required defaultValue={evento?.titulo}
+              onChange={marcarCambio}
               className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
             />
           </div>
@@ -177,6 +214,7 @@ export default function EditarEventoPage() {
           <div>
             <label htmlFor="tipo" className="text-sm font-medium text-on-surface">Tipo</label>
             <select id="tipo" name="tipo" required defaultValue={evento?.tipo}
+              onChange={marcarCambio}
               className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
             >
               <option value="" disabled>Seleccioná...</option>
@@ -187,7 +225,7 @@ export default function EditarEventoPage() {
           <div>
             <label htmlFor="departamento" className="text-sm font-medium text-on-surface">Departamento</label>
             <select id="departamento" name="departamento" required value={departamento}
-              onChange={(e) => handleDepartamentoChange(e.target.value)}
+              onChange={(e) => { handleDepartamentoChange(e.target.value); marcarCambio(); }}
               className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
             >
               <option value="" disabled>Seleccioná...</option>
@@ -198,7 +236,7 @@ export default function EditarEventoPage() {
           <div>
             <label htmlFor="lugar_id" className="text-sm font-medium text-on-surface">Capilla asociada <span className="text-on-surface-variant font-normal">(opcional)</span></label>
             <select id="lugar_id" name="lugar_id" value={lugarId}
-              onChange={(e) => setLugarId(e.target.value)}
+              onChange={(e) => { setLugarId(e.target.value); marcarCambio(); }}
               disabled={!departamento}
               aria-describedby={!departamento ? "lugar_id-hint" : undefined}
               className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-50"
@@ -216,6 +254,7 @@ export default function EditarEventoPage() {
           <div className="md:col-span-2">
             <label htmlFor="ubicacion" className="text-sm font-medium text-on-surface">Ubicación <span className="text-on-surface-variant font-normal">(se completa automáticamente si seleccionás una capilla)</span></label>
             <input id="ubicacion" name="ubicacion" type="text" defaultValue={evento?.lugares?.nombre ?? ""}
+              onChange={marcarCambio}
               className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary"
             />
           </div>
@@ -230,6 +269,7 @@ export default function EditarEventoPage() {
           <div>
             <label htmlFor="fecha_inicio_time" className="text-sm font-medium text-on-surface">Hora de Inicio</label>
             <select id="fecha_inicio_time" name="fecha_inicio_time" required defaultValue={roundToNearest15(toTimeValue(evento?.fecha_inicio ?? ""))}
+              onChange={marcarCambio}
               className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
             >
               <option value="" disabled>Seleccioná...</option>
@@ -249,6 +289,7 @@ export default function EditarEventoPage() {
           <div>
             <label htmlFor="fecha_fin_time" className="text-sm font-medium text-on-surface">Hora de Fin <span className="text-on-surface-variant font-normal">(opcional)</span></label>
             <select id="fecha_fin_time" name="fecha_fin_time" defaultValue={roundToNearest15(toTimeValue(evento?.fecha_fin ?? ""))}
+              onChange={marcarCambio}
               className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
             >
               <option value="">Sin hora</option>
@@ -261,6 +302,7 @@ export default function EditarEventoPage() {
           <div className="md:col-span-2">
             <label htmlFor="descripcion" className="text-sm font-medium text-on-surface">Descripción</label>
             <textarea id="descripcion" name="descripcion" rows={4} defaultValue={evento?.descripcion ?? ""}
+              onChange={marcarCambio}
               className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary resize-y"
             />
           </div>
@@ -272,6 +314,7 @@ export default function EditarEventoPage() {
                 name="activo"
                 type="checkbox"
                 defaultChecked={evento?.activo}
+                onChange={marcarCambio}
                 className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary"
               />
               <span className="text-sm font-medium text-on-surface">Activo</span>

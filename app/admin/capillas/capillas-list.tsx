@@ -187,14 +187,14 @@ export function CapillasList({
                         <Link
                           href={`/admin/capillas/${l.id}/horarios`}
                           className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
-                          title="Horarios"
+                          title="Gestionar horarios de misa"
                         >
                           <Clock className="h-4 w-4" />
                         </Link>
                         <Link
                           href={`/admin/capillas/${l.id}/editar`}
                           className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
-                          title="Editar"
+                          title="Editar capilla"
                         >
                           <Pencil className="h-4 w-4" />
                         </Link>
@@ -280,15 +280,21 @@ export function CapillasList({
                         <div className="flex items-center justify-end gap-1">
                           <Link
                             href={`/admin/capillas/${l.id}/horarios`}
-                            className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
-                            title="Horarios"
+                            title="Gestionar horarios de misa"
+                            className="inline-flex items-center gap-1.5
+                                       rounded-lg px-3 py-1.5 text-sm
+                                       text-on-surface-variant border
+                                       border-outline-variant/30
+                                       hover:text-primary hover:border-primary/30
+                                       transition-colors"
                           >
-                            <Clock className="h-4 w-4" />
+                            <Clock className="h-3.5 w-3.5" />
+                            Horarios
                           </Link>
                           <Link
                             href={`/admin/capillas/${l.id}/editar`}
                             className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
-                            title="Editar"
+                            title="Editar capilla"
                           >
                             <Pencil className="h-4 w-4" />
                           </Link>

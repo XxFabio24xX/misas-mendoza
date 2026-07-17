@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { unstable_rethrow, useParams } from "next/navigation";
-import { ArrowLeft, Clock, Loader2, Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { Clock, Loader2, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { agregarHorario, editarHorario, eliminarHorario, setTemporadaActual } from "../../actions";
+import { Breadcrumb } from "@/app/admin/components/breadcrumb";
 
 const DIAS = [
   { value: 0, label: "Domingo", short: "Dom" },
@@ -247,12 +248,13 @@ export default function HorariosPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
+      <Breadcrumb items={[
+        { label: "Capillas", href: "/admin/capillas" },
+        { label: lugar.nombre, href: `/admin/capillas/${id}/editar` },
+        { label: "Horarios" },
+      ]} />
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Link href={`/admin/capillas/${id}/editar`}
-          className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface">
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
         <div className="flex-1">
           <h1 className="text-xl font-semibold text-on-surface md:text-2xl">
             Horarios — <span className="text-primary">{lugar.nombre}</span>
@@ -260,6 +262,10 @@ export default function HorariosPage() {
           <p className="mt-0.5 text-sm text-on-surface-variant">
             Configurá los horarios de misa y actividades por día y temporada.
           </p>
+          <Link href={`/admin/capillas/${id}/editar`}
+            className="text-primary hover:underline text-sm">
+            Editar datos de la capilla →
+          </Link>
         </div>
         {!showPanel && (
           <button onClick={() => openAddFor()}

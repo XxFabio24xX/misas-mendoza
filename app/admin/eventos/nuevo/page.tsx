@@ -2,13 +2,14 @@
 
 import { Suspense, useEffect, useMemo, useState, useTransition } from "react";
 import { unstable_rethrow, useSearchParams } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { TIPO_EVENTO_OPTIONS } from "@/lib/eventos-tipos";
 import { DEPARTAMENTOS } from "@/lib/departamentos";
 import DateInputDMY from "@/app/components/date-input-dmy";
 import { crearEvento } from "../actions";
+import { Breadcrumb } from "@/app/admin/components/breadcrumb";
 
 const HORARIOS = Array.from({ length: 96 }, (_, i) => {
   const h = String(Math.floor(i / 4)).padStart(2, "0");
@@ -52,10 +53,23 @@ function NuevoEventoForm() {
   const [lugarId, setLugarId] = useState("");
   const [base, setBase] = useState<EventoBase | null>(null);
   const [baseLoading, setBaseLoading] = useState(duplicarId !== null);
+  const [esEditor, setEsEditor] = useState(false);
 
   useEffect(() => {
     supabase.from("lugares").select("id,nombre,departamento").order("nombre").then(({ data }) => {
       if (data) setLugares(data);
+    });
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("perfiles")
+        .select("rol")
+        .eq("id", user.id)
+        .single();
+      setEsEditor(data?.rol === "editor");
     });
   }, []);
 
@@ -129,22 +143,27 @@ function NuevoEventoForm() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="flex items-center gap-3">
-        <Link
-          href="/admin/eventos"
-          className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div>
-          <h1 className="text-xl font-semibold text-on-surface md:text-2xl">Nuevo Evento</h1>
-          <p className="mt-0.5 text-sm text-on-surface-variant">
-            {base
-              ? "Duplicando un evento existente: revisá los datos y completá las fechas."
-              : "Creá un nuevo evento o aviso para la comunidad."}
-          </p>
-        </div>
+      <Breadcrumb items={[
+        { label: "Eventos", href: "/admin/eventos" },
+        { label: "Nuevo evento" },
+      ]} />
+      <div>
+        <h1 className="text-xl font-semibold text-on-surface md:text-2xl">Nuevo Evento</h1>
+        <p className="mt-0.5 text-sm text-on-surface-variant">
+          {base
+            ? "Duplicando un evento existente: revisá los datos y completá las fechas."
+            : "Creá un nuevo evento o aviso para la comunidad."}
+        </p>
       </div>
+
+      {esEditor && (
+        <div className="mt-6 rounded-xl bg-secondary-container
+                        px-5 py-4 text-sm text-on-secondary-container">
+          <strong>Modo editor:</strong> Los eventos que propongas
+          serán revisados por el administrador de tu departamento
+          antes de publicarse.
+        </div>
+      )}
 
       <form action={handleSubmit} className="mt-6 space-y-5">
         <div className="grid gap-5 md:grid-cols-2">
@@ -247,6 +266,27 @@ function NuevoEventoForm() {
               placeholder="Describí los detalles del evento..."
               className="mt-1.5 block w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/50 focus:border-primary resize-y"
             />
+          </div>
+
+          <div className="md:col-span-2 flex items-start gap-3 pt-2">
+            <input
+              type="checkbox"
+              id="activo"
+              name="activo"
+              defaultChecked
+              className="mt-0.5 h-4 w-4 rounded border-outline-variant
+                         accent-primary cursor-pointer"
+            />
+            <div>
+              <label htmlFor="activo"
+                     className="text-sm font-medium text-on-surface
+                                cursor-pointer">
+                Publicar evento
+              </label>
+              <p className="text-xs text-on-surface-variant mt-0.5">
+                Si está desmarcado, el evento no será visible al público.
+              </p>
+            </div>
           </div>
         </div>
 

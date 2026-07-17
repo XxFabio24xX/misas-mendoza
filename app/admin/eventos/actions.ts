@@ -26,6 +26,7 @@ export async function crearEvento(formData: FormData) {
   const fecha_inicio = formData.get("fecha_inicio") as string;
   const fecha_fin = formData.get("fecha_fin") as string;
   const descripcion = (formData.get("descripcion") as string) || "";
+  const activo = formData.get("activo") === "on";
 
   const { error } = await supabaseAdmin.from("eventos").insert({
     titulo,
@@ -36,7 +37,7 @@ export async function crearEvento(formData: FormData) {
     fecha_inicio: new Date(fecha_inicio).toISOString(),
     fecha_fin: fecha_fin ? new Date(fecha_fin).toISOString() : null,
     descripcion,
-    activo: true,
+    activo,
   });
 
   if (error) throw new Error(error.message);

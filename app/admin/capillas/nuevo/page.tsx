@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { unstable_rethrow } from "next/navigation";
-import { ArrowLeft, Loader2, MapPin } from "lucide-react";
+import { Loader2, MapPin } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { crearCapilla } from "../actions";
@@ -11,6 +11,7 @@ import { ImageUploader } from "@/app/components/image-uploader";
 import { supabase } from "@/lib/supabase";
 import { DEPARTAMENTOS } from "@/lib/departamentos";
 import imageCompression from "browser-image-compression";
+import { Breadcrumb } from "@/app/admin/components/breadcrumb";
 
 const LocationPicker = dynamic(
   () => import("@/app/components/location-picker"),
@@ -43,7 +44,33 @@ export default function NuevaCapillaPage() {
     })();
   }, []);
 
+  function validar(formData: FormData): string | null {
+    const nombre = ((formData.get("nombre") as string) ?? "").trim();
+    const direccion = ((formData.get("direccion") as string) ?? "").trim();
+    const departamento = formData.get("departamento") as string;
+    const email = ((formData.get("email") as string) ?? "").trim();
+    const sitio_web = ((formData.get("sitio_web") as string) ?? "").trim();
+
+    if (!nombre) return "El nombre es obligatorio.";
+    if (!direccion) return "La dirección es obligatoria.";
+    if (!departamento) return "Seleccioná un departamento.";
+    if (!lat || !lng) return "Marcá la ubicación en el mapa.";
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return "El email no tiene un formato válido.";
+    }
+    if (sitio_web && sitio_web.length > 0 && !sitio_web.startsWith("http")) {
+      return "El sitio web debe comenzar con http:// o https://";
+    }
+    return null;
+  }
+
   async function handleSubmit(formData: FormData) {
+    const errorValidacion = validar(formData);
+    if (errorValidacion) {
+      setError(errorValidacion);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     startTransition(async () => {
       setError(null);
       formData.set("lat", String(lat));
@@ -83,17 +110,13 @@ export default function NuevaCapillaPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="flex items-center gap-3">
-        <Link
-          href="/admin/capillas"
-          className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div>
-          <h1 className="text-xl font-semibold text-on-surface md:text-2xl">Nueva Capilla</h1>
-          <p className="mt-0.5 text-sm text-on-surface-variant">Registrá una nueva capilla, parroquia o santuario.</p>
-        </div>
+      <Breadcrumb items={[
+        { label: "Capillas", href: "/admin/capillas" },
+        { label: "Nueva capilla" },
+      ]} />
+      <div>
+        <h1 className="text-xl font-semibold text-on-surface md:text-2xl">Nueva Capilla</h1>
+        <p className="mt-0.5 text-sm text-on-surface-variant">Registrá una nueva capilla, parroquia o santuario.</p>
       </div>
 
       {esEditor && (
