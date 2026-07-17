@@ -5,6 +5,7 @@ import { unstable_rethrow, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle, ChevronDown, Loader2 } from "lucide-react";
 import { enviarMensaje } from "./actions";
+import { CandleLoader } from "@/app/components/candle-loader";
 
 const DEPARTAMENTOS_TODOS = [
   "Capital", "Las Heras", "Guaymallén", "Godoy Cruz", "Maipú",
@@ -19,7 +20,7 @@ export default function ContactoPage() {
     <Suspense
       fallback={
         <div className="flex min-h-[40vh] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <CandleLoader size="md" />
         </div>
       }
     >

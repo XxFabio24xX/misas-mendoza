@@ -12,6 +12,7 @@ import { actualizarCapilla, eliminarCapilla } from "../../actions";
 import { HorariosGrid, type HorarioData } from "@/app/components/horarios-grid";
 import { ImageUploader } from "@/app/components/image-uploader";
 import { Breadcrumb } from "@/app/admin/components/breadcrumb";
+import { CandleLoader } from "@/app/components/candle-loader";
 
 const LocationPicker = dynamic(
   () => import("@/app/components/location-picker"),
@@ -230,7 +231,7 @@ export default function EditarCapillaPage() {
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <CandleLoader size="md" />
       </div>
     );
   }

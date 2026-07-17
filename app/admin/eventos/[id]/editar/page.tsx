@@ -10,6 +10,7 @@ import { DEPARTAMENTOS } from "@/lib/departamentos";
 import DateInputDMY from "@/app/components/date-input-dmy";
 import { actualizarEvento } from "@/app/admin/eventos/actions";
 import { Breadcrumb } from "@/app/admin/components/breadcrumb";
+import { CandleLoader } from "@/app/components/candle-loader";
 
 const HORARIOS = Array.from({ length: 96 }, (_, i) => {
   const h = String(Math.floor(i / 4)).padStart(2, "0");
@@ -167,7 +168,7 @@ export default function EditarEventoPage() {
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <CandleLoader size="md" />
       </div>
     );
   }

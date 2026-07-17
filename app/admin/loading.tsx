@@ -1,7 +1,9 @@
+import { CandleLoader } from "@/app/components/candle-loader";
+
 export default function Loading() {
   return (
     <div className="flex min-h-[50vh] items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <CandleLoader size="md" />
     </div>
   );
 }

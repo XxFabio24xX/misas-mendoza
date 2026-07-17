@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { ThemeToggle } from "@/app/components/theme-toggle";
+import { CandleLoader } from "@/app/components/candle-loader";
 
 type Perfil = {
   id: string;
@@ -175,8 +176,8 @@ export default function AdminLayout({
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface-container">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <CandleLoader />
       </div>
     );
   }

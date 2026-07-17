@@ -8,6 +8,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { tipoEventoColor, tipoEventoLabel } from "@/lib/eventos-tipos";
 import { FilterChip } from "@/app/components/filter-chip";
+import { CandleLoader } from "@/app/components/candle-loader";
 
 type Evento = {
   id: string;
@@ -113,8 +114,7 @@ export default function EventosPage() {
 
       {loading && (
         <div className="mt-20 flex flex-col items-center gap-3 text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm text-on-surface-variant">Cargando eventos...</p>
+          <CandleLoader size="sm" text="Cargando eventos" />
         </div>
       )}
 

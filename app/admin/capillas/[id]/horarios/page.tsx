@@ -7,6 +7,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { agregarHorario, editarHorario, eliminarHorario, setTemporadaActual } from "../../actions";
 import { Breadcrumb } from "@/app/admin/components/breadcrumb";
+import { CandleLoader } from "@/app/components/candle-loader";
 
 const DIAS = [
   { value: 0, label: "Domingo", short: "Dom" },
@@ -208,7 +209,7 @@ export default function HorariosPage() {
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <CandleLoader size="md" />
       </div>
     );
   }
