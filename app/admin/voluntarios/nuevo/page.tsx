@@ -13,7 +13,7 @@ export default function NuevoVoluntarioPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [rol, setRol] = useState<"editor_departamento" | "admin">("editor_departamento");
+  const [rol, setRol] = useState<"editor" | "admin_departamento" | "super_admin">("editor");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -129,17 +129,28 @@ export default function NuevoVoluntarioPage() {
             onChange={(e) => setRol(e.target.value as typeof rol)}
             className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
           >
-            <option value="editor_departamento">Editor de Departamento</option>
-            <option value="admin">Super Admin</option>
+            <option value="editor">Editor</option>
+            <option value="admin_departamento">Admin de Departamento</option>
+            <option value="super_admin">Super Admin</option>
           </select>
-          {rol === "admin" && (
+          {rol === "super_admin" && (
             <p className="mt-1.5 text-xs text-on-surface-variant">
               El Super Admin tiene acceso completo a todas las capillas, eventos y voluntarios.
             </p>
           )}
+          {rol === "admin_departamento" && (
+            <p className="mt-1.5 text-xs text-on-surface-variant">
+              Aprueba solicitudes y edita capillas directo, pero solo dentro de su departamento.
+            </p>
+          )}
+          {rol === "editor" && (
+            <p className="mt-1.5 text-xs text-on-surface-variant">
+              Propone altas, bajas y ediciones de su departamento, sujetas a aprobación.
+            </p>
+          )}
         </div>
 
-        {rol === "editor_departamento" && (
+        {(rol === "editor" || rol === "admin_departamento") && (
           <div>
             <label
               htmlFor="departamento"

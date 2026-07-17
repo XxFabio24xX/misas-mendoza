@@ -14,14 +14,14 @@ export async function crearVoluntario(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const nombre = formData.get("nombre") as string;
-  const rol = (formData.get("rol") as string) || "editor_departamento";
+  const rol = (formData.get("rol") as string) || "editor";
   const departamento = formData.get("departamento") as string | null;
 
   if (!email || !password || !nombre) {
     return { error: "Nombre, email y contraseña son obligatorios." };
   }
-  if (rol === "editor_departamento" && !departamento) {
-    return { error: "El departamento es obligatorio para editores." };
+  if ((rol === "editor" || rol === "admin_departamento") && !departamento) {
+    return { error: "El departamento es obligatorio para este rol." };
   }
 
   const { data: authUser, error: authError } =
@@ -40,7 +40,7 @@ export async function crearVoluntario(formData: FormData) {
     nombre_completo: nombre,
     email,
     rol,
-    departamento_asignado: rol === "admin" ? null : departamento,
+    departamento_asignado: rol === "super_admin" ? null : departamento,
     activo: true,
   });
 

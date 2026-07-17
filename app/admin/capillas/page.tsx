@@ -20,7 +20,7 @@ export default async function CapillasPage() {
     .maybeSingle();
 
   let query = supabase.from("lugares").select("*");
-  if (perfil?.rol === "editor_departamento" && perfil?.departamento_asignado) {
+  if (perfil?.rol !== "super_admin" && perfil?.departamento_asignado) {
     query = query.eq("departamento", perfil.departamento_asignado);
   }
 
@@ -52,7 +52,7 @@ export default async function CapillasPage() {
       <CapillasList
         initialLugares={lugRes.data ?? []}
         initialHorarios={horRes.data ?? []}
-        rol={perfil?.rol ?? "editor_departamento"}
+        rol={perfil?.rol ?? "editor"}
       />
     </div>
   );

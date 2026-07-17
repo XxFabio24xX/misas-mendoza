@@ -37,7 +37,7 @@ export function CapillasList({
 }: {
   initialLugares: Lugar[];
   initialHorarios: Horario[];
-  rol: "admin" | "editor_departamento";
+  rol: "super_admin" | "admin_departamento" | "editor";
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -198,7 +198,7 @@ export function CapillasList({
                         >
                           <Pencil className="h-4 w-4" />
                         </Link>
-                        {rol === "admin" ? (
+                        {rol !== "editor" ? (
                           <button
                             onClick={() => setDeleteTarget(l.id)}
                             aria-label="Eliminar capilla"
@@ -292,7 +292,7 @@ export function CapillasList({
                           >
                             <Pencil className="h-4 w-4" />
                           </Link>
-                          {rol === "admin" ? (
+                          {rol !== "editor" ? (
                             <button
                               onClick={() => setDeleteTarget(l.id)}
                               aria-label="Eliminar capilla"

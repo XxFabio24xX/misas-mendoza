@@ -20,7 +20,7 @@ export default async function EventosPage() {
     .maybeSingle();
 
   let query = supabase.from("eventos").select("*, lugares(nombre)");
-  if (perfil?.rol === "editor_departamento" && perfil?.departamento_asignado) {
+  if (perfil?.rol !== "super_admin" && perfil?.departamento_asignado) {
     query = query.eq("departamento", perfil.departamento_asignado);
   }
   query = query.order("fecha_inicio", { ascending: false });

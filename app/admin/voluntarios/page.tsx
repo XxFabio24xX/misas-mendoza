@@ -13,7 +13,7 @@ type Perfil = {
   id: string;
   nombre_completo: string;
   email: string;
-  rol: "admin" | "editor_departamento";
+  rol: "super_admin" | "admin_departamento" | "editor";
   departamento_asignado: string | null;
   activo: boolean;
 };
@@ -29,13 +29,15 @@ function getInitials(name: string | null | undefined): string {
 }
 
 const roleLabels: Record<string, string> = {
-  admin: "Super Admin",
-  editor_departamento: "Editor",
+  super_admin: "Super Admin",
+  admin_departamento: "Admin Depto.",
+  editor: "Editor",
 };
 
 const roleColors: Record<string, string> = {
-  admin: "bg-primary/10 text-primary",
-  editor_departamento: "bg-secondary-container/30 text-secondary",
+  super_admin: "bg-primary/10 text-primary",
+  admin_departamento: "bg-primary/10 text-primary",
+  editor: "bg-secondary-container/30 text-secondary",
 };
 
 export default function VoluntariosPage() {
@@ -62,7 +64,7 @@ export default function VoluntariosPage() {
       .eq("id", user.id)
       .single();
 
-    if (!perfil || perfil.rol !== "admin") {
+    if (!perfil || perfil.rol !== "super_admin") {
       router.push("/admin");
       return;
     }

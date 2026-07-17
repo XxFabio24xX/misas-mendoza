@@ -22,7 +22,7 @@ type Perfil = {
   id: string;
   nombre_completo: string;
   email: string;
-  rol: "admin" | "editor_departamento";
+  rol: "super_admin" | "admin_departamento" | "editor";
   departamento_asignado: string | null;
   activo: boolean;
 };
@@ -34,7 +34,7 @@ type NavItem = {
   tooltip?: string;
 };
 
-const adminNavItems: NavItem[] = [
+const superAdminNavItems: NavItem[] = [
   { href: "/admin", label: "Inicio del Panel", icon: LayoutDashboard },
   { href: "/admin/capillas", label: "Capillas", icon: Church },
   { href: "/admin/eventos", label: "Eventos", icon: Calendar },
@@ -46,9 +46,21 @@ const adminNavItems: NavItem[] = [
   },
   {
     href: "/admin/solicitudes",
-    label: "Solicitudes de Baja",
+    label: "Solicitudes",
     icon: Inbox,
-    tooltip: "Pedidos de eliminación de capillas enviados por los editores.",
+    tooltip: "Pedidos de alta, baja y edición enviados por los editores.",
+  },
+];
+
+const adminDepartamentoNavItems: NavItem[] = [
+  { href: "/admin", label: "Inicio del Panel", icon: LayoutDashboard },
+  { href: "/admin/capillas", label: "Capillas", icon: Church },
+  { href: "/admin/eventos", label: "Eventos", icon: Calendar },
+  {
+    href: "/admin/solicitudes",
+    label: "Solicitudes",
+    icon: Inbox,
+    tooltip: "Pedidos de alta, baja y edición de tu departamento.",
   },
 ];
 
@@ -102,12 +114,13 @@ export default function AdminLayout({
     })();
   }, [router]);
 
-  // Contador para el badge de Solicitudes de Baja (RLS: admin lee todas).
+  // Contador para el badge de Solicitudes (RLS ya escopea: super_admin ve
+  // todas, admin_departamento solo las de su departamento).
   // Se refresca en cada navegación para reflejar solicitudes resueltas/nuevas.
   useEffect(() => {
-    if (perfil?.rol !== "admin") return;
+    if (perfil?.rol !== "super_admin" && perfil?.rol !== "admin_departamento") return;
     supabase
-      .from("solicitudes_baja")
+      .from("solicitudes")
       .select("id", { count: "exact", head: true })
       .eq("estado", "pendiente")
       .then(({ count }) => setPendientes(count ?? 0));
@@ -128,8 +141,14 @@ export default function AdminLayout({
     );
   }
 
-  const isAdmin = perfil?.rol === "admin";
-  const navItems = isAdmin ? adminNavItems : editorNavItems;
+  const isAdmin = perfil?.rol === "super_admin";
+  const isAdminDepartamento = perfil?.rol === "admin_departamento";
+  const navItems = isAdmin
+    ? superAdminNavItems
+    : isAdminDepartamento
+      ? adminDepartamentoNavItems
+      : editorNavItems;
+  const roleLabel = isAdmin ? "Super Admin" : isAdminDepartamento ? "Admin Depto." : "Editor";
 
   return (
     <div className="flex min-h-screen bg-surface-container-low">
@@ -154,12 +173,12 @@ export default function AdminLayout({
               </p>
               <span
                 className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                  isAdmin
+                  isAdmin || isAdminDepartamento
                     ? "bg-primary/10 text-primary"
                     : "bg-secondary-container/30 text-secondary"
                 }`}
               >
-                {isAdmin ? "Super Admin" : "Editor"}
+                {roleLabel}
               </span>
             </div>
           </div>
@@ -323,12 +342,12 @@ export default function AdminLayout({
                   </p>
                   <span
                     className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                      isAdmin
+                      isAdmin || isAdminDepartamento
                         ? "bg-primary/10 text-primary"
                         : "bg-secondary-container/30 text-secondary"
                     }`}
                   >
-                    {isAdmin ? "Super Admin" : "Editor"}
+                    {roleLabel}
                   </span>
                 </div>
               </div>

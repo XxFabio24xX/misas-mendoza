@@ -13,9 +13,12 @@ type Lugar = {
   activo: boolean;
 };
 
+type Estado = "pendiente" | "aprobada" | "rechazada";
+
 type Solicitud = {
   id: string;
   motivo: string;
+  estado: Estado;
   created_at: string;
   lugares: { nombre: string; slug: string } | null;
 };
@@ -28,6 +31,18 @@ function tiempoRelativo(fecha: string): string {
   const dias = Math.floor(horas / 24);
   if (dias === 1) return "ayer";
   return `hace ${dias} días`;
+}
+
+function estadoLabel(estado: Estado): string {
+  if (estado === "aprobada") return "Aprobada";
+  if (estado === "rechazada") return "Rechazada";
+  return "Pendiente";
+}
+
+function estadoBadgeClass(estado: Estado): string {
+  if (estado === "aprobada") return "bg-primary/10 text-primary";
+  if (estado === "rechazada") return "bg-error-container text-on-error-container";
+  return "bg-surface-container text-on-surface-variant";
 }
 
 function StatCard({
@@ -80,16 +95,18 @@ export default async function AdminDashboard() {
     .eq("id", user.id)
     .single();
 
-  const isAdmin = perfil?.rol === "admin";
+  const isSuperAdmin = perfil?.rol === "super_admin";
+  const isAdminDepartamento = perfil?.rol === "admin_departamento";
+  const departamento = perfil?.departamento_asignado ?? "";
 
   let lugares: Lugar[] = [];
   let lugarIdsConHorarios = new Set<string>();
   let totalEventos = 0;
   let totalVoluntarios = 0;
-  let solicitudes: Solicitud[] = [];
   let totalSolicitudes = 0;
+  let solicitudes: Solicitud[] = [];
 
-  if (isAdmin) {
+  if (isSuperAdmin) {
     const [lugaresRes, horariosRes, eventosRes, voluntariosRes, totalSolicitudesRes, solicitudesRes] =
       await Promise.all([
         supabase
@@ -107,12 +124,12 @@ export default async function AdminDashboard() {
           .select("*", { count: "exact", head: true })
           .eq("activo", true),
         supabase
-          .from("solicitudes_baja")
+          .from("solicitudes")
           .select("*", { count: "exact", head: true })
           .eq("estado", "pendiente"),
         supabase
-          .from("solicitudes_baja")
-          .select("id, motivo, created_at, lugares(nombre, slug)")
+          .from("solicitudes")
+          .select("id, motivo, estado, created_at, lugares(nombre, slug)")
           .eq("estado", "pendiente")
           .order("created_at", { ascending: false })
           .limit(5),
@@ -124,25 +141,66 @@ export default async function AdminDashboard() {
     totalVoluntarios = voluntariosRes.count ?? 0;
     totalSolicitudes = totalSolicitudesRes.count ?? 0;
     solicitudes = (solicitudesRes.data ?? []) as unknown as Solicitud[];
+  } else if (isAdminDepartamento) {
+    // RLS ya restringe "solicitudes" a las del departamento de este perfil.
+    const [lugaresRes, horariosRes, eventosRes, totalSolicitudesRes, solicitudesRes] =
+      await Promise.all([
+        supabase
+          .from("lugares")
+          .select("id, nombre, departamento, slug, activo")
+          .eq("activo", true)
+          .eq("departamento", departamento)
+          .order("nombre"),
+        supabase.from("horarios").select("lugar_id"),
+        supabase
+          .from("eventos")
+          .select("*", { count: "exact", head: true })
+          .eq("activo", true)
+          .eq("departamento", departamento),
+        supabase
+          .from("solicitudes")
+          .select("*", { count: "exact", head: true })
+          .eq("estado", "pendiente"),
+        supabase
+          .from("solicitudes")
+          .select("id, motivo, estado, created_at, lugares(nombre, slug)")
+          .eq("estado", "pendiente")
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ]);
+
+    lugares = (lugaresRes.data ?? []) as Lugar[];
+    lugarIdsConHorarios = new Set((horariosRes.data ?? []).map((h) => h.lugar_id));
+    totalEventos = eventosRes.count ?? 0;
+    totalSolicitudes = totalSolicitudesRes.count ?? 0;
+    solicitudes = (solicitudesRes.data ?? []) as unknown as Solicitud[];
   } else {
-    const [lugaresRes, horariosRes, eventosRes] = await Promise.all([
+    // editor: stats de su departamento + estado de sus propias solicitudes.
+    const [lugaresRes, horariosRes, eventosRes, misSolicitudesRes] = await Promise.all([
       supabase
         .from("lugares")
         .select("id, nombre, departamento, slug, activo")
         .eq("activo", true)
-        .eq("departamento", perfil?.departamento_asignado ?? "")
+        .eq("departamento", departamento)
         .order("nombre"),
       supabase.from("horarios").select("lugar_id"),
       supabase
         .from("eventos")
         .select("*", { count: "exact", head: true })
         .eq("activo", true)
-        .eq("departamento", perfil?.departamento_asignado ?? ""),
+        .eq("departamento", departamento),
+      supabase
+        .from("solicitudes")
+        .select("id, motivo, estado, created_at, lugares(nombre, slug)")
+        .eq("solicitado_por", user.id)
+        .order("created_at", { ascending: false })
+        .limit(5),
     ]);
 
     lugares = (lugaresRes.data ?? []) as Lugar[];
     lugarIdsConHorarios = new Set((horariosRes.data ?? []).map((h) => h.lugar_id));
     totalEventos = eventosRes.count ?? 0;
+    solicitudes = (misSolicitudesRes.data ?? []) as unknown as Solicitud[];
   }
 
   const capillasSinHorarios = lugares.filter((l) => !lugarIdsConHorarios.has(l.id));
@@ -166,8 +224,12 @@ export default async function AdminDashboard() {
         </Link>
       </div>
 
-      <div className={`mt-6 grid grid-cols-1 gap-3 md:gap-4 ${isAdmin ? "md:grid-cols-4" : "md:grid-cols-2"}`}>
-        {isAdmin ? (
+      <div
+        className={`mt-6 grid grid-cols-1 gap-3 md:gap-4 ${
+          isSuperAdmin ? "md:grid-cols-4" : isAdminDepartamento ? "md:grid-cols-3" : "md:grid-cols-2"
+        }`}
+      >
+        {isSuperAdmin ? (
           <>
             <StatCard icon={Church} label="Activas" sublabel="Capillas" count={lugares.length} />
             <StatCard icon={Calendar} label="Próximos" sublabel="Eventos" count={totalEventos} />
@@ -180,11 +242,28 @@ export default async function AdminDashboard() {
             />
             <StatCard icon={Users} label="Registrados" sublabel="Voluntarios" count={totalVoluntarios} />
           </>
+        ) : isAdminDepartamento ? (
+          <>
+            <StatCard
+              icon={Church}
+              label={`En ${departamento || "tu zona"}`}
+              sublabel="Capillas"
+              count={lugares.length}
+            />
+            <StatCard icon={Calendar} label="Activos" sublabel="Eventos" count={totalEventos} />
+            <StatCard
+              icon={Inbox}
+              label="Pendientes"
+              sublabel="Solicitudes"
+              count={totalSolicitudes}
+              error={totalSolicitudes > 0}
+            />
+          </>
         ) : (
           <>
             <StatCard
               icon={Church}
-              label={`En ${perfil?.departamento_asignado ?? "tu zona"}`}
+              label={`En ${departamento || "tu zona"}`}
               sublabel="Capillas"
               count={lugares.length}
             />
@@ -224,7 +303,7 @@ export default async function AdminDashboard() {
           )}
         </div>
 
-        {isAdmin ? (
+        {isSuperAdmin || isAdminDepartamento ? (
           <div className="rounded-2xl bg-surface-container-high p-6">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -262,9 +341,36 @@ export default async function AdminDashboard() {
             )}
           </div>
         ) : (
-          <p className="text-sm text-on-surface-variant">
-            Contactá al administrador para gestionar solicitudes.
-          </p>
+          <div className="rounded-2xl bg-surface-container-high p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <Inbox className="h-4 w-4 text-on-surface-variant" />
+              <h2 className="text-base font-semibold text-on-surface">Mis solicitudes</h2>
+            </div>
+
+            {solicitudes.length === 0 ? (
+              <p className="py-2 text-sm text-on-surface-variant">
+                Todavía no enviaste solicitudes.
+              </p>
+            ) : (
+              <div className="divide-y divide-outline-variant/20">
+                {solicitudes.map((solicitud) => (
+                  <div key={solicitud.id} className="flex items-center gap-3 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-on-surface">
+                        {solicitud.lugares?.nombre ?? "Capilla eliminada"}
+                      </p>
+                      <p className="truncate text-xs text-on-surface-variant">{solicitud.motivo}</p>
+                    </div>
+                    <span
+                      className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-xs ${estadoBadgeClass(solicitud.estado)}`}
+                    >
+                      {estadoLabel(solicitud.estado)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

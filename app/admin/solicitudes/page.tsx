@@ -17,11 +17,11 @@ export default async function SolicitudesPage() {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (perfil?.rol !== "admin") redirect("/admin");
+  if (perfil?.rol !== "super_admin" && perfil?.rol !== "admin_departamento") redirect("/admin");
 
-  // RLS: los admins leen todas las solicitudes.
+  // RLS: super_admin lee todas, admin_departamento solo las de su depto.
   const { data } = await supabase
-    .from("solicitudes_baja")
+    .from("solicitudes")
     .select(
       "id, motivo, estado, created_at, lugares(nombre, departamento), perfiles(nombre_completo, email)",
     )

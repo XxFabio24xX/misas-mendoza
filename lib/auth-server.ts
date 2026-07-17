@@ -8,7 +8,7 @@ export type Perfil = {
   id: string;
   nombre_completo: string;
   email: string;
-  rol: "admin" | "editor_departamento";
+  rol: "super_admin" | "admin_departamento" | "editor";
   departamento_asignado: string | null;
   activo: boolean;
 };
@@ -38,14 +38,14 @@ export async function requirePerfil(): Promise<Perfil> {
   return perfil as Perfil;
 }
 
-/** Admins can act on any department; editors only on their own assigned one. */
+/** Super admin can act on any department; admin_departamento and editor only on their own assigned one. */
 export function assertDepartamentoAccess(
   perfil: Perfil,
   departamento: string | null | undefined
 ) {
-  if (perfil.rol === "admin") return;
+  if (perfil.rol === "super_admin") return;
   if (
-    perfil.rol === "editor_departamento" &&
+    (perfil.rol === "admin_departamento" || perfil.rol === "editor") &&
     departamento &&
     perfil.departamento_asignado === departamento
   ) {
@@ -55,7 +55,7 @@ export function assertDepartamentoAccess(
 }
 
 export function assertAdmin(perfil: Perfil) {
-  if (perfil.rol !== "admin") {
+  if (perfil.rol !== "super_admin") {
     throw new AuthError("Acción reservada a administradores.");
   }
 }

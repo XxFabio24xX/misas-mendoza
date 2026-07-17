@@ -12,7 +12,7 @@ export async function aprobarSolicitudBaja(solicitudId: string) {
   assertAdmin(await requirePerfil());
 
   const { data: solicitud } = await supabaseAdmin
-    .from("solicitudes_baja")
+    .from("solicitudes")
     .select("lugar_id, estado")
     .eq("id", solicitudId)
     .maybeSingle();
@@ -39,7 +39,7 @@ export async function rechazarSolicitudBaja(solicitudId: string) {
   assertAdmin(await requirePerfil());
 
   const { error } = await supabaseAdmin
-    .from("solicitudes_baja")
+    .from("solicitudes")
     .update({ estado: "rechazada" })
     .eq("id", solicitudId)
     .eq("estado", "pendiente");

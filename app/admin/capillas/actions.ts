@@ -175,7 +175,7 @@ export async function solicitarBajaCapilla(lugarId: string, motivo: string) {
   const motivoLimpio = motivo.trim();
   if (!motivoLimpio) throw new Error("El motivo es obligatorio.");
 
-  const { error } = await supabaseAdmin.from("solicitudes_baja").insert({
+  const { error } = await supabaseAdmin.from("solicitudes").insert({
     lugar_id: lugarId,
     motivo: motivoLimpio,
     solicitado_por: perfil.id,
