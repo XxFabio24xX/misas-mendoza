@@ -68,10 +68,9 @@ export default function AcercaPage() {
           datos de tu departamento, escribinos. Toda ayuda suma: cargar
           horarios lleva minutos y le ahorra la búsqueda a mucha gente.
         </p>
-        {/* TODO: reemplazar por el canal de contacto real (email / WhatsApp / formulario) */}
-        <p className="mt-4 text-sm font-medium text-primary">
-          Contacto: próximamente
-        </p>
+        <Link href="/contacto" className="mt-4 inline-block text-sm font-medium text-primary hover:underline">
+          Escribinos →
+        </Link>
       </section>
 
       <p className="mt-10 text-center text-sm text-on-surface-variant">

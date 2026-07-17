@@ -9,6 +9,7 @@ import {
   Calendar,
   LogOut,
   Inbox,
+  MessageSquare,
   User,
   Home,
   Users,
@@ -50,6 +51,12 @@ const superAdminNavItems: NavItem[] = [
     icon: Inbox,
     tooltip: "Pedidos de alta, baja y edición enviados por los editores.",
   },
+  {
+    href: "/admin/mensajes",
+    label: "Mensajes",
+    icon: MessageSquare,
+    tooltip: "Mensajes y reportes de la comunidad",
+  },
 ];
 
 const adminDepartamentoNavItems: NavItem[] = [
@@ -61,6 +68,12 @@ const adminDepartamentoNavItems: NavItem[] = [
     label: "Solicitudes",
     icon: Inbox,
     tooltip: "Pedidos de alta, baja y edición de tu departamento.",
+  },
+  {
+    href: "/admin/mensajes",
+    label: "Mensajes",
+    icon: MessageSquare,
+    tooltip: "Mensajes y reportes de la comunidad",
   },
 ];
 
@@ -87,6 +100,7 @@ export default function AdminLayout({
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [pendientes, setPendientes] = useState(0);
+  const [mensajesNuevos, setMensajesNuevos] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -124,6 +138,11 @@ export default function AdminLayout({
       .select("id", { count: "exact", head: true })
       .eq("estado", "pendiente")
       .then(({ count }) => setPendientes(count ?? 0));
+    supabase
+      .from("mensajes")
+      .select("id", { count: "exact", head: true })
+      .eq("estado", "nuevo")
+      .then(({ count }) => setMensajesNuevos(count ?? 0));
   }, [perfil, pathname]);
 
   const handleLogout = useCallback(async () => {
@@ -229,6 +248,11 @@ export default function AdminLayout({
                 {item.href === "/admin/solicitudes" && pendientes > 0 && (
                   <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-on-primary">
                     {pendientes}
+                  </span>
+                )}
+                {item.href === "/admin/mensajes" && mensajesNuevos > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-on-primary">
+                    {mensajesNuevos}
                   </span>
                 )}
               </Link>
@@ -399,6 +423,11 @@ export default function AdminLayout({
                     {item.href === "/admin/solicitudes" && pendientes > 0 && (
                       <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-on-primary">
                         {pendientes}
+                      </span>
+                    )}
+                    {item.href === "/admin/mensajes" && mensajesNuevos > 0 && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-on-primary">
+                        {mensajesNuevos}
                       </span>
                     )}
                   </Link>

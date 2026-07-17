@@ -1,12 +1,13 @@
 import { cache } from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { supabasePublic } from "@/lib/supabase-public";
 import { BackButton } from "@/app/components/back-button";
 import { FavoriteButton } from "@/app/components/favorite-button";
 import { ShareButton } from "@/app/components/share-button";
 import MapWrapper from "@/app/components/map-wrapper";
-import { Clock, Cross as CrossIcon, HandHeart, MapPin, Navigation, Snowflake, Sun } from "lucide-react";
+import { ArrowRight, Clock, Cross as CrossIcon, HandHeart, MapPin, MessageSquare, Navigation, Snowflake, Sun } from "lucide-react";
 import { notFound, permanentRedirect } from "next/navigation";
 
 type Lugar = {
@@ -404,6 +405,32 @@ export default async function CapillaPage({
               </h2>
               <div className="mt-3">
                 <MapWrapper lat={lugar.lat} lng={lugar.lng} nombre={lugar.nombre} />
+              </div>
+            </div>
+
+            <div className="mt-8 rounded-2xl bg-surface-container-high p-6">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center
+                                rounded-full bg-primary/10">
+                  <MessageSquare className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium text-on-surface">
+                    ¿Encontraste un error en los horarios?
+                  </h3>
+                  <p className="mt-1 text-sm text-on-surface-variant">
+                    Ayudanos a mantener la información actualizada.
+                  </p>
+                  <Link
+                    href={`/contacto?tipo=error_horario&capilla=${encodeURIComponent(lugar.nombre)}`}
+                    className="mt-3 inline-flex items-center gap-1.5
+                               text-sm font-medium text-primary
+                               hover:underline"
+                  >
+                    Reportar un error
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
