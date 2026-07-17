@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -126,10 +126,31 @@ export default function AdminLayout({
       .then(({ count }) => setPendientes(count ?? 0));
   }, [perfil, pathname]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await supabase.auth.signOut();
     router.push("/login");
-  };
+  }, [router]);
+
+  // Auto-logout por inactividad — 4hs de balance entre seguridad y UX para
+  // voluntarios que dejan el panel abierto mientras trabajan.
+  useEffect(() => {
+    const INACTIVIDAD_MS = 4 * 60 * 60 * 1000;
+    let timer: ReturnType<typeof setTimeout>;
+
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(handleLogout, INACTIVIDAD_MS);
+    };
+
+    const eventos = ["mousedown", "keydown", "touchstart", "scroll"];
+    eventos.forEach((e) => window.addEventListener(e, resetTimer));
+    resetTimer();
+
+    return () => {
+      clearTimeout(timer);
+      eventos.forEach((e) => window.removeEventListener(e, resetTimer));
+    };
+  }, [handleLogout]);
 
   const closeDrawer = () => setDrawerOpen(false);
 
