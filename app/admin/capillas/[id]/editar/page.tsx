@@ -65,6 +65,22 @@ export default function EditarCapillaPage() {
   const [lng, setLng] = useState<number>(-68.8272);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [esEditor, setEsEditor] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: perfil } = await supabase
+        .from("perfiles")
+        .select("rol")
+        .eq("id", user.id)
+        .maybeSingle();
+      setEsEditor(perfil?.rol === "editor");
+    })();
+  }, []);
 
   const fetchLugar = useCallback(async () => {
     if (!id) {
@@ -198,6 +214,13 @@ export default function EditarCapillaPage() {
           <p className="mt-0.5 text-sm text-on-surface-variant">Modificá los datos de la capilla.</p>
         </div>
       </div>
+
+      {esEditor && (
+        <div className="mt-6 rounded-xl bg-secondary-container px-5 py-4 text-sm text-on-secondary-container">
+          <strong>Modo editor:</strong> los cambios en datos de contacto y horarios se enviarán al
+          administrador de tu departamento para su aprobación antes de publicarse.
+        </div>
+      )}
 
       <form action={handleSubmit} className="mt-6 space-y-6">
 

@@ -5,17 +5,57 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Check, Church, Inbox, Loader2, X } from "lucide-react";
-import { aprobarSolicitudBaja, rechazarSolicitudBaja } from "./actions";
+import {
+  aprobarSolicitudAlta,
+  aprobarSolicitudBaja,
+  aprobarSolicitudEdicion,
+  rechazarSolicitudBaja,
+} from "./actions";
 import ConfirmDialog from "@/app/components/confirm-dialog";
 
 export type Solicitud = {
   id: string;
+  tipo: "alta" | "baja" | "edicion";
   motivo: string;
+  campo_editado: string | null;
   estado: "pendiente" | "aprobada" | "rechazada";
   created_at: string;
   lugares: { nombre: string; departamento: string } | null;
   perfiles: { nombre_completo: string; email: string } | null;
 };
+
+const TIPO_BADGE: Record<Solicitud["tipo"], { label: string; className: string }> = {
+  alta: { label: "Alta", className: "bg-primary-fixed text-on-primary-fixed" },
+  baja: { label: "Baja", className: "bg-error-container text-on-error-container" },
+  edicion: { label: "Edición", className: "bg-secondary-container text-on-secondary-container" },
+};
+
+const APROBAR_COPY: Record<
+  Solicitud["tipo"],
+  { title: string; confirmLabel: string; message: (nombre: string) => string }
+> = {
+  alta: {
+    title: "Aprobar alta",
+    confirmLabel: "Crear capilla",
+    message: (nombre) => `Se va a crear la capilla "${nombre}" con los datos propuestos.`,
+  },
+  baja: {
+    title: "Aprobar baja",
+    confirmLabel: "Eliminar capilla",
+    message: (nombre) =>
+      `Se va a eliminar definitivamente "${nombre}" junto con sus horarios. Esta acción no se puede deshacer.`,
+  },
+  edicion: {
+    title: "Aprobar edición",
+    confirmLabel: "Aplicar cambios",
+    message: (nombre) => `Se van a aplicar los cambios propuestos a "${nombre}".`,
+  },
+};
+
+function nombreSolicitud(s: Solicitud): string {
+  if (s.lugares) return s.lugares.nombre;
+  return s.tipo === "alta" ? "Nueva capilla (alta)" : "Capilla eliminada";
+}
 
 export function SolicitudesList({
   initialSolicitudes,
@@ -35,7 +75,9 @@ export function SolicitudesList({
     setBusyId(aprobarTarget.id);
     setError(null);
     try {
-      await aprobarSolicitudBaja(aprobarTarget.id);
+      if (aprobarTarget.tipo === "alta") await aprobarSolicitudAlta(aprobarTarget.id);
+      else if (aprobarTarget.tipo === "edicion") await aprobarSolicitudEdicion(aprobarTarget.id);
+      else await aprobarSolicitudBaja(aprobarTarget.id);
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al aprobar la solicitud");
@@ -70,9 +112,13 @@ export function SolicitudesList({
 
       <ConfirmDialog
         open={aprobarTarget !== null}
-        title="Aprobar baja"
-        message={`Se va a eliminar definitivamente "${aprobarTarget?.lugares?.nombre ?? "la capilla"}" junto con sus horarios. Esta acción no se puede deshacer.`}
-        confirmLabel="Eliminar capilla"
+        title={aprobarTarget ? APROBAR_COPY[aprobarTarget.tipo].title : "Aprobar"}
+        message={
+          aprobarTarget
+            ? APROBAR_COPY[aprobarTarget.tipo].message(nombreSolicitud(aprobarTarget))
+            : ""
+        }
+        confirmLabel={aprobarTarget ? APROBAR_COPY[aprobarTarget.tipo].confirmLabel : "Aprobar"}
         loading={busyId !== null}
         onConfirm={handleAprobar}
         onCancel={() => setAprobarTarget(null)}
@@ -96,9 +142,12 @@ export function SolicitudesList({
             >
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="min-w-0">
-                  <p className="flex items-center gap-2 font-medium text-on-surface">
+                  <p className="flex flex-wrap items-center gap-2 font-medium text-on-surface">
                     <Church className="h-4 w-4 shrink-0 text-primary/60" />
-                    {s.lugares?.nombre ?? "Capilla eliminada"}
+                    {nombreSolicitud(s)}
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${TIPO_BADGE[s.tipo].className}`}>
+                      {TIPO_BADGE[s.tipo].label}
+                    </span>
                     {s.lugares && (
                       <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                         {s.lugares.departamento}
@@ -108,6 +157,11 @@ export function SolicitudesList({
                   <p className="mt-2 whitespace-pre-line text-sm text-on-surface-variant">
                     {s.motivo}
                   </p>
+                  {s.tipo === "edicion" && s.campo_editado && (
+                    <p className="mt-1 text-xs text-on-surface-variant/70">
+                      Campos: {s.campo_editado}
+                    </p>
+                  )}
                   <p className="mt-2 text-xs text-on-surface-variant/70">
                     Solicitada por {s.perfiles?.nombre_completo ?? "—"}
                     {s.perfiles?.email ? ` (${s.perfiles.email})` : ""} ·{" "}
@@ -134,7 +188,7 @@ export function SolicitudesList({
                     className="flex items-center gap-1.5 rounded-lg bg-error px-3.5 py-2 text-sm font-medium text-on-error transition-colors hover:bg-error/90 disabled:opacity-50"
                   >
                     <Check className="h-4 w-4" />
-                    Aprobar baja
+                    {APROBAR_COPY[s.tipo].title}
                   </button>
                 </div>
               </div>

@@ -6,7 +6,12 @@ import { CapillasList } from "./capillas-list";
 
 export const dynamic = "force-dynamic";
 
-export default async function CapillasPage() {
+export default async function CapillasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const enviado = (await searchParams).enviado;
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -31,6 +36,13 @@ export default async function CapillasPage() {
 
   return (
     <div>
+      {(enviado === "alta" || enviado === "edicion") && (
+        <div className="mb-4 rounded-lg bg-primary/10 px-4 py-3 text-sm text-primary">
+          {enviado === "alta"
+            ? "Tu solicitud de alta fue enviada. Un administrador de tu departamento la va a revisar."
+            : "Tu solicitud de edición fue enviada. Un administrador de tu departamento la va a revisar."}
+        </div>
+      )}
       <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-on-surface md:text-2xl">

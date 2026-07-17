@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { HorarioData } from "@/app/components/horarios-grid";
-import { requirePerfil, assertDepartamentoAccess } from "@/lib/auth-server";
+import { requirePerfil, assertDepartamentoAccess, AuthError } from "@/lib/auth-server";
 
 /** Ground-truth department for a lugar — never trust a department string from the client. */
 async function getLugarDepartamento(lugarId: string): Promise<string | null> {
@@ -14,6 +14,31 @@ async function getLugarDepartamento(lugarId: string): Promise<string | null> {
     .eq("id", lugarId)
     .maybeSingle();
   return data?.departamento ?? null;
+}
+
+/** Junta los campos del form de capilla en el mismo shape que espera crear_lugar/actualizar_lugar. */
+function buildDatosPropuestos(formData: FormData, lat: number | null, lng: number | null) {
+  const horariosJson = formData.get("horarios_json") as string | null;
+  return {
+    nombre: formData.get("nombre"),
+    tipo: formData.get("tipo"),
+    departamento: formData.get("departamento"),
+    direccion: formData.get("direccion"),
+    lat,
+    lng,
+    decanato: formData.get("decanato") || null,
+    telefono: formData.get("telefono") || null,
+    email: formData.get("email") || null,
+    sitio_web: formData.get("sitio_web") || null,
+    horario_secretaria: formData.get("horario_secretaria") || null,
+    descripcion: formData.get("descripcion") || null,
+    imagen_url: formData.get("imagen_url") || null,
+    hay_confesiones: formData.get("hay_confesiones") === "on",
+    activo: formData.get("activo") === "on",
+    notas_horarios: formData.get("notas_horarios") || null,
+    recibe_caritas: formData.get("recibe_caritas") === "on",
+    horarios: horariosJson ? (JSON.parse(horariosJson) as HorarioData[]) : [],
+  };
 }
 
 /** Ground-truth parent lugar for a horario — never trust a lugarId string from the client. */
@@ -33,6 +58,21 @@ export async function crearCapilla(formData: FormData) {
 
   const lat = parseFloat(formData.get("lat") as string) || null;
   const lng = parseFloat(formData.get("lng") as string) || null;
+
+  if (perfil.rol === "editor") {
+    const { error: solError } = await supabaseAdmin.from("solicitudes").insert({
+      tipo: "alta",
+      estado: "pendiente",
+      solicitado_por: perfil.id,
+      lugar_id: null,
+      motivo: "Solicitud de alta de nueva capilla",
+      datos_propuestos: buildDatosPropuestos(formData, lat, lng),
+    });
+    if (solError) throw new Error(solError.message);
+
+    revalidatePath("/admin/solicitudes");
+    redirect("/admin/capillas?enviado=alta");
+  }
 
   const { data, error } = await supabaseAdmin.rpc("crear_lugar", {
     p_nombre: formData.get("nombre"),
@@ -98,6 +138,29 @@ export async function actualizarCapilla(id: string, formData: FormData) {
   const lat = parseFloat(formData.get("lat") as string) || null;
   const lng = parseFloat(formData.get("lng") as string) || null;
 
+  if (perfil.rol === "editor") {
+    const camposImportantes = ["telefono", "email", "sitio_web", "horario_secretaria", "horarios_json"];
+    const tocaCampoImportante = camposImportantes.some(
+      (c) => formData.has(c) && formData.get(c) !== "",
+    );
+
+    if (tocaCampoImportante) {
+      const { error: solError } = await supabaseAdmin.from("solicitudes").insert({
+        tipo: "edicion",
+        estado: "pendiente",
+        solicitado_por: perfil.id,
+        lugar_id: id,
+        campo_editado: camposImportantes.filter((c) => formData.has(c)).join(", "),
+        motivo: "Solicitud de edición de datos importantes",
+        datos_propuestos: buildDatosPropuestos(formData, lat, lng),
+      });
+      if (solError) throw new Error(solError.message);
+
+      revalidatePath("/admin/solicitudes");
+      redirect("/admin/capillas?enviado=edicion");
+    }
+  }
+
   const { error } = await supabaseAdmin.rpc("actualizar_lugar", {
     p_id: id,
     p_nombre: formData.get("nombre"),
@@ -156,6 +219,12 @@ export async function eliminarCapilla(id: string) {
   const departamento = await getLugarDepartamento(id);
   if (!departamento) throw new Error("La capilla no existe.");
   assertDepartamentoAccess(perfil, departamento);
+
+  if (perfil.rol === "editor") {
+    throw new AuthError(
+      "Los editores no pueden eliminar capillas directo. Usá 'Solicitar baja' para pedir la eliminación con un motivo.",
+    );
+  }
 
   const { error } = await supabaseAdmin.from("lugares").delete().eq("id", id);
   if (error) throw new Error(error.message);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { unstable_rethrow } from "next/navigation";
 import { ArrowLeft, Loader2, MapPin } from "lucide-react";
 import Link from "next/link";
@@ -26,6 +26,22 @@ export default function NuevaCapillaPage() {
   const [lng, setLng] = useState<number>(-68.8272);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [esEditor, setEsEditor] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: perfil } = await supabase
+        .from("perfiles")
+        .select("rol")
+        .eq("id", user.id)
+        .maybeSingle();
+      setEsEditor(perfil?.rol === "editor");
+    })();
+  }, []);
 
   async function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -79,6 +95,13 @@ export default function NuevaCapillaPage() {
           <p className="mt-0.5 text-sm text-on-surface-variant">Registrá una nueva capilla, parroquia o santuario.</p>
         </div>
       </div>
+
+      {esEditor && (
+        <div className="mb-6 rounded-xl bg-secondary-container px-5 py-4 text-sm text-on-secondary-container">
+          <strong>Modo editor:</strong> esta alta se enviará al administrador de tu departamento
+          para su aprobación antes de publicarse.
+        </div>
+      )}
 
       <form action={handleSubmit} className="mt-6 space-y-8">
         <section className="rounded-xl bg-surface-container p-5 shadow-[0_4px_16px_rgba(118,146,131,0.06)]">
