@@ -1,38 +1,60 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Plus, AlertTriangle, Clock, CheckCircle } from "lucide-react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { Church, Calendar, Inbox, Users, CheckCircle } from "lucide-react";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
-import { QuickList } from "./quick-list";
 
 export const dynamic = "force-dynamic";
-
-const DEPARTMENTS = ["Capital", "Las Heras", "Guaymallén", "Godoy Cruz", "Maipú"];
 
 type Lugar = {
   id: string;
   nombre: string;
   departamento: string;
-  direccion: string;
-  imagen_url?: string | null;
-  telefono?: string | null;
-  decanato?: string | null;
-  descripcion?: string | null;
-  created_at: string;
+  slug: string;
+  activo: boolean;
 };
 
-type Horario = {
+type Solicitud = {
   id: string;
-  lugar_id: string;
-  dia_semana: number;
-  hora: string;
+  created_at: string;
+  lugares: { nombre: string; slug: string } | null;
 };
 
-function missingFields(lugar: Lugar): string[] {
-  const missing: string[] = [];
-  if (!lugar.direccion) missing.push("dirección");
-  if (!lugar.telefono) missing.push("teléfono");
-  if (!lugar.descripcion) missing.push("descripción");
-  return missing;
+function StatCard({
+  icon: Icon,
+  count,
+  label,
+  highlight,
+}: {
+  icon: typeof Church;
+  count: number;
+  label: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-xl border border-outline-variant/30 p-5 ${
+        highlight ? "bg-error-container text-on-error-container" : "bg-surface-container"
+      }`}
+    >
+      <Icon
+        className={`h-5 w-5 float-right opacity-50 ${
+          highlight ? "text-on-error-container" : "text-on-surface-variant"
+        }`}
+      />
+      <p className={`text-3xl font-bold ${highlight ? "text-on-error-container" : "text-primary"}`}>
+        {count}
+      </p>
+      <p
+        className={`text-xs font-semibold uppercase tracking-wider ${
+          highlight ? "text-on-error-container" : "text-on-surface-variant"
+        }`}
+      >
+        {label}
+      </p>
+    </div>
+  );
 }
 
 export default async function AdminDashboard() {
@@ -42,105 +64,203 @@ export default async function AdminDashboard() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [lugaresRes, horariosRes] = await Promise.all([
-    supabase.from("lugares").select("*"),
-    supabase.from("horarios").select("*"),
-  ]);
-  const lugares = (lugaresRes.data ?? []) as Lugar[];
-  const horarios = (horariosRes.data ?? []) as Horario[];
+  const { data: perfil } = await supabase
+    .from("perfiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
 
-  const horariosMap = new Map<string, Horario[]>();
-  for (const h of horarios) {
-    if (!horariosMap.has(h.lugar_id)) horariosMap.set(h.lugar_id, []);
-    horariosMap.get(h.lugar_id)!.push(h);
+  const isAdmin = perfil?.rol === "admin";
+
+  let lugares: Lugar[] = [];
+  let lugarIdsConHorarios = new Set<string>();
+  let totalEventos = 0;
+  let totalVoluntarios = 0;
+  let solicitudes: Solicitud[] = [];
+  let totalSolicitudes = 0;
+
+  if (isAdmin) {
+    const [lugaresRes, horariosRes, eventosRes, voluntariosRes, totalSolicitudesRes, solicitudesRes] =
+      await Promise.all([
+        supabase
+          .from("lugares")
+          .select("id, nombre, departamento, slug, activo")
+          .eq("activo", true)
+          .order("nombre"),
+        supabase.from("horarios").select("lugar_id"),
+        supabase
+          .from("eventos")
+          .select("*", { count: "exact", head: true })
+          .eq("activo", true),
+        supabase
+          .from("perfiles")
+          .select("*", { count: "exact", head: true })
+          .eq("activo", true),
+        supabase
+          .from("solicitudes_baja")
+          .select("*", { count: "exact", head: true })
+          .eq("estado", "pendiente"),
+        supabase
+          .from("solicitudes_baja")
+          .select("id, created_at, lugares(nombre, slug)")
+          .eq("estado", "pendiente")
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ]);
+
+    lugares = (lugaresRes.data ?? []) as Lugar[];
+    lugarIdsConHorarios = new Set((horariosRes.data ?? []).map((h) => h.lugar_id));
+    totalEventos = eventosRes.count ?? 0;
+    totalVoluntarios = voluntariosRes.count ?? 0;
+    totalSolicitudes = totalSolicitudesRes.count ?? 0;
+    solicitudes = (solicitudesRes.data ?? []) as unknown as Solicitud[];
+  } else {
+    const [lugaresRes, horariosRes, eventosRes] = await Promise.all([
+      supabase
+        .from("lugares")
+        .select("id, nombre, departamento, slug, activo")
+        .eq("activo", true)
+        .eq("departamento", perfil?.departamento_asignado ?? "")
+        .order("nombre"),
+      supabase.from("horarios").select("lugar_id"),
+      supabase
+        .from("eventos")
+        .select("*", { count: "exact", head: true })
+        .eq("activo", true)
+        .eq("departamento", perfil?.departamento_asignado ?? ""),
+    ]);
+
+    lugares = (lugaresRes.data ?? []) as Lugar[];
+    lugarIdsConHorarios = new Set((horariosRes.data ?? []).map((h) => h.lugar_id));
+    totalEventos = eventosRes.count ?? 0;
   }
 
-  const deptCounts: Record<string, number> = {};
-  for (const d of DEPARTMENTS) deptCounts[d] = 0;
-  for (const l of lugares) {
-    if (deptCounts[l.departamento] !== undefined) deptCounts[l.departamento]++;
-  }
+  const capillasSinHorarios = lugares.filter((l) => !lugarIdsConHorarios.has(l.id));
 
   return (
     <div>
-      <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-on-surface md:text-2xl">
-            Resumen Operativo
-          </h1>
-          <p className="mt-0.5 text-sm text-on-surface-variant">
-            Vista general del estado de capillas por departamento.
-          </p>
-        </div>
-        <Link
-          href="/admin/capillas/nuevo"
-          className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-on-primary transition-colors hover:bg-primary-container hover:text-on-primary-container md:w-auto"
-        >
-          <Plus className="h-4 w-4" />
-          Agregar Nueva Capilla
-        </Link>
-      </div>
+      <h1 className="text-xl font-semibold text-on-surface md:text-2xl">
+        Hola, {perfil?.nombre_completo ?? "Voluntario"} 👋
+      </h1>
+      <p className="mt-0.5 text-sm text-on-surface-variant">
+        {isAdmin
+          ? "Vista general de toda la arquidiócesis"
+          : `Vista de ${perfil?.departamento_asignado ?? "tu departamento"}`}
+      </p>
 
-      <section className="mt-6">
-        <h2 className="text-sm font-semibold text-on-surface">
-          Resumen de Capillas por Departamento
-        </h2>
-        <div className="mt-3 grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {DEPARTMENTS.map((dept) => {
-            const count = deptCounts[dept] ?? 0;
-            const deptLugares = lugares.filter((l) => l.departamento === dept);
-            const sinFoto = deptLugares.filter((l) => !l.imagen_url).length;
-            const sinHorarios = deptLugares.filter((l) => !horariosMap.get(l.id)?.length).length;
-            const incompletas = deptLugares.filter((l) => missingFields(l).length > 0).length;
-            const hasIssues = sinFoto > 0 || sinHorarios > 0 || incompletas > 0;
-
-            return (
-              <div
-                key={dept}
-                className={`w-full wrap-break-word rounded-xl bg-secondary-container p-4 shadow-[0_4px_16px_rgba(118,146,131,0.06)] ${!hasIssues && count > 0 ? "ring-1 ring-primary/30" : ""}`}
-              >
-                <p className="text-sm font-semibold text-on-surface">{dept}</p>
-                <p className="mt-1 text-2xl font-bold text-primary">
-                  {count}
-                  <span className="ml-1 text-sm font-normal text-on-surface-variant">
-                    capillas
-                  </span>
-                </p>
-                {count > 0 && (
-                  <div className="mt-3 space-y-1.5">
-                    {sinFoto > 0 && (
-                      <p className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                        <AlertTriangle className="h-3 w-3 shrink-0 text-outline" />
-                        {sinFoto} sin foto
-                      </p>
-                    )}
-                    {sinHorarios > 0 && (
-                      <p className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                        <Clock className="h-3 w-3 shrink-0 text-outline" />
-                        {sinHorarios} sin horarios
-                      </p>
-                    )}
-                    {incompletas > 0 && (
-                      <p className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                        <AlertTriangle className="h-3 w-3 shrink-0 text-outline" />
-                        {incompletas} incompletas
-                      </p>
-                    )}
-                    {!hasIssues && (
-                      <p className="flex items-center gap-1.5 text-xs text-primary">
-                        <CheckCircle className="h-3 w-3 shrink-0" />
-                        Completas
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      <section
+        className={`mt-6 grid grid-cols-2 gap-3 ${isAdmin ? "md:grid-cols-4" : ""}`}
+      >
+        {isAdmin ? (
+          <>
+            <StatCard icon={Church} count={lugares.length} label="Capillas activas" />
+            <StatCard icon={Calendar} count={totalEventos} label="Eventos activos" />
+            <StatCard
+              icon={Inbox}
+              count={totalSolicitudes ?? 0}
+              label="Solicitudes pendientes"
+              highlight={(totalSolicitudes ?? 0) > 0}
+            />
+            <StatCard icon={Users} count={totalVoluntarios} label="Voluntarios activos" />
+          </>
+        ) : (
+          <>
+            <StatCard
+              icon={Church}
+              count={lugares.length}
+              label={`Capillas en ${perfil?.departamento_asignado ?? "tu zona"}`}
+            />
+            <StatCard icon={Calendar} count={totalEventos} label="Eventos activos en tu zona" />
+          </>
+        )}
       </section>
 
-      <QuickList initialLugares={lugares} initialHorarios={horarios} />
+      <section className="mt-8">
+        <h2 className="text-sm font-semibold text-on-surface">⚠️ Capillas sin horarios</h2>
+        <p className="mt-0.5 text-xs text-on-surface-variant">
+          {isAdmin ? "De toda la arquidiócesis" : perfil?.departamento_asignado}
+        </p>
+
+        {capillasSinHorarios.length === 0 ? (
+          <p className="mt-4 flex items-center gap-1.5 text-sm text-primary">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            Todas las capillas tienen horarios cargados ✓
+          </p>
+        ) : (
+          <>
+            <div className="mt-3 divide-y divide-outline-variant/20 rounded-xl bg-surface-container px-4">
+              {capillasSinHorarios.slice(0, 10).map((lugar) => (
+                <div key={lugar.id} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-on-surface">{lugar.nombre}</p>
+                    <p className="text-xs text-on-surface-variant">{lugar.departamento}</p>
+                  </div>
+                  <Link
+                    href={`/admin/capillas/${lugar.id}/horarios`}
+                    className="shrink-0 text-sm text-primary hover:underline"
+                  >
+                    Cargar horarios →
+                  </Link>
+                </div>
+              ))}
+            </div>
+            {capillasSinHorarios.length > 10 && (
+              <Link
+                href="/admin/capillas"
+                className="mt-3 inline-block text-sm text-primary hover:underline"
+              >
+                Ver todas ({capillasSinHorarios.length})
+              </Link>
+            )}
+          </>
+        )}
+      </section>
+
+      {isAdmin && (
+        <section className="mt-8">
+          <h2 className="text-sm font-semibold text-on-surface">
+            📋 Solicitudes de baja pendientes
+          </h2>
+
+          {solicitudes.length === 0 ? (
+            <p className="mt-4 flex items-center gap-1.5 text-sm text-primary">
+              <CheckCircle className="h-4 w-4 shrink-0" />
+              No hay solicitudes pendientes ✓
+            </p>
+          ) : (
+            <>
+              <div className="mt-3 divide-y divide-outline-variant/20 rounded-xl bg-surface-container px-4">
+                {solicitudes.slice(0, 5).map((solicitud) => (
+                  <div key={solicitud.id} className="flex items-center justify-between gap-3 py-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-on-surface">
+                        {solicitud.lugares?.nombre ?? "Capilla eliminada"}
+                      </p>
+                      <p className="text-xs text-on-surface-variant">
+                        {format(new Date(solicitud.created_at), "d MMM yyyy", { locale: es })}
+                      </p>
+                    </div>
+                    <Link
+                      href="/admin/solicitudes"
+                      className="shrink-0 text-sm text-primary hover:underline"
+                    >
+                      Revisar →
+                    </Link>
+                  </div>
+                ))}
+              </div>
+              {totalSolicitudes > 5 && (
+                <Link
+                  href="/admin/solicitudes"
+                  className="mt-3 inline-block text-sm text-primary hover:underline"
+                >
+                  Ver todas en Solicitudes →
+                </Link>
+              )}
+            </>
+          )}
+        </section>
+      )}
     </div>
   );
 }
