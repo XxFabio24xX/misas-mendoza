@@ -324,7 +324,7 @@ export default function Home() {
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1.5 rounded-full text-xs font-semibold uppercase tracking-wider text-on-surface-variant transition-colors hover:text-primary"
+            className="flex items-center gap-1.5 rounded-full bg-error-container px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-on-error-container transition-colors hover:bg-error/20"
           >
             <X className="h-3.5 w-3.5" />
             Limpiar filtros
