@@ -27,10 +27,20 @@ export async function actualizarMensaje(
     }
   }
 
+  // Whitelist: nunca spread libre de un objeto que viene del cliente (evita
+  // mass-assignment de columnas no previstas). Solo estado (validado contra el
+  // enum) y notas_internas (con tope de longitud) pueden actualizarse acá.
+  const ESTADOS_VALIDOS = ["nuevo", "leido", "respondido"];
+  const estadoValidado =
+    campos.estado && ESTADOS_VALIDOS.includes(campos.estado) ? campos.estado : undefined;
+
   const { error } = await supabaseAdmin
     .from("mensajes")
     .update({
-      ...campos,
+      ...(estadoValidado && { estado: estadoValidado }),
+      ...(campos.notas_internas !== undefined && {
+        notas_internas: campos.notas_internas?.slice(0, 2000) ?? null,
+      }),
       leido_por: perfil.id,
     })
     .eq("id", mensajeId);
