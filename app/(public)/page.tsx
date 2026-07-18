@@ -470,29 +470,15 @@ export default function Home() {
 
       {!loading && !error && totalPaginas > 1 && (
         <div className="flex flex-col items-center gap-4 mt-10 pb-8">
-          {/* Velas decorativas */}
-          <div className="flex items-end gap-2.5 opacity-30">
-            {[18, 26, 18].map((h, i) => (
-              <div key={i} className="flex flex-col items-center">
-                <div className="w-1.5 h-2 rounded-t-full rounded-b-[35%] bg-on-surface" />
-                <div className="w-px h-1 bg-outline-variant" />
-                <div
-                  className="w-2 rounded-sm bg-surface-container-high border border-outline-variant/50"
-                  style={{ height: `${h}px` }}
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Controles de paginación */}
-          <div className="flex items-center gap-2">
+          {/* Números + navegación */}
+          <div className="flex items-center gap-1.5">
             {/* Anterior */}
             <button
               onClick={() => irAPagina(Math.max(1, paginaActual - 1))}
               disabled={paginaActual === 1}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full
+              className="flex items-center gap-1 px-3 h-9 rounded-lg
                          text-xs font-medium text-on-surface-variant
-                         border border-outline-variant/40
+                         border border-outline-variant/30
                          hover:border-outline-variant hover:text-on-surface
                          disabled:opacity-25 disabled:cursor-not-allowed
                          transition-all"
@@ -500,6 +486,8 @@ export default function Home() {
               <ChevronLeft className="h-3.5 w-3.5" />
               Anterior
             </button>
+
+            <div className="w-2" />
 
             {/* Números */}
             {Array.from({ length: totalPaginas }, (_, i) => i + 1)
@@ -523,12 +511,12 @@ export default function Home() {
                   <button
                     key={item}
                     onClick={() => irAPagina(item as number)}
-                    className={`w-8 h-8 rounded-full text-sm font-medium
+                    className={`w-9 h-9 rounded-lg text-sm font-medium
                                 transition-all
                                 ${
                                   paginaActual === item
-                                    ? "bg-on-surface text-surface border border-on-surface"
-                                    : "border border-outline-variant/40 text-on-surface-variant hover:border-outline-variant hover:text-on-surface"
+                                    ? "bg-[var(--color-on-surface)] text-[var(--color-surface)] border border-transparent"
+                                    : "border border-outline-variant/30 text-on-surface-variant hover:border-outline-variant hover:text-on-surface"
                                 }`}
                   >
                     {item}
@@ -536,13 +524,15 @@ export default function Home() {
                 ),
               )}
 
+            <div className="w-2" />
+
             {/* Siguiente */}
             <button
               onClick={() => irAPagina(Math.min(totalPaginas, paginaActual + 1))}
               disabled={paginaActual === totalPaginas}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full
+              className="flex items-center gap-1 px-3 h-9 rounded-lg
                          text-xs font-medium text-on-surface-variant
-                         border border-outline-variant/40
+                         border border-outline-variant/30
                          hover:border-outline-variant hover:text-on-surface
                          disabled:opacity-25 disabled:cursor-not-allowed
                          transition-all"
@@ -552,10 +542,21 @@ export default function Home() {
             </button>
           </div>
 
+          {/* Separador con cruz */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-px bg-outline-variant/40" />
+            <svg width="10" height="10" viewBox="0 0 10 10" className="text-outline-variant/30" aria-hidden="true">
+              <rect x="4" y="0" width="2" height="10" rx="0.5" fill="currentColor" />
+              <rect x="0" y="3.5" width="10" height="2" rx="0.5" fill="currentColor" />
+            </svg>
+            <div className="w-10 h-px bg-outline-variant/40" />
+          </div>
+
           {/* Contador */}
-          <p className="text-[11px] text-on-surface-variant/60 tracking-wide">
-            {(paginaActual - 1) * LUGARES_POR_PAGINA + 1}–
-            {Math.min(paginaActual * LUGARES_POR_PAGINA, filtered.length)} de {filtered.length} capillas
+          <p className="text-[11px] tracking-wide text-on-surface-variant/50">
+            Página {paginaActual} de {totalPaginas}
+            <span className="mx-2 opacity-40">·</span>
+            {filtered.length} capillas
           </p>
         </div>
       )}
