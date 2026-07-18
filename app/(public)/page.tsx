@@ -469,73 +469,94 @@ export default function Home() {
       )}
 
       {!loading && !error && totalPaginas > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-8 pb-6">
-          {/* Anterior */}
-          <button
-            onClick={() => irAPagina(Math.max(1, paginaActual - 1))}
-            disabled={paginaActual === 1}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg
-                       text-sm font-medium
-                       border border-outline-variant/30
-                       text-on-surface-variant
-                       hover:bg-surface-container hover:text-on-surface
-                       disabled:opacity-30 disabled:cursor-not-allowed
-                       transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Anterior
-          </button>
+        <div className="flex flex-col items-center gap-4 mt-10 pb-8">
+          {/* Velas decorativas */}
+          <div className="flex items-end gap-2.5 opacity-30">
+            {[18, 26, 18].map((h, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <div className="w-1.5 h-2 rounded-t-full rounded-b-[35%] bg-on-surface" />
+                <div className="w-px h-1 bg-outline-variant" />
+                <div
+                  className="w-2 rounded-sm bg-surface-container-high border border-outline-variant/50"
+                  style={{ height: `${h}px` }}
+                />
+              </div>
+            ))}
+          </div>
 
-          {/* Números de página */}
-          {Array.from({ length: totalPaginas }, (_, i) => i + 1)
-            .filter((n) => {
-              // Mostrar: primera, última, actual y ±1 de la actual
-              return n === 1 || n === totalPaginas || Math.abs(n - paginaActual) <= 1;
-            })
-            .reduce((acc: (number | "...")[], n, idx, arr) => {
-              if (idx > 0 && n - (arr[idx - 1] as number) > 1) {
-                acc.push("...");
-              }
-              acc.push(n);
-              return acc;
-            }, [])
-            .map((item, idx) =>
-              item === "..." ? (
-                <span key={`dots-${idx}`} className="px-2 text-on-surface-variant">
-                  …
-                </span>
-              ) : (
-                <button
-                  key={item}
-                  onClick={() => irAPagina(item as number)}
-                  className={`w-9 h-9 rounded-lg text-sm font-medium
-                              transition-colors
-                              ${
-                                paginaActual === item
-                                  ? "bg-primary text-on-primary"
-                                  : "border border-outline-variant/30 text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
-                              }`}
-                >
-                  {item}
-                </button>
-              ),
-            )}
+          {/* Controles de paginación */}
+          <div className="flex items-center gap-2">
+            {/* Anterior */}
+            <button
+              onClick={() => irAPagina(Math.max(1, paginaActual - 1))}
+              disabled={paginaActual === 1}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full
+                         text-xs font-medium text-on-surface-variant
+                         border border-outline-variant/40
+                         hover:border-outline-variant hover:text-on-surface
+                         disabled:opacity-25 disabled:cursor-not-allowed
+                         transition-all"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Anterior
+            </button>
 
-          {/* Siguiente */}
-          <button
-            onClick={() => irAPagina(Math.min(totalPaginas, paginaActual + 1))}
-            disabled={paginaActual === totalPaginas}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg
-                       text-sm font-medium
-                       border border-outline-variant/30
-                       text-on-surface-variant
-                       hover:bg-surface-container hover:text-on-surface
-                       disabled:opacity-30 disabled:cursor-not-allowed
-                       transition-colors"
-          >
-            Siguiente
-            <ChevronRight className="h-4 w-4" />
-          </button>
+            {/* Números */}
+            {Array.from({ length: totalPaginas }, (_, i) => i + 1)
+              .filter((n) => {
+                // Mostrar: primera, última, actual y ±1 de la actual
+                return n === 1 || n === totalPaginas || Math.abs(n - paginaActual) <= 1;
+              })
+              .reduce((acc: (number | "...")[], n, idx, arr) => {
+                if (idx > 0 && n - (arr[idx - 1] as number) > 1) {
+                  acc.push("...");
+                }
+                acc.push(n);
+                return acc;
+              }, [])
+              .map((item, idx) =>
+                item === "..." ? (
+                  <span key={`dots-${idx}`} className="w-8 text-center text-sm text-on-surface-variant/50">
+                    …
+                  </span>
+                ) : (
+                  <button
+                    key={item}
+                    onClick={() => irAPagina(item as number)}
+                    className={`w-8 h-8 rounded-full text-sm font-medium
+                                transition-all
+                                ${
+                                  paginaActual === item
+                                    ? "bg-on-surface text-surface border border-on-surface"
+                                    : "border border-outline-variant/40 text-on-surface-variant hover:border-outline-variant hover:text-on-surface"
+                                }`}
+                  >
+                    {item}
+                  </button>
+                ),
+              )}
+
+            {/* Siguiente */}
+            <button
+              onClick={() => irAPagina(Math.min(totalPaginas, paginaActual + 1))}
+              disabled={paginaActual === totalPaginas}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full
+                         text-xs font-medium text-on-surface-variant
+                         border border-outline-variant/40
+                         hover:border-outline-variant hover:text-on-surface
+                         disabled:opacity-25 disabled:cursor-not-allowed
+                         transition-all"
+            >
+              Siguiente
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          {/* Contador */}
+          <p className="text-[11px] text-on-surface-variant/60 tracking-wide">
+            {(paginaActual - 1) * LUGARES_POR_PAGINA + 1}–
+            {Math.min(paginaActual * LUGARES_POR_PAGINA, filtered.length)} de {filtered.length} capillas
+          </p>
         </div>
       )}
     </div>
