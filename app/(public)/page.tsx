@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Clock, Heart, MapPin, Search, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Heart, MapPin, Search, X } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import {
@@ -42,6 +42,8 @@ type Horario = {
   reemplaza_dia: boolean | null;
 };
 
+const LUGARES_POR_PAGINA = 12;
+
 export default function Home() {
   const [lugares, setLugares] = useState<Lugar[]>([]);
   const [horarios, setHorarios] = useState<Horario[]>([]);
@@ -54,6 +56,7 @@ export default function Home() {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [selectedDias, setSelectedDias] = useState<Set<number>>(new Set());
   const [horarioFilter, setHorarioFilter] = useState<FranjaHoraria | null>(null);
+  const [paginaActual, setPaginaActual] = useState(1);
   const { isFavorite } = useFavorites();
 
   const departments = useMemo(() => {
@@ -96,8 +99,7 @@ export default function Home() {
       .from("lugares")
       .select("id, nombre, direccion, departamento, lat, lng, slug, temporada_actual")
       .eq("activo", true)
-      .order("nombre")
-      .limit(50);
+      .order("nombre");
     if (dbError) {
       setError(dbError.message);
     } else {
@@ -130,6 +132,12 @@ export default function Home() {
     setIsLocating(true);
     fetchCercanos(coords.lat, coords.lng).finally(() => setIsLocating(false));
   }, [coords, fetchCercanos]);
+
+  // Reset a página 1 cuando cambia cualquier filtro existente.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPaginaActual(1);
+  }, [search, activeFilter, selectedDias, horarioFilter]);
 
   const horariosMap = useMemo(() => {
     const map = new Map<string, Horario[]>();
@@ -214,6 +222,18 @@ export default function Home() {
       return aFav === bFav ? 0 : aFav ? -1 : 1;
     });
   }, [lugares, activeFilter, search, isFavorite, selectedDias, horarioFilter, horariosMap]);
+
+  const totalPaginas = Math.ceil(filtered.length / LUGARES_POR_PAGINA);
+
+  const lugaresPaginados = useMemo(() => {
+    const inicio = (paginaActual - 1) * LUGARES_POR_PAGINA;
+    return filtered.slice(inicio, inicio + LUGARES_POR_PAGINA);
+  }, [filtered, paginaActual]);
+
+  const irAPagina = (pagina: number) => {
+    setPaginaActual(pagina);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <div className="mx-auto max-w-280 space-y-8 px-4 py-10 md:px-6 md:py-16">
@@ -374,8 +394,15 @@ export default function Home() {
       )}
 
       {!loading && !error && filtered.length > 0 && (
+        <p className="text-xs text-on-surface-variant">
+          Mostrando {(paginaActual - 1) * LUGARES_POR_PAGINA + 1}–
+          {Math.min(paginaActual * LUGARES_POR_PAGINA, filtered.length)} de {filtered.length} capillas
+        </p>
+      )}
+
+      {!loading && !error && filtered.length > 0 && (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((place) => {
+          {lugaresPaginados.map((place) => {
             const misas = horariosMap.get(place.id) ?? [];
             const distanciaValida =
               place.distancia != null && !isNaN(place.distancia);
@@ -438,6 +465,77 @@ export default function Home() {
               </article>
             );
           })}
+        </div>
+      )}
+
+      {!loading && !error && totalPaginas > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-8 pb-6">
+          {/* Anterior */}
+          <button
+            onClick={() => irAPagina(Math.max(1, paginaActual - 1))}
+            disabled={paginaActual === 1}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg
+                       text-sm font-medium
+                       border border-outline-variant/30
+                       text-on-surface-variant
+                       hover:bg-surface-container hover:text-on-surface
+                       disabled:opacity-30 disabled:cursor-not-allowed
+                       transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Anterior
+          </button>
+
+          {/* Números de página */}
+          {Array.from({ length: totalPaginas }, (_, i) => i + 1)
+            .filter((n) => {
+              // Mostrar: primera, última, actual y ±1 de la actual
+              return n === 1 || n === totalPaginas || Math.abs(n - paginaActual) <= 1;
+            })
+            .reduce((acc: (number | "...")[], n, idx, arr) => {
+              if (idx > 0 && n - (arr[idx - 1] as number) > 1) {
+                acc.push("...");
+              }
+              acc.push(n);
+              return acc;
+            }, [])
+            .map((item, idx) =>
+              item === "..." ? (
+                <span key={`dots-${idx}`} className="px-2 text-on-surface-variant">
+                  …
+                </span>
+              ) : (
+                <button
+                  key={item}
+                  onClick={() => irAPagina(item as number)}
+                  className={`w-9 h-9 rounded-lg text-sm font-medium
+                              transition-colors
+                              ${
+                                paginaActual === item
+                                  ? "bg-primary text-on-primary"
+                                  : "border border-outline-variant/30 text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
+                              }`}
+                >
+                  {item}
+                </button>
+              ),
+            )}
+
+          {/* Siguiente */}
+          <button
+            onClick={() => irAPagina(Math.min(totalPaginas, paginaActual + 1))}
+            disabled={paginaActual === totalPaginas}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg
+                       text-sm font-medium
+                       border border-outline-variant/30
+                       text-on-surface-variant
+                       hover:bg-surface-container hover:text-on-surface
+                       disabled:opacity-30 disabled:cursor-not-allowed
+                       transition-colors"
+          >
+            Siguiente
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
       )}
     </div>
