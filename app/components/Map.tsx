@@ -5,14 +5,46 @@ import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const icon = L.icon({
-  iconUrl: "/marker-icon.png",
-  iconRetinaUrl: "/marker-icon-2x.png",
-  shadowUrl: "/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
+const icon = L.divIcon({
+  className: "",
+  html: `
+    <div style="
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    ">
+      <div style="
+        width: 30px;
+        height: 30px;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        background: #476254;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <svg width="14" height="14" viewBox="0 0 14 14"
+             style="transform: rotate(45deg)">
+          <rect x="6" y="1" width="2" height="12"
+                rx="0.5" fill="white"/>
+          <rect x="2" y="4" width="10" height="2"
+                rx="0.5" fill="white"/>
+        </svg>
+      </div>
+      <div style="
+        width: 5px;
+        height: 5px;
+        background: rgba(0,0,0,0.12);
+        border-radius: 50%;
+        margin-top: 2px;
+      "></div>
+    </div>
+  `,
+  iconSize: [30, 37],
+  iconAnchor: [15, 37],
+  popupAnchor: [0, -38],
 });
 
 export default function Map({

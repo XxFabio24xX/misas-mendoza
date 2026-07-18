@@ -196,7 +196,7 @@ export default function GlobalMap({ lugares }: { lugares: LugarMapa[] }) {
 
         {/* Marcador de ubicación del usuario — separado de los markers de capillas. */}
         {userLocation && (
-          <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon} />
+          <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon} zIndexOffset={1000} />
         )}
       </MapContainer>
 
