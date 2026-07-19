@@ -51,12 +51,13 @@ export function CapillasList({
   const [bajaError, setBajaError] = useState<string | null>(null);
   const [bajaSuccess, setBajaSuccess] = useState<string | null>(null);
   const [paginaActual, setPaginaActual] = useState(1);
+  const [deptFiltro, setDeptFiltro] = useState<string | null>(null);
 
-  // Reset a página 1 cuando cambia la búsqueda
+  // Reset a página 1 cuando cambia la búsqueda o el filtro de departamento
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPaginaActual(1);
-  }, [search]);
+  }, [search, deptFiltro]);
 
   const handleDelete = async (id: string) => {
     setDeleting(true);
@@ -91,6 +92,18 @@ export function CapillasList({
     return () => clearTimeout(t);
   }, [bajaSuccess]);
 
+  // Lista de departamentos únicos presentes en los lugares, con conteos,
+  // ordenados alfabéticamente.
+  const departamentos = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const l of initialLugares) {
+      counts.set(l.departamento, (counts.get(l.departamento) ?? 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .sort((a, b) => a[0].localeCompare(b[0], "es"))
+      .map(([depto, count]) => ({ depto, count }));
+  }, [initialLugares]);
+
   const horMap = useMemo(() => {
     const m = new Map<string, Horario[]>();
     for (const h of initialHorarios) {
@@ -100,15 +113,20 @@ export function CapillasList({
     return m;
   }, [initialHorarios]);
 
-  const filtered = useMemo(
-    () =>
-      search.trim()
-        ? initialLugares.filter((l) =>
-            normalizeText(l.nombre).includes(normalizeText(search)),
-          )
-        : initialLugares,
-    [initialLugares, search],
-  );
+  const filtered = useMemo(() => {
+    let result = initialLugares;
+
+    if (search.trim()) {
+      const q = normalizeText(search);
+      result = result.filter((l) => normalizeText(l.nombre).includes(q));
+    }
+
+    if (deptFiltro) {
+      result = result.filter((l) => l.departamento === deptFiltro);
+    }
+
+    return result;
+  }, [initialLugares, search, deptFiltro]);
 
   const totalPaginas = Math.ceil(filtered.length / ITEMS_POR_PAGINA);
 
@@ -119,12 +137,96 @@ export function CapillasList({
 
   return (
     <div>
+      {rol === "super_admin" && (
+        <div className="mb-6">
+          {/* Resumen global */}
+          <div className="flex items-baseline justify-between mb-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+              Capillas por departamento
+            </h2>
+            <span className="text-xs text-on-surface-variant/60">
+              {initialLugares.length} en total
+            </span>
+          </div>
+
+          {/* Grid de chips con contador — clickeables para filtrar */}
+          <div className="flex flex-wrap gap-2">
+            {/* Chip "Todos" */}
+            <button
+              onClick={() => setDeptFiltro(null)}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5
+                          text-xs font-medium transition-all border
+                          ${
+                            deptFiltro === null
+                              ? "bg-[var(--color-on-surface)] text-[var(--color-surface)] border-transparent"
+                              : "border-outline-variant/30 text-on-surface-variant hover:border-outline-variant hover:text-on-surface"
+                          }`}
+            >
+              Todos
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold
+                            ${
+                              deptFiltro === null
+                                ? "bg-[var(--color-surface)]/20 text-[var(--color-surface)]"
+                                : "bg-surface-container-high text-on-surface-variant"
+                            }`}
+              >
+                {initialLugares.length}
+              </span>
+            </button>
+
+            {/* Un chip por departamento */}
+            {departamentos.map(({ depto, count }) => (
+              <button
+                key={depto}
+                onClick={() => setDeptFiltro(deptFiltro === depto ? null : depto)}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5
+                            text-xs font-medium transition-all border
+                            ${
+                              deptFiltro === depto
+                                ? "bg-[var(--color-on-surface)] text-[var(--color-surface)] border-transparent"
+                                : "border-outline-variant/30 text-on-surface-variant hover:border-outline-variant hover:text-on-surface"
+                            }`}
+              >
+                {depto}
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold
+                              ${
+                                deptFiltro === depto
+                                  ? "bg-[var(--color-surface)]/20 text-[var(--color-surface)]"
+                                  : "bg-surface-container-high text-on-surface-variant"
+                              }`}
+                >
+                  {count}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Indicador de filtro activo */}
+          {deptFiltro && (
+            <div className="mt-3 flex items-center gap-2">
+              <span className="text-xs text-on-surface-variant">
+                Mostrando {filtered.length} capilla{filtered.length !== 1 ? "s" : ""} en{" "}
+                {deptFiltro}
+              </span>
+              <button
+                onClick={() => setDeptFiltro(null)}
+                className="text-xs text-primary hover:underline"
+              >
+                Ver todas
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="mt-6">
         <div className="flex items-center gap-2 border-b border-outline-variant bg-transparent px-1 py-2.5">
           <Search className="h-4 w-4 shrink-0 text-on-surface-variant" />
           <input
             type="text"
-            placeholder="Buscar por nombre..."
+            placeholder={deptFiltro ? `Buscar en ${deptFiltro}...` : "Buscar por nombre..."}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="flex-1 bg-transparent text-sm text-on-surface outline-none placeholder:text-on-surface-variant/50"
