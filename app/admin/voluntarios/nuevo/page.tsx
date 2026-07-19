@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { crearVoluntario } from "../actions";
-
-const DEPARTMENTS = ["Capital", "Las Heras", "Guaymallén", "Godoy Cruz", "Maipú"];
+import { DEPARTAMENTOS } from "@/lib/departamentos";
 
 export default function NuevoVoluntarioPage() {
   const router = useRouter();
@@ -168,7 +167,7 @@ export default function NuevoVoluntarioPage() {
               <option value="" disabled>
                 Seleccioná un departamento...
               </option>
-              {DEPARTMENTS.map((dept) => (
+              {DEPARTAMENTOS.map((dept) => (
                 <option key={dept} value={dept}>
                   {dept}
                 </option>

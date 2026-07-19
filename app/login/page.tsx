@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react";
 import { ThemeToggle } from "@/app/components/theme-toggle";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -111,7 +111,7 @@ export default function LoginPage() {
           >
             {loading ? (
               <>
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary border-t-transparent" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Ingresando...
               </>
             ) : (

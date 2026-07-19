@@ -187,9 +187,9 @@ export function VoluntariosList({
                     <td className="px-4 py-3 text-sm text-on-surface-variant">{perfil.departamento_asignado ?? "—"}</td>
                     <td className="px-4 py-3">
                       {perfil.activo ? (
-                        <span className="inline-block rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">Activo</span>
+                        <span className="inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">Activo</span>
                       ) : (
-                        <span className="inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">Inactivo</span>
+                        <span className="inline-block rounded-full bg-surface-container-highest px-2.5 py-0.5 text-xs font-medium text-on-surface-variant">Inactivo</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">

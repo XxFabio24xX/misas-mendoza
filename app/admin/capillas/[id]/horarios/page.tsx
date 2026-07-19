@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { agregarHorario, editarHorario, eliminarHorario, setTemporadaActual } from "../../actions";
 import { Breadcrumb } from "@/app/admin/components/breadcrumb";
 import { CandleLoader } from "@/app/components/candle-loader";
+import ConfirmDialog from "@/app/components/confirm-dialog";
 
 const DIAS = [
   { value: 0, label: "Domingo", short: "Dom" },
@@ -97,6 +98,8 @@ export default function HorariosPage() {
   const [showPanel, setShowPanel] = useState(false);
   const [form, setForm] = useState<FormState>(FORM_DEFAULT);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [horarioAEliminar, setHorarioAEliminar] = useState<string | null>(null);
+  const [eliminando, setEliminando] = useState(false);
 
   const fetchLugar = useCallback(async () => {
     if (!id) return;
@@ -195,7 +198,7 @@ export default function HorariosPage() {
   }
 
   async function handleDelete(horarioId: string) {
-    if (!confirm("¿Eliminar este horario?")) return;
+    setEliminando(true);
     setError(null);
     setSuccess(null);
     try {
@@ -204,6 +207,8 @@ export default function HorariosPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al eliminar");
     }
+    setEliminando(false);
+    setHorarioAEliminar(null);
   }
 
   if (loading) {
@@ -630,7 +635,7 @@ export default function HorariosPage() {
                               className="cursor-pointer rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary">
                               <Pencil className="h-4 w-4" />
                             </button>
-                            <button onClick={() => handleDelete(h.id)} aria-label="Eliminar horario"
+                            <button onClick={() => setHorarioAEliminar(h.id)} aria-label="Eliminar horario"
                               className="cursor-pointer rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-error">
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -645,6 +650,15 @@ export default function HorariosPage() {
           </div>
         )}
       </section>
+
+      <ConfirmDialog
+        open={horarioAEliminar !== null}
+        title="Eliminar horario"
+        message="¿Estás seguro? Esta acción no se puede deshacer."
+        loading={eliminando}
+        onConfirm={() => horarioAEliminar && handleDelete(horarioAEliminar)}
+        onCancel={() => setHorarioAEliminar(null)}
+      />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import { HorariosGrid, type HorarioData } from "@/app/components/horarios-grid";
 import { ImageUploader } from "@/app/components/image-uploader";
 import { Breadcrumb } from "@/app/admin/components/breadcrumb";
 import { CandleLoader } from "@/app/components/candle-loader";
+import ConfirmDialog from "@/app/components/confirm-dialog";
 
 const LocationPicker = dynamic(
   () => import("@/app/components/location-picker"),
@@ -69,6 +70,7 @@ export default function EditarCapillaPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [esEditor, setEsEditor] = useState(false);
   const [hayCambios, setHayCambios] = useState(false);
+  const [confirmarEliminar, setConfirmarEliminar] = useState(false);
 
   const marcarCambio = () => {
     if (!hayCambios) setHayCambios(true);
@@ -216,7 +218,6 @@ export default function EditarCapillaPage() {
   }
 
   async function handleDelete() {
-    if (!confirm("¿Estás seguro de que querés eliminar esta capilla?")) return;
     setIsDeleting(true);
     setError(null);
     try {
@@ -224,6 +225,7 @@ export default function EditarCapillaPage() {
       router.push("/admin/capillas");
     } catch (e) {
       setIsDeleting(false);
+      setConfirmarEliminar(false);
       setError(e instanceof Error ? e.message : "Error al eliminar");
     }
   }
@@ -501,7 +503,7 @@ export default function EditarCapillaPage() {
           </button>
           <button
             type="button"
-            onClick={handleDelete}
+            onClick={() => setConfirmarEliminar(true)}
             disabled={isDeleting}
             className="flex items-center justify-center gap-2 rounded-lg border border-error px-4 py-2.5 text-sm font-medium text-error transition-colors hover:bg-error-container disabled:opacity-50"
           >
@@ -513,6 +515,15 @@ export default function EditarCapillaPage() {
           </button>
         </div>
       </form>
+
+      <ConfirmDialog
+        open={confirmarEliminar}
+        title="Eliminar capilla"
+        message="¿Estás seguro? Esta acción no se puede deshacer."
+        loading={isDeleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmarEliminar(false)}
+      />
     </div>
   );
 }

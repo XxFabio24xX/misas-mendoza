@@ -171,7 +171,7 @@ export function HorariosGrid({ initialHorarios = [], name = "horarios_json" }: P
         {rows.map((row, i) => (
           <div
             key={row._key}
-            className="rounded-xl border border-[#c0c3b8] bg-surface-container-low p-4"
+            className="rounded-xl border border-outline-variant/30 bg-surface-container-low p-4"
           >
             <div className="mb-3 flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
@@ -194,7 +194,7 @@ export function HorariosGrid({ initialHorarios = [], name = "horarios_json" }: P
                   onChange={(e) =>
                     updateRow(row._key, { tipo: e.target.value as HorarioRow["tipo"] })
                   }
-                  className="mt-1 block w-full rounded-lg border border-[#c0c3b8] bg-surface-container px-3 py-2 text-sm text-on-surface outline-none focus:border-primary"
+                  className="mt-1 block w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm text-on-surface outline-none focus:border-primary"
                 >
                   <option value="semanal">Semanal</option>
                   <option value="mensual">Mensual Fijo</option>
@@ -208,7 +208,7 @@ export function HorariosGrid({ initialHorarios = [], name = "horarios_json" }: P
                   <select
                     value={row.dia_semana}
                     onChange={(e) => updateRow(row._key, { dia_semana: Number(e.target.value) })}
-                    className="mt-1 block w-full rounded-lg border border-[#c0c3b8] bg-surface-container px-3 py-2 text-sm text-on-surface outline-none focus:border-primary"
+                    className="mt-1 block w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm text-on-surface outline-none focus:border-primary"
                   >
                     {DIAS_SEMANA.map((d, i) => (
                       <option key={i} value={i}>
@@ -223,7 +223,7 @@ export function HorariosGrid({ initialHorarios = [], name = "horarios_json" }: P
                     max={31}
                     value={row.dia_mes}
                     onChange={(e) => updateRow(row._key, { dia_mes: Number(e.target.value) })}
-                    className="mt-1 block w-full rounded-lg border border-[#c0c3b8] bg-surface-container px-3 py-2 text-sm text-on-surface outline-none focus:border-primary"
+                    className="mt-1 block w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm text-on-surface outline-none focus:border-primary"
                   />
                 )}
               </div>
@@ -244,7 +244,7 @@ export function HorariosGrid({ initialHorarios = [], name = "horarios_json" }: P
                   type="time"
                   value={row.hora}
                   onChange={(e) => updateRow(row._key, { hora: e.target.value })}
-                  className="mt-1 block w-full rounded-lg border border-[#c0c3b8] bg-surface-container px-3 py-2 text-sm text-on-surface outline-none focus:border-primary"
+                  className="mt-1 block w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm text-on-surface outline-none focus:border-primary"
                 />
               </div>
               <div>
@@ -254,7 +254,7 @@ export function HorariosGrid({ initialHorarios = [], name = "horarios_json" }: P
                   onChange={(e) =>
                     updateRow(row._key, { temporada: e.target.value as Temporada })
                   }
-                  className="mt-1 block w-full rounded-lg border border-[#c0c3b8] bg-surface-container px-3 py-2 text-sm text-on-surface outline-none focus:border-primary"
+                  className="mt-1 block w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm text-on-surface outline-none focus:border-primary"
                 >
                   {TEMPORADAS.map((t) => (
                     <option key={t} value={t}>

@@ -30,6 +30,14 @@ const TIPO_BADGE: Record<Solicitud["tipo"], { label: string; className: string }
   edicion: { label: "Edición", className: "bg-secondary-container text-on-secondary-container" },
 };
 
+// Solo "baja" es una acción destructiva (elimina la capilla); alta y edición
+// son acciones positivas, no deben llevar el color de error.
+const APROBAR_BTN_CLASS: Record<Solicitud["tipo"], string> = {
+  alta: "bg-primary text-on-primary hover:bg-primary/90",
+  edicion: "bg-primary text-on-primary hover:bg-primary/90",
+  baja: "bg-error text-on-error hover:bg-error/90",
+};
+
 const APROBAR_COPY: Record<
   Solicitud["tipo"],
   { title: string; confirmLabel: string; message: (nombre: string) => string }
@@ -185,7 +193,7 @@ export function SolicitudesList({
                   <button
                     onClick={() => setAprobarTarget(s)}
                     disabled={busyId !== null}
-                    className="flex items-center gap-1.5 rounded-lg bg-error px-3.5 py-2 text-sm font-medium text-on-error transition-colors hover:bg-error/90 disabled:opacity-50"
+                    className={`flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${APROBAR_BTN_CLASS[s.tipo]}`}
                   >
                     <Check className="h-4 w-4" />
                     {APROBAR_COPY[s.tipo].title}

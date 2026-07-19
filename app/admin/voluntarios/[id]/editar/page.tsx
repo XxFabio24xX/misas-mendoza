@@ -7,8 +7,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { actualizarVoluntario } from "../../actions";
 import { CandleLoader } from "@/app/components/candle-loader";
-
-const DEPARTMENTS = ["Capital", "Las Heras", "Guaymallén", "Godoy Cruz", "Maipú"];
+import { DEPARTAMENTOS } from "@/lib/departamentos";
 
 type Perfil = {
   id: string;
@@ -120,7 +119,7 @@ export default function EditarVoluntarioPage() {
             className="mt-1.5 block w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 pr-8 text-sm text-on-surface outline-none transition-colors focus:border-primary"
           >
             <option value="" disabled>Seleccioná un departamento...</option>
-            {DEPARTMENTS.map((dept) => (
+            {DEPARTAMENTOS.map((dept) => (
               <option key={dept} value={dept}>{dept}</option>
             ))}
           </select>

@@ -30,10 +30,10 @@ export default async function SolicitudesPage() {
   return (
     <div>
       <h1 className="text-xl font-semibold text-on-surface md:text-2xl">
-        Solicitudes de Baja
+        Solicitudes
       </h1>
       <p className="mt-0.5 text-sm text-on-surface-variant">
-        Pedidos de eliminación de capillas enviados por los editores.
+        Pedidos de alta, baja y edición enviados por los editores.
       </p>
 
       <SolicitudesList initialSolicitudes={(data ?? []) as unknown as Solicitud[]} />
