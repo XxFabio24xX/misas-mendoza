@@ -14,8 +14,8 @@ export function FilterChip({ active, onClick, children }: FilterChipProps) {
       aria-pressed={active}
       className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
         active
-          ? "bg-primary/10 text-primary border border-primary/20"
-          : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
+          ? "bg-primary text-on-primary border border-primary"
+          : "border border-outline-variant/50 bg-transparent text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
       }`}
     >
       {children}

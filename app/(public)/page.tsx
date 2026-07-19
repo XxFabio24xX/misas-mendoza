@@ -5,7 +5,6 @@ import { ChevronLeft, ChevronRight, Clock, Heart, MapPin, Search, X } from "luci
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import {
-  DIAS_SEMANA,
   FRANJAS_HORARIAS,
   GRUPOS_DIAS,
   findNextMisa,
@@ -148,15 +147,6 @@ export default function Home() {
     return map;
   }, [horarios]);
 
-  const toggleDia = (dia: number) => {
-    setSelectedDias((prev) => {
-      const next = new Set(prev);
-      if (next.has(dia)) next.delete(dia);
-      else next.add(dia);
-      return next;
-    });
-  };
-
   const toggleGrupoDias = (dias: readonly number[]) => {
     setSelectedDias((prev) => {
       const isExactMatch =
@@ -171,6 +161,10 @@ export default function Home() {
 
   // Día actual para el chip "Hoy" (0=Dom … 6=Sáb, como dia_semana en la DB).
   const hoy = new Date().getDay();
+  // Constantes del render actual — se recalculan en el próximo re-render.
+  const ahora = new Date();
+  const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
+  const esFiltroPorHoy = selectedDias.size === 1 && selectedDias.has(hoy);
 
   const hasActiveFilters =
     activeFilter !== null ||
@@ -201,6 +195,13 @@ export default function Home() {
     // Solo capillas con al menos una misa que caiga en el día y/o franja
     // elegidos, considerando únicamente horarios de la temporada vigente.
     if (selectedDias.size > 0 || horarioFilter !== null) {
+      // Calculados dentro del memo (no capturados de afuera) para que el
+      // compilador de React pueda preservar la memoización: son locales al
+      // cuerpo de la función, no dependencias externas inestables.
+      const hoyLocal = new Date().getDay();
+      const ahoraLocal = new Date();
+      const minutosAhoraLocal = ahoraLocal.getHours() * 60 + ahoraLocal.getMinutes();
+      const esFiltroPorHoyLocal = selectedDias.size === 1 && selectedDias.has(hoyLocal);
       result = result.filter((p) => {
         const misas = horariosMap.get(p.id) ?? [];
         return misas.some((h) => {
@@ -210,6 +211,12 @@ export default function Home() {
           }
           if (horarioFilter !== null && !horaEnFranja(h.hora, horarioFilter)) {
             return false;
+          }
+          // Si el filtro es HOY, descartar misas que ya pasaron.
+          if (esFiltroPorHoyLocal) {
+            const [hs, ms] = h.hora.split(":").map(Number);
+            const minutosMisa = hs * 60 + ms;
+            if (minutosMisa <= minutosAhoraLocal) return false;
           }
           return true;
         });
@@ -305,22 +312,6 @@ export default function Home() {
                 Domingo
               </FilterChip>
             </div>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {DIAS_SEMANA.map((dia) => (
-                <button
-                  key={dia.value}
-                  onClick={() => toggleDia(dia.value)}
-                  aria-pressed={selectedDias.has(dia.value)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                    selectedDias.has(dia.value)
-                      ? "bg-primary text-on-primary"
-                      : "border border-outline-variant/50 text-on-surface-variant hover:bg-outline-variant/40"
-                  }`}
-                >
-                  {dia.label}
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Horario */}
@@ -404,6 +395,15 @@ export default function Home() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {lugaresPaginados.map((place) => {
             const misas = horariosMap.get(place.id) ?? [];
+            // Cuando filtra HOY, solo pasar las misas de hoy que no pasaron.
+            const misasParaCard = esFiltroPorHoy
+              ? misas.filter((h) => {
+                  if (h.dia_semana !== hoy) return false;
+                  if (!temporadaVigente(h, place.temporada_actual)) return false;
+                  const [hs, ms] = h.hora.split(":").map(Number);
+                  return hs * 60 + ms > minutosAhora;
+                })
+              : misas;
             const distanciaValida =
               place.distancia != null && !isNaN(place.distancia);
             const esFavorita = isFavorite(place.id);
@@ -451,7 +451,7 @@ export default function Home() {
                   </p>
                   <p className="flex items-center gap-2 text-base font-medium text-primary">
                     <Clock className="h-4 w-4" />
-                    {findNextMisa(misas, { temporadaActual: place.temporada_actual })}
+                    {findNextMisa(misasParaCard, { temporadaActual: place.temporada_actual })}
                   </p>
                 </div>
 
