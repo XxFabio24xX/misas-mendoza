@@ -28,6 +28,7 @@ export default async function CapillasPage({
   if (perfil?.rol !== "super_admin" && perfil?.departamento_asignado) {
     query = query.eq("departamento", perfil.departamento_asignado);
   }
+  query = query.order("nombre", { ascending: true });
 
   const [lugRes, horRes] = await Promise.all([
     query,

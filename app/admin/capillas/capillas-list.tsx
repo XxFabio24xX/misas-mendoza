@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Pencil, Trash2, Church, AlertTriangle, MapPin, Clock, FileWarning } from "lucide-react";
+import { Search, Pencil, Trash2, Church, AlertTriangle, MapPin, Clock, FileWarning, ChevronLeft, ChevronRight } from "lucide-react";
 import { eliminarCapilla, solicitarBajaCapilla } from "./actions";
 import ConfirmDialog from "@/app/components/confirm-dialog";
 import SolicitudBajaDialog from "@/app/components/solicitud-baja-dialog";
@@ -30,6 +30,8 @@ type Horario = {
   reemplaza_dia?: boolean | null;
 };
 
+const ITEMS_POR_PAGINA = 15;
+
 export function CapillasList({
   initialLugares,
   initialHorarios,
@@ -48,6 +50,13 @@ export function CapillasList({
   const [bajaLoading, setBajaLoading] = useState(false);
   const [bajaError, setBajaError] = useState<string | null>(null);
   const [bajaSuccess, setBajaSuccess] = useState<string | null>(null);
+  const [paginaActual, setPaginaActual] = useState(1);
+
+  // Reset a página 1 cuando cambia la búsqueda
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPaginaActual(1);
+  }, [search]);
 
   const handleDelete = async (id: string) => {
     setDeleting(true);
@@ -100,6 +109,13 @@ export function CapillasList({
         : initialLugares,
     [initialLugares, search],
   );
+
+  const totalPaginas = Math.ceil(filtered.length / ITEMS_POR_PAGINA);
+
+  const capillasPaginadas = useMemo(() => {
+    const inicio = (paginaActual - 1) * ITEMS_POR_PAGINA;
+    return filtered.slice(inicio, inicio + ITEMS_POR_PAGINA);
+  }, [filtered, paginaActual]);
 
   return (
     <div>
@@ -173,7 +189,7 @@ export function CapillasList({
       {filtered.length > 0 && (
         <>
           <div className="mt-4 space-y-3 md:hidden">
-            {filtered.map((l) => {
+            {capillasPaginadas.map((l) => {
               const misas = horMap.get(l.id) ?? [];
               const next = findNextMisa(misas, { temporadaActual: l.temporada_actual });
               return (
@@ -253,7 +269,7 @@ export function CapillasList({
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/10">
-                {filtered.map((l) => {
+                {capillasPaginadas.map((l) => {
                   const misas = horMap.get(l.id) ?? [];
                   const next = findNextMisa(misas, { temporadaActual: l.temporada_actual });
                   return (
@@ -325,6 +341,112 @@ export function CapillasList({
               </tbody>
             </table>
           </div>
+
+          {totalPaginas > 1 && (
+            <div className="flex flex-col items-center gap-4 mt-6 pb-4">
+              {/* Controles */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => {
+                    setPaginaActual((p) => Math.max(1, p - 1));
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  disabled={paginaActual === 1}
+                  className="flex items-center gap-1 px-3 h-8 rounded-lg
+                             text-xs font-medium text-on-surface-variant
+                             border border-outline-variant/30
+                             hover:border-outline-variant hover:text-on-surface
+                             disabled:opacity-25 disabled:cursor-not-allowed
+                             transition-all"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  Anterior
+                </button>
+
+                <div className="w-2" />
+
+                {Array.from({ length: totalPaginas }, (_, i) => i + 1)
+                  .filter(
+                    (n) =>
+                      n === 1 || n === totalPaginas || Math.abs(n - paginaActual) <= 1,
+                  )
+                  .reduce((acc: (number | "...")[], n, idx, arr) => {
+                    if (idx > 0 && n - (arr[idx - 1] as number) > 1) acc.push("...");
+                    acc.push(n);
+                    return acc;
+                  }, [])
+                  .map((item, idx) =>
+                    item === "..." ? (
+                      <span
+                        key={`d-${idx}`}
+                        className="w-7 text-center text-sm text-on-surface-variant/50"
+                      >
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={item}
+                        onClick={() => {
+                          setPaginaActual(item as number);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className={`w-8 h-8 rounded-lg text-sm font-medium
+                                    transition-all
+                                    ${
+                                      paginaActual === item
+                                        ? "bg-[var(--color-on-surface)] text-[var(--color-surface)] border border-transparent"
+                                        : "border border-outline-variant/30 text-on-surface-variant hover:border-outline-variant hover:text-on-surface"
+                                    }`}
+                      >
+                        {item}
+                      </button>
+                    ),
+                  )}
+
+                <div className="w-2" />
+
+                <button
+                  onClick={() => {
+                    setPaginaActual((p) => Math.min(totalPaginas, p + 1));
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  disabled={paginaActual === totalPaginas}
+                  className="flex items-center gap-1 px-3 h-8 rounded-lg
+                             text-xs font-medium text-on-surface-variant
+                             border border-outline-variant/30
+                             hover:border-outline-variant hover:text-on-surface
+                             disabled:opacity-25 disabled:cursor-not-allowed
+                             transition-all"
+                >
+                  Siguiente
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              {/* Separador con cruz */}
+              <div className="flex items-center gap-3">
+                <div className="h-px w-10 bg-outline-variant/40" />
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 10 10"
+                  className="text-outline-variant/30"
+                  aria-hidden="true"
+                >
+                  <rect x="4" y="0" width="2" height="10" rx="0.5" fill="currentColor" />
+                  <rect x="0" y="3.5" width="10" height="2" rx="0.5" fill="currentColor" />
+                </svg>
+                <div className="h-px w-10 bg-outline-variant/40" />
+              </div>
+
+              {/* Contador */}
+              <p className="text-[11px] tracking-wide text-on-surface-variant/50">
+                Página {paginaActual} de {totalPaginas}
+                <span className="mx-2 opacity-40">·</span>
+                {filtered.length} capillas
+              </p>
+            </div>
+          )}
         </>
       )}
     </div>
