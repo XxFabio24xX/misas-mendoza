@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Clock, Heart, MapPin, Search, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Heart, MapPin, Search, SlidersHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import {
@@ -56,6 +56,7 @@ export default function Home() {
   const [selectedDias, setSelectedDias] = useState<Set<number>>(new Set());
   const [horarioFilter, setHorarioFilter] = useState<FranjaHoraria | null>(null);
   const [paginaActual, setPaginaActual] = useState(1);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const { isFavorite } = useFavorites();
 
   const departments = useMemo(() => {
@@ -275,89 +276,178 @@ export default function Home() {
           />
         </div>
 
-        <div className="flex flex-wrap items-start gap-x-10 gap-y-5">
-          {/* Localidad */}
-          <div role="group" aria-label="Filtrar por localidad">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
-              Localidad
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <FilterChip active={activeFilter === null} onClick={() => setActiveFilter(null)}>
-                Todas
-              </FilterChip>
-              {departments.map((dept) => (
-                <FilterChip
-                  key={dept}
-                  active={activeFilter === dept}
-                  onClick={() => setActiveFilter(dept)}
+        {/* Mobile: barra compacta con botón Filtros + chips activos (patrón C) */}
+        <div className="md:hidden">
+          <div
+            className="flex items-center gap-2 overflow-x-auto pb-1
+                       scrollbar-none [-ms-overflow-style:none]
+                       [scrollbar-width:none]"
+          >
+            {/* Botón Filtros — siempre visible */}
+            <button
+              onClick={() => setSheetOpen(true)}
+              className={`flex shrink-0 items-center gap-1.5 rounded-full
+                          px-3 py-1.5 text-xs font-medium transition-all
+                          border whitespace-nowrap
+                          ${
+                            hasActiveFilters
+                              ? "bg-[var(--color-on-surface)] text-[var(--color-surface)] border-transparent"
+                              : "border-outline-variant/40 text-on-surface-variant"
+                          }`}
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Filtros
+              {hasActiveFilters && (
+                <span
+                  className="flex h-4 w-4 items-center justify-center
+                             rounded-full bg-[var(--color-surface)]/20
+                             text-[10px] font-semibold"
                 >
-                  {dept}
-                </FilterChip>
-              ))}
-            </div>
-          </div>
+                  {[
+                    activeFilter !== null,
+                    selectedDias.size > 0,
+                    horarioFilter !== null,
+                  ].filter(Boolean).length}
+                </span>
+              )}
+            </button>
 
-          {/* Día de misa */}
-          <div role="group" aria-label="Filtrar por día de misa">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
-              Día de misa
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <FilterChip
-                active={selectedDias.size === 1 && selectedDias.has(hoy)}
-                onClick={() => toggleGrupoDias([hoy])}
+            {/* Chip de departamento activo */}
+            {activeFilter && (
+              <button
+                onClick={() => setActiveFilter(null)}
+                className="flex shrink-0 items-center gap-1 rounded-full
+                           bg-primary/10 text-primary border border-primary/20
+                           px-3 py-1.5 text-xs font-medium whitespace-nowrap"
               >
-                Hoy
-              </FilterChip>
-              <FilterChip
-                active={GRUPOS_DIAS.semana.every((d) => selectedDias.has(d)) && selectedDias.size === GRUPOS_DIAS.semana.length}
-                onClick={() => toggleGrupoDias(GRUPOS_DIAS.semana)}
-              >
-                Lun-Vie
-              </FilterChip>
-              <FilterChip
-                active={selectedDias.size === 1 && selectedDias.has(6)}
-                onClick={() => toggleGrupoDias(GRUPOS_DIAS.sabado)}
-              >
-                Sábado
-              </FilterChip>
-              <FilterChip
-                active={selectedDias.size === 1 && selectedDias.has(0)}
-                onClick={() => toggleGrupoDias(GRUPOS_DIAS.domingo)}
-              >
-                Domingo
-              </FilterChip>
-            </div>
-          </div>
+                {activeFilter}
+                <X className="h-3 w-3" />
+              </button>
+            )}
 
-          {/* Horario */}
-          <div role="group" aria-label="Filtrar por horario">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
-              Horario
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {FRANJAS_HORARIAS.map((franja) => (
-                <FilterChip
-                  key={franja.value}
-                  active={horarioFilter === franja.value}
-                  onClick={() => toggleHorario(franja.value)}
-                >
-                  {franja.label}
-                </FilterChip>
-              ))}
-            </div>
+            {/* Chip de día activo */}
+            {selectedDias.size > 0 && (
+              <button
+                onClick={() => setSelectedDias(new Set())}
+                className="flex shrink-0 items-center gap-1 rounded-full
+                           bg-primary/10 text-primary border border-primary/20
+                           px-3 py-1.5 text-xs font-medium whitespace-nowrap"
+              >
+                {/* Mostrar label del grupo activo */}
+                {selectedDias.size === 1 && selectedDias.has(hoy)
+                  ? "Hoy"
+                  : GRUPOS_DIAS.semana.every((d) => selectedDias.has(d))
+                    ? "Lun-Vie"
+                    : selectedDias.has(6)
+                      ? "Sábado"
+                      : selectedDias.has(0)
+                        ? "Domingo"
+                        : "Día"}
+                <X className="h-3 w-3" />
+              </button>
+            )}
+
+            {/* Chip de horario activo */}
+            {horarioFilter && (
+              <button
+                onClick={() => setHorarioFilter(null)}
+                className="flex shrink-0 items-center gap-1 rounded-full
+                           bg-primary/10 text-primary border border-primary/20
+                           px-3 py-1.5 text-xs font-medium whitespace-nowrap"
+              >
+                {FRANJAS_HORARIAS.find((f) => f.value === horarioFilter)?.label}
+                <X className="h-3 w-3" />
+              </button>
+            )}
           </div>
         </div>
 
-        {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            className="flex items-center gap-1.5 rounded-full bg-error-container px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-on-error-container transition-colors hover:bg-error/20"
-          >
-            <X className="h-3.5 w-3.5" />
-            Limpiar filtros
-          </button>
-        )}
+        {/* Desktop: layout de filtros sin cambios */}
+        <div className="hidden md:block">
+          <div className="flex flex-wrap items-start gap-x-10 gap-y-5">
+            {/* Localidad */}
+            <div role="group" aria-label="Filtrar por localidad">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+                Localidad
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <FilterChip active={activeFilter === null} onClick={() => setActiveFilter(null)}>
+                  Todas
+                </FilterChip>
+                {departments.map((dept) => (
+                  <FilterChip
+                    key={dept}
+                    active={activeFilter === dept}
+                    onClick={() => setActiveFilter(dept)}
+                  >
+                    {dept}
+                  </FilterChip>
+                ))}
+              </div>
+            </div>
+
+            {/* Día de misa */}
+            <div role="group" aria-label="Filtrar por día de misa">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+                Día de misa
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <FilterChip
+                  active={selectedDias.size === 1 && selectedDias.has(hoy)}
+                  onClick={() => toggleGrupoDias([hoy])}
+                >
+                  Hoy
+                </FilterChip>
+                <FilterChip
+                  active={GRUPOS_DIAS.semana.every((d) => selectedDias.has(d)) && selectedDias.size === GRUPOS_DIAS.semana.length}
+                  onClick={() => toggleGrupoDias(GRUPOS_DIAS.semana)}
+                >
+                  Lun-Vie
+                </FilterChip>
+                <FilterChip
+                  active={selectedDias.size === 1 && selectedDias.has(6)}
+                  onClick={() => toggleGrupoDias(GRUPOS_DIAS.sabado)}
+                >
+                  Sábado
+                </FilterChip>
+                <FilterChip
+                  active={selectedDias.size === 1 && selectedDias.has(0)}
+                  onClick={() => toggleGrupoDias(GRUPOS_DIAS.domingo)}
+                >
+                  Domingo
+                </FilterChip>
+              </div>
+            </div>
+
+            {/* Horario */}
+            <div role="group" aria-label="Filtrar por horario">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+                Horario
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {FRANJAS_HORARIAS.map((franja) => (
+                  <FilterChip
+                    key={franja.value}
+                    active={horarioFilter === franja.value}
+                    onClick={() => toggleHorario(franja.value)}
+                  >
+                    {franja.label}
+                  </FilterChip>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="mt-6 flex items-center gap-1.5 rounded-full bg-error-container px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-on-error-container transition-colors hover:bg-error/20"
+            >
+              <X className="h-3.5 w-3.5" />
+              Limpiar filtros
+            </button>
+          )}
+        </div>
       </div>
 
       {loading && (
@@ -574,6 +664,137 @@ export default function Home() {
             <span className="mx-2 opacity-40">·</span>
             {filtered.length} capillas
           </p>
+        </div>
+      )}
+
+      {/* Bottom sheet — solo mobile. z-[60]: por encima del contenido pero
+          por debajo del bottom nav (z-1100 en app/components/bottom-nav.tsx). */}
+      {sheetOpen && (
+        <div className="fixed inset-0 z-[60] md:hidden">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setSheetOpen(false)}
+          />
+
+          {/* Panel */}
+          <div className="absolute bottom-0 left-0 right-0 bg-[var(--color-surface-container-low)] rounded-t-2xl pb-safe">
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="h-1 w-8 rounded-full bg-outline-variant/50" />
+            </div>
+
+            <div className="px-5 pt-2 pb-6">
+              {/* Título */}
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-base font-semibold text-on-surface">
+                  Filtros
+                </h2>
+                <button
+                  onClick={() => setSheetOpen(false)}
+                  className="p-1 text-on-surface-variant"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Sección Localidad */}
+              <div className="mb-5">
+                <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+                  Localidad
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <FilterChip
+                    active={activeFilter === null}
+                    onClick={() => setActiveFilter(null)}
+                  >
+                    Todas
+                  </FilterChip>
+                  {departments.map((dept) => (
+                    <FilterChip
+                      key={dept}
+                      active={activeFilter === dept}
+                      onClick={() => setActiveFilter(dept)}
+                    >
+                      {dept}
+                    </FilterChip>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sección Día */}
+              <div className="mb-5">
+                <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+                  Día de misa
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <FilterChip
+                    active={selectedDias.size === 1 && selectedDias.has(hoy)}
+                    onClick={() => toggleGrupoDias([hoy])}
+                  >
+                    Hoy
+                  </FilterChip>
+                  <FilterChip
+                    active={GRUPOS_DIAS.semana.every((d) => selectedDias.has(d)) && selectedDias.size === GRUPOS_DIAS.semana.length}
+                    onClick={() => toggleGrupoDias(GRUPOS_DIAS.semana)}
+                  >
+                    Lun-Vie
+                  </FilterChip>
+                  <FilterChip
+                    active={selectedDias.size === 1 && selectedDias.has(6)}
+                    onClick={() => toggleGrupoDias(GRUPOS_DIAS.sabado)}
+                  >
+                    Sábado
+                  </FilterChip>
+                  <FilterChip
+                    active={selectedDias.size === 1 && selectedDias.has(0)}
+                    onClick={() => toggleGrupoDias(GRUPOS_DIAS.domingo)}
+                  >
+                    Domingo
+                  </FilterChip>
+                </div>
+              </div>
+
+              {/* Sección Horario */}
+              <div className="mb-6">
+                <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+                  Horario
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {FRANJAS_HORARIAS.map((franja) => (
+                    <FilterChip
+                      key={franja.value}
+                      active={horarioFilter === franja.value}
+                      onClick={() => toggleHorario(franja.value)}
+                    >
+                      {franja.label}
+                    </FilterChip>
+                  ))}
+                </div>
+              </div>
+
+              {/* Botones */}
+              <div className="flex gap-3">
+                {hasActiveFilters && (
+                  <button
+                    onClick={() => {
+                      clearFilters();
+                      setSheetOpen(false);
+                    }}
+                    className="flex-1 rounded-xl border border-outline-variant/40 py-3 text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-colors"
+                  >
+                    Limpiar
+                  </button>
+                )}
+                <button
+                  onClick={() => setSheetOpen(false)}
+                  className="flex-1 rounded-xl bg-[var(--color-on-surface)] text-[var(--color-surface)] py-3 text-sm font-medium transition-colors"
+                >
+                  Ver {filtered.length} resultado{filtered.length !== 1 ? "s" : ""}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

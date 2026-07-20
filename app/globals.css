@@ -176,5 +176,6 @@ button {
 .animate-marquee {
   display: inline-block;
   animation: marquee 20s linear infinite;
-  animation-delay: 0s;
+  animation-delay: 1.5s;
+  transform: translateX(0%);
 }
