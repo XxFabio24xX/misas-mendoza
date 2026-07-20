@@ -254,12 +254,9 @@ export default function Home() {
           </span>
           <div className="flex-1 overflow-hidden whitespace-nowrap">
             <p className="inline-block animate-marquee text-sm text-on-surface-variant">
-              Estamos verificando los datos de todas las capillas junto a cada parroquia. Si
-              encontrás un horario o dato desactualizado,{" "}
-              <Link href="/contacto?tipo=error_horario" className="font-medium text-primary hover:underline">
-                Reportar un error
-              </Link>
-              .
+              ⚠️ Los horarios pueden no estar actualizados — estamos verificando los datos con
+              cada parroquia. Si encontrás un error, usá el botón Reportar en el detalle de cada
+              capilla. ✝ Gracias por tu paciencia.
             </p>
           </div>
         </div>
