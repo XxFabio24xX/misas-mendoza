@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import type { HorarioData } from "@/app/components/horarios-grid";
 import { requirePerfil, assertDepartamentoAccess, AuthError } from "@/lib/auth-server";
 
+const ESTADOS_VERIFICACION_VALIDOS = ["sin_verificar", "en_revision", "verificada"];
+
 /** Ground-truth department for a lugar — never trust a department string from the client. */
 async function getLugarDepartamento(lugarId: string): Promise<string | null> {
   const { data } = await supabaseAdmin
@@ -92,6 +94,7 @@ export async function crearCapilla(formData: FormData) {
     p_activo: formData.get("activo") === "on",
     p_notas_horarios: formData.get("notas_horarios") || null,
     p_recibe_caritas: formData.get("recibe_caritas") === "on",
+    p_estado_verificacion: "sin_verificar",
   });
 
   if (error) throw new Error(error.message);
@@ -180,6 +183,11 @@ export async function actualizarCapilla(id: string, formData: FormData) {
     p_activo: formData.get("activo") === "on",
     p_notas_horarios: formData.get("notas_horarios") || null,
     p_recibe_caritas: formData.get("recibe_caritas") === "on",
+    p_estado_verificacion: ESTADOS_VERIFICACION_VALIDOS.includes(
+      formData.get("estado_verificacion") as string,
+    )
+      ? (formData.get("estado_verificacion") as string)
+      : "sin_verificar",
   });
 
   if (error) throw new Error(error.message);

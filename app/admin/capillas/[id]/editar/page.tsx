@@ -41,6 +41,7 @@ type Lugar = {
   activo: boolean;
   notas_horarios?: string;
   recibe_caritas?: boolean;
+  estado_verificacion?: string;
 };
 
 type HorarioRaw = {
@@ -69,8 +70,10 @@ export default function EditarCapillaPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [esEditor, setEsEditor] = useState(false);
+  const [rol, setRol] = useState<string>("editor");
   const [hayCambios, setHayCambios] = useState(false);
   const [confirmarEliminar, setConfirmarEliminar] = useState(false);
+  const [estadoVerif, setEstadoVerif] = useState<string>("sin_verificar");
 
   const marcarCambio = () => {
     if (!hayCambios) setHayCambios(true);
@@ -99,6 +102,7 @@ export default function EditarCapillaPage() {
         .eq("id", user.id)
         .maybeSingle();
       setEsEditor(perfil?.rol === "editor");
+      setRol(perfil?.rol ?? "editor");
     })();
   }, []);
 
@@ -123,6 +127,7 @@ export default function EditarCapillaPage() {
       setLugar(l);
       setLat(l.lat ?? -32.8908);
       setLng(l.lng ?? -68.8272);
+      setEstadoVerif(l.estado_verificacion ?? "sin_verificar");
       if (l.imagen_url) setImagePreview(l.imagen_url);
       setError(null);
     } else {
@@ -266,6 +271,7 @@ export default function EditarCapillaPage() {
       )}
 
       <form action={handleSubmit} className="mt-6 space-y-6">
+        <input type="hidden" name="estado_verificacion" value={estadoVerif} />
 
         <section className="rounded-xl bg-surface-container p-5 shadow-[0_4px_16px_rgba(118,146,131,0.06)]">
           <h2 className="mb-4 text-base font-semibold text-on-surface">Información básica</h2>
@@ -478,6 +484,58 @@ export default function EditarCapillaPage() {
             </div>
           </div>
         </section>
+
+        {(rol === "super_admin" || rol === "admin_departamento") && (
+          <div className="border-t border-outline-variant/20 pt-6 mt-6">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-3">
+              Estado de verificación
+            </h3>
+            <div className="flex flex-col gap-2">
+              {[
+                {
+                  value: "sin_verificar",
+                  label: "Sin verificar",
+                  desc: "Datos importados, pendientes de confirmación",
+                  color: "border-outline-variant/30 text-on-surface-variant",
+                },
+                {
+                  value: "en_revision",
+                  label: "En revisión",
+                  desc: "Un voluntario está revisando los datos",
+                  color: "border-amber-500/40 text-amber-600 dark:text-amber-400",
+                },
+                {
+                  value: "verificada",
+                  label: "Verificada ✓",
+                  desc: "Datos confirmados con la parroquia",
+                  color: "border-primary/40 text-primary",
+                },
+              ].map(({ value, label, desc, color }) => (
+                <label
+                  key={value}
+                  className={`flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition-all ${
+                    estadoVerif === value
+                      ? `${color} bg-surface-container`
+                      : "border-outline-variant/20 text-on-surface-variant/60 hover:border-outline-variant/40"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="estado_verificacion_radio"
+                    value={value}
+                    checked={estadoVerif === value}
+                    onChange={() => { setEstadoVerif(value); marcarCambio(); }}
+                    className="mt-0.5 accent-primary"
+                  />
+                  <div>
+                    <p className="text-sm font-medium">{label}</p>
+                    <p className="text-xs opacity-70 mt-0.5">{desc}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
         {error && (
           <div role="status" aria-live="polite" className="rounded-lg bg-error-container px-4 py-3 text-sm text-on-error-container">{error}</div>

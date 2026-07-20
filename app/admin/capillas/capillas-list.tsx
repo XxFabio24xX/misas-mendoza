@@ -18,6 +18,16 @@ type Lugar = {
   email?: string;
   created_at: string;
   temporada_actual?: string | null;
+  estado_verificacion?: "sin_verificar" | "en_revision" | "verificada";
+};
+
+const ESTADO_VERIF_META: Record<
+  "sin_verificar" | "en_revision" | "verificada",
+  { color: string; label: string }
+> = {
+  sin_verificar: { color: "bg-outline-variant/40", label: "Sin verificar" },
+  en_revision: { color: "bg-amber-400", label: "En revisión" },
+  verificada: { color: "bg-primary", label: "Datos verificados" },
 };
 
 type Horario = {
@@ -300,6 +310,10 @@ export function CapillasList({
                     <div className="flex items-center gap-2 min-w-0">
                       <Church className="h-5 w-5 shrink-0 text-primary/60" />
                       <span className="font-medium text-on-surface truncate">{l.nombre}</span>
+                      <span
+                        className={`h-2 w-2 shrink-0 rounded-full ${ESTADO_VERIF_META[l.estado_verificacion ?? "sin_verificar"].color}`}
+                        title={ESTADO_VERIF_META[l.estado_verificacion ?? "sin_verificar"].label}
+                      />
                     </div>
                       <div className="flex shrink-0 gap-1">
                         <Link
@@ -380,6 +394,10 @@ export function CapillasList({
                         <div className="flex items-center gap-2">
                           <Church className="h-4 w-4 shrink-0 text-primary/60" />
                           <span className="font-medium text-on-surface">{l.nombre}</span>
+                          <span
+                            className={`h-2 w-2 shrink-0 rounded-full ${ESTADO_VERIF_META[l.estado_verificacion ?? "sin_verificar"].color}`}
+                            title={ESTADO_VERIF_META[l.estado_verificacion ?? "sin_verificar"].label}
+                          />
                         </div>
                       </td>
                       <td className="px-4 py-3 text-on-surface-variant">{l.departamento}</td>

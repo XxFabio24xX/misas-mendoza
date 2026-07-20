@@ -24,6 +24,7 @@ type Lugar = {
   recibe_caritas?: boolean;
   slug: string;
   temporada_actual: "Invierno" | "Verano" | null;
+  estado_verificacion?: "sin_verificar" | "en_revision" | "verificada";
 };
 
 type Horario = {
@@ -124,7 +125,7 @@ function groupByDay(horarios: Horario[]) {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const LUGAR_COLS =
-  "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, departamento, lat, lng, recibe_caritas, slug, temporada_actual";
+  "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, departamento, lat, lng, recibe_caritas, slug, temporada_actual, estado_verificacion";
 
 // cache(): generateMetadata y la página comparten la misma consulta por request.
 const getLugarBySlug = cache(async (slug: string): Promise<Lugar | null> => {
@@ -231,9 +232,30 @@ export default async function CapillaPage({
       <div className="mx-auto max-w-280 px-5 py-6 md:px-6 md:py-8">
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           <div className="lg:col-span-2">
-            <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              {lugar.departamento}
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                {lugar.departamento}
+              </span>
+
+              {lugar.estado_verificacion === "verificada" && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                  <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Datos verificados
+                </span>
+              )}
+
+              {lugar.estado_verificacion === "en_revision" && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-container-high px-3 py-1 text-xs font-medium text-on-surface-variant">
+                  En revisión
+                </span>
+              )}
+            </div>
 
             <h1 className="mt-3 text-2xl font-semibold text-on-surface md:text-3xl">
               {lugar.nombre}

@@ -246,6 +246,25 @@ export default function Home() {
     <div className="mx-auto max-w-280 space-y-8 px-4 py-10 md:px-6 md:py-16">
       <HeroBanner />
 
+      {/* Banner informativo: verificación de datos en curso */}
+      <div className="overflow-hidden rounded-full border border-outline-variant/30 bg-secondary-container px-4 py-2.5">
+        <div className="flex items-center gap-3">
+          <span className="shrink-0 text-base" aria-hidden="true">
+            ℹ️
+          </span>
+          <div className="flex-1 overflow-hidden whitespace-nowrap">
+            <p className="inline-block animate-marquee text-sm text-on-surface-variant">
+              Estamos verificando los datos de todas las capillas junto a cada parroquia. Si
+              encontrás un horario o dato desactualizado,{" "}
+              <Link href="/contacto?tipo=error_horario" className="font-medium text-primary hover:underline">
+                Reportar un error
+              </Link>
+              .
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Search + Filtros: alineados al mismo eje izquierdo que la grilla */}
       <div className="space-y-6">
         <div className="group relative w-full max-w-xl">
