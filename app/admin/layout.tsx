@@ -151,10 +151,9 @@ export default function AdminLayout({
     router.push("/login");
   }, [router]);
 
-  // Auto-logout por inactividad — 4hs de balance entre seguridad y UX para
-  // voluntarios que dejan el panel abierto mientras trabajan.
+  // Auto-logout por inactividad — 1 hora.
   useEffect(() => {
-    const INACTIVIDAD_MS = 4 * 60 * 60 * 1000;
+    const INACTIVIDAD_MS = 60 * 60 * 1000; // 1 hora
     let timer: ReturnType<typeof setTimeout>;
 
     const resetTimer = () => {
