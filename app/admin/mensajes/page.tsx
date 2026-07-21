@@ -58,10 +58,10 @@ export default async function MensajesPage({
   const nuevos = mensajes?.filter((m) => m.estado === "nuevo").length ?? 0;
 
   const chipClass = (active: boolean) =>
-    `rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+    `rounded-full border px-4 py-1.5 text-xs font-medium transition-colors ${
       active
-        ? "border border-primary/20 bg-primary/10 text-primary"
-        : "border border-outline-variant/50 bg-outline-variant/40 text-on-surface hover:bg-outline-variant/60"
+        ? "bg-primary text-on-primary border-transparent"
+        : "border-outline-variant/30 bg-transparent text-on-surface-variant hover:border-outline-variant hover:text-on-surface"
     }`;
 
   return (

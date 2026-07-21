@@ -168,7 +168,7 @@ export function CapillasList({
                           text-xs font-medium transition-all border
                           ${
                             deptFiltro === null
-                              ? "bg-[var(--color-on-surface)] text-[var(--color-surface)] border-transparent"
+                              ? "bg-primary text-on-primary border-transparent"
                               : "border-outline-variant/30 text-on-surface-variant hover:border-outline-variant hover:text-on-surface"
                           }`}
             >
@@ -194,7 +194,7 @@ export function CapillasList({
                             text-xs font-medium transition-all border
                             ${
                               deptFiltro === depto
-                                ? "bg-[var(--color-on-surface)] text-[var(--color-surface)] border-transparent"
+                                ? "bg-primary text-on-primary border-transparent"
                                 : "border-outline-variant/30 text-on-surface-variant hover:border-outline-variant hover:text-on-surface"
                             }`}
               >
@@ -514,7 +514,7 @@ export function CapillasList({
                                     transition-all
                                     ${
                                       paginaActual === item
-                                        ? "bg-[var(--color-on-surface)] text-[var(--color-surface)] border border-transparent"
+                                        ? "bg-primary text-on-primary border border-transparent"
                                         : "border border-outline-variant/30 text-on-surface-variant hover:border-outline-variant hover:text-on-surface"
                                     }`}
                       >

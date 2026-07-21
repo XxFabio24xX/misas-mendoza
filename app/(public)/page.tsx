@@ -291,7 +291,7 @@ export default function Home() {
                           border whitespace-nowrap
                           ${
                             hasActiveFilters
-                              ? "bg-[var(--color-on-surface)] text-[var(--color-surface)] border-transparent"
+                              ? "bg-primary text-on-primary border-transparent"
                               : "border-outline-variant/40 text-on-surface-variant"
                           }`}
             >
@@ -621,7 +621,7 @@ export default function Home() {
                                 transition-all
                                 ${
                                   paginaActual === item
-                                    ? "bg-[var(--color-on-surface)] text-[var(--color-surface)] border border-transparent"
+                                    ? "bg-primary text-on-primary border border-transparent"
                                     : "border border-outline-variant/30 text-on-surface-variant hover:border-outline-variant hover:text-on-surface"
                                 }`}
                   >
@@ -788,7 +788,7 @@ export default function Home() {
                 )}
                 <button
                   onClick={() => setSheetOpen(false)}
-                  className="flex-1 rounded-xl bg-[var(--color-on-surface)] text-[var(--color-surface)] py-3 text-sm font-medium transition-colors"
+                  className="flex-1 rounded-xl bg-primary text-on-primary py-3 text-sm font-medium transition-colors"
                 >
                   Ver {filtered.length} resultado{filtered.length !== 1 ? "s" : ""}
                 </button>
