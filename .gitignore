@@ -43,6 +43,9 @@ opencode.json
 # Supabase temp
 supabase/.temp/
 
+# Graphify knowledge graph (generado local, ver CLAUDE.md)
+.graphify/
+
 # vercel
 .vercel
 

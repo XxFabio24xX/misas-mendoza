@@ -54,7 +54,7 @@ export default function AcercaPage() {
           <h2 className="mt-3 font-semibold text-on-surface">Hecho a pulmón</h2>
           <p className="mt-1.5 text-sm leading-relaxed text-on-surface-variant">
             El proyecto es gratuito y sin fines de lucro. Fue creado y es
-            mantenido por un único voluntario, con la esperanza de sumar más
+            mantenido por un voluntario, con la esperanza de sumar más
             manos para cuidar los datos de cada zona.
           </p>
         </div>
