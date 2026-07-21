@@ -153,7 +153,9 @@ export async function generateMetadata({
     openGraph: {
       title: lugar.nombre,
       description,
-      ...(lugar.imagen_url ? { images: [lugar.imagen_url] } : {}),
+      images: lugar.imagen_url
+        ? [{ url: lugar.imagen_url, width: 1200, height: 630 }]
+        : [{ url: "/opengraph-image", width: 1200, height: 630 }],
     },
   };
 }

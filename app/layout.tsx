@@ -16,11 +16,19 @@ export const metadata: Metadata = {
     template: "%s | Misas Mendoza",
   },
   description:
-    "Horarios de misas, parroquias, capillas y eventos católicos en Mendoza.",
+    "Encontrá los horarios de misas, celebraciones y eventos católicos más cercanos a vos en Mendoza, Argentina.",
   openGraph: {
     siteName: "Misas Mendoza",
     locale: "es_AR",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Misas Mendoza",
+      },
+    ],
   },
 };
 
