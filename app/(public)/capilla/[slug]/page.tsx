@@ -205,7 +205,7 @@ export default async function CapillaPage({
   return (
     <div className="min-h-screen bg-background">
       <div className="relative h-52 overflow-hidden rounded-b-xl bg-surface-container-high md:h-80">
-        {lugar.imagen_url && (
+        {lugar.imagen_url ? (
           <Image
             src={lugar.imagen_url}
             alt={lugar.nombre}
@@ -213,6 +213,12 @@ export default async function CapillaPage({
             priority
             sizes="100vw"
             className="object-cover"
+          />
+        ) : (
+          <img
+            src="/fondocapilla.webp"
+            alt={lugar.nombre}
+            className="h-48 w-full object-cover md:h-80"
           />
         )}
         <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
