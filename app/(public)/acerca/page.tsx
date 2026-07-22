@@ -3,9 +3,14 @@ import Link from "next/link";
 import { Church, HandHeart, MapPin, Users } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Acerca del proyecto",
+  title: "Acerca de Misas Mendoza",
   description:
-    "Qué es Misas Mendoza, quiénes lo mantienen y cómo colaborar para que los horarios de misa estén siempre al día.",
+    "Conocé el proyecto detrás de Misas Mendoza — una plataforma gratuita para encontrar horarios de misas y celebraciones católicas en Mendoza, Argentina.",
+  openGraph: {
+    title: "Acerca de Misas Mendoza",
+    description: "Una plataforma gratuita al servicio de la comunidad católica de Mendoza.",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 export default function AcercaPage() {
@@ -51,14 +56,37 @@ export default function AcercaPage() {
 
         <div className="rounded-xl border border-outline-variant/50 bg-secondary-container p-6">
           <Users className="h-6 w-6 text-primary" />
-          <h2 className="mt-3 font-semibold text-on-surface">Hecho a pulmón</h2>
+          <h2 className="mt-3 font-semibold text-on-surface">Al servicio de las capillas de Mendoza</h2>
           <p className="mt-1.5 text-sm leading-relaxed text-on-surface-variant">
-            El proyecto es gratuito y sin fines de lucro. Fue creado y es
-            mantenido por un voluntario, con la esperanza de sumar más
-            manos para cuidar los datos de cada zona.
+            Gratuito y sin fines de lucro, este proyecto está al servicio de
+            los voluntarios que sostienen cada capilla y parroquia de la
+            provincia — con la idea de sumar cada vez más manos para cuidar
+            los datos de su zona.
           </p>
         </div>
       </div>
+
+      <section className="mt-12">
+        <h2 className="text-lg font-semibold text-on-surface">En números</h2>
+        <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="rounded-xl border border-outline-variant/50 bg-secondary-container p-5 text-center">
+            <p className="text-2xl font-bold text-primary md:text-3xl">84+</p>
+            <p className="mt-1 text-xs text-on-surface-variant">Capillas</p>
+          </div>
+          <div className="rounded-xl border border-outline-variant/50 bg-secondary-container p-5 text-center">
+            <p className="text-2xl font-bold text-primary md:text-3xl">6</p>
+            <p className="mt-1 text-xs text-on-surface-variant">Departamentos</p>
+          </div>
+          <div className="rounded-xl border border-outline-variant/50 bg-secondary-container p-5 text-center">
+            <p className="text-2xl font-bold text-primary md:text-3xl">500+</p>
+            <p className="mt-1 text-xs text-on-surface-variant">Horarios de misa</p>
+          </div>
+          <div className="rounded-xl border border-outline-variant/50 bg-secondary-container p-5 text-center">
+            <p className="text-2xl font-bold text-primary md:text-3xl">100%</p>
+            <p className="mt-1 text-xs text-on-surface-variant">Gratuito</p>
+          </div>
+        </div>
+      </section>
 
       <section className="mt-12 rounded-xl bg-secondary-container p-6 md:p-8">
         <h2 className="text-lg font-semibold text-on-surface">¿Querés colaborar?</h2>

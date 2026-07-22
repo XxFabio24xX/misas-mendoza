@@ -85,6 +85,12 @@ export async function generateMetadata({
     openGraph: {
       title: evento.titulo,
       description,
+      images: [{
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: evento.titulo,
+      }],
     },
   };
 }
