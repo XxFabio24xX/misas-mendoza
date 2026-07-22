@@ -256,7 +256,7 @@ export default function Home() {
           <div className="flex-1 overflow-hidden whitespace-nowrap">
             <p className="inline-block animate-marquee text-sm text-on-surface-variant">
               Los horarios pueden no estar actualizados — estamos verificando los datos con
-              cada parroquia. Si encontrás un error, usá el botón "Reportar" en el detalle de cada
+              cada parroquia. Si encontrás un error, usá el botón &quot;Reportar&quot; en el detalle de cada
               capilla. Gracias por tu paciencia.
             </p>
           </div>
