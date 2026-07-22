@@ -170,12 +170,11 @@ button {
 
 @keyframes marquee {
   0%   { transform: translateX(0%); }
-  100% { transform: translateX(-100%); }
+  100% { transform: translateX(-50%); }
 }
 
 .animate-marquee {
-  display: inline-block;
-  animation: marquee 20s linear infinite;
+  display: inline-flex;
+  animation: marquee 25s linear infinite;
   animation-delay: 1.5s;
-  transform: translateX(0%);
 }

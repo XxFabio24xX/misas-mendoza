@@ -253,12 +253,20 @@ export default function Home() {
           <span className="shrink-0 text-base" aria-hidden="true">
             ℹ️
           </span>
-          <div className="flex-1 overflow-hidden whitespace-nowrap">
-            <p className="inline-block animate-marquee text-sm text-on-surface-variant">
-              Los horarios pueden no estar actualizados — estamos verificando los datos con
-              cada parroquia. Si encontrás un error, usá el botón &quot;Reportar&quot; en el detalle de cada
-              capilla. Gracias por tu paciencia.
-            </p>
+          <div className="flex-1 overflow-hidden">
+            <div className="flex animate-marquee whitespace-nowrap">
+              <span className="pr-16 text-sm text-on-surface-variant">
+                Los horarios pueden no estar actualizados — estamos verificando los datos con
+                cada parroquia. Si encontrás un error, usá el botón &quot;Reportar&quot; en el detalle de cada
+                capilla. Gracias por tu paciencia.
+              </span>
+              {/* Segunda copia idéntica para loop continuo */}
+              <span className="pr-16 text-sm text-on-surface-variant" aria-hidden="true">
+                Los horarios pueden no estar actualizados — estamos verificando los datos con
+                cada parroquia. Si encontrás un error, usá el botón &quot;Reportar&quot; en el detalle de cada
+                capilla. Gracias por tu paciencia.
+              </span>
+            </div>
           </div>
         </div>
       </div>
