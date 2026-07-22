@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Church, HandHeart, MapPin, Users } from "lucide-react";
+import { AnimatedCounter } from "@/app/components/animated-counter";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Acerca de Misas Mendoza",
@@ -13,7 +17,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AcercaPage() {
+export default async function AcercaPage() {
+  const [{ count: totalCapillas }, { count: totalHorarios }] = await Promise.all([
+    supabaseAdmin
+      .from("lugares")
+      .select("*", { count: "exact", head: true })
+      .eq("activo", true),
+    supabaseAdmin.from("horarios").select("*", { count: "exact", head: true }),
+  ]);
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 md:px-6 md:py-16">
       <h1 className="text-2xl font-semibold text-on-surface md:text-3xl">
@@ -70,19 +82,27 @@ export default function AcercaPage() {
         <h2 className="text-lg font-semibold text-on-surface">En números</h2>
         <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
           <div className="rounded-xl border border-outline-variant/50 bg-secondary-container p-5 text-center">
-            <p className="text-2xl font-bold text-primary md:text-3xl">84+</p>
+            <p className="text-2xl font-bold text-primary md:text-3xl">
+              <AnimatedCounter target={totalCapillas ?? 84} suffix="+" />
+            </p>
             <p className="mt-1 text-xs text-on-surface-variant">Capillas</p>
           </div>
           <div className="rounded-xl border border-outline-variant/50 bg-secondary-container p-5 text-center">
-            <p className="text-2xl font-bold text-primary md:text-3xl">6</p>
+            <p className="text-2xl font-bold text-primary md:text-3xl">
+              <AnimatedCounter target={9} suffix="+" />
+            </p>
             <p className="mt-1 text-xs text-on-surface-variant">Departamentos</p>
           </div>
           <div className="rounded-xl border border-outline-variant/50 bg-secondary-container p-5 text-center">
-            <p className="text-2xl font-bold text-primary md:text-3xl">500+</p>
+            <p className="text-2xl font-bold text-primary md:text-3xl">
+              <AnimatedCounter target={totalHorarios ?? 500} suffix="+" duration={2200} />
+            </p>
             <p className="mt-1 text-xs text-on-surface-variant">Horarios de misa</p>
           </div>
           <div className="rounded-xl border border-outline-variant/50 bg-secondary-container p-5 text-center">
-            <p className="text-2xl font-bold text-primary md:text-3xl">100%</p>
+            <p className="text-2xl font-bold text-primary md:text-3xl">
+              <AnimatedCounter target={100} suffix="%" />
+            </p>
             <p className="mt-1 text-xs text-on-surface-variant">Gratuito</p>
           </div>
         </div>
