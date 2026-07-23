@@ -148,6 +148,43 @@ export async function aprobarSolicitudAlta(solicitudId: string) {
   revalidatePath("/mapa");
 }
 
+/**
+ * Aplica una solicitud de horario suelto (propuesta desde el editor avanzado
+ * de horarios, no desde el form completo de capilla). `datos_propuestos` trae
+ * `accion` ("agregar" | "eliminar" | "editar") en vez de los campos de lugar.
+ */
+async function aplicarSolicitudHorario(datos: Record<string, unknown>) {
+  const accion = datos.accion as string;
+
+  if (accion === "agregar") {
+    const { error } = await supabaseAdmin
+      .from("horarios")
+      .insert(datos.horario as Record<string, unknown>);
+    if (error) throw new Error(error.message);
+    return;
+  }
+
+  if (accion === "eliminar") {
+    const { error } = await supabaseAdmin
+      .from("horarios")
+      .delete()
+      .eq("id", datos.horario_id as string);
+    if (error) throw new Error(error.message);
+    return;
+  }
+
+  if (accion === "editar") {
+    const { error } = await supabaseAdmin
+      .from("horarios")
+      .update(datos.datos as Record<string, unknown>)
+      .eq("id", datos.horario_id as string);
+    if (error) throw new Error(error.message);
+    return;
+  }
+
+  throw new Error(`Acción de horario desconocida: ${accion}`);
+}
+
 /** Aprueba una solicitud de edición: aplica los datos propuestos a la capilla existente. */
 export async function aprobarSolicitudEdicion(solicitudId: string) {
   const perfil = await requirePerfil();
@@ -155,7 +192,7 @@ export async function aprobarSolicitudEdicion(solicitudId: string) {
 
   const { data: solicitud } = await supabaseAdmin
     .from("solicitudes")
-    .select("lugar_id, datos_propuestos, estado")
+    .select("lugar_id, campo_editado, datos_propuestos, estado")
     .eq("id", solicitudId)
     .maybeSingle();
 
@@ -166,44 +203,48 @@ export async function aprobarSolicitudEdicion(solicitudId: string) {
 
   const datos = solicitud.datos_propuestos as Record<string, unknown>;
 
-  const { error } = await supabaseAdmin.rpc("actualizar_lugar", {
-    p_id: solicitud.lugar_id,
-    p_nombre: datos.nombre,
-    p_tipo: datos.tipo,
-    p_departamento: datos.departamento,
-    p_direccion: datos.direccion,
-    p_lat: datos.lat,
-    p_lng: datos.lng,
-    p_decanato: datos.decanato ?? null,
-    p_telefono: datos.telefono ?? null,
-    p_email: datos.email ?? null,
-    p_sitio_web: datos.sitio_web ?? null,
-    p_horario_secretaria: datos.horario_secretaria ?? null,
-    p_descripcion: datos.descripcion ?? null,
-    p_imagen_url: datos.imagen_url ?? null,
-    p_hay_confesiones: datos.hay_confesiones ?? false,
-    p_activo: datos.activo ?? true,
-    p_notas_horarios: datos.notas_horarios ?? null,
-    p_recibe_caritas: datos.recibe_caritas ?? false,
-  });
-  if (error) throw new Error(error.message);
+  if (solicitud.campo_editado === "horarios") {
+    await aplicarSolicitudHorario(datos);
+  } else {
+    const { error } = await supabaseAdmin.rpc("actualizar_lugar", {
+      p_id: solicitud.lugar_id,
+      p_nombre: datos.nombre,
+      p_tipo: datos.tipo,
+      p_departamento: datos.departamento,
+      p_direccion: datos.direccion,
+      p_lat: datos.lat,
+      p_lng: datos.lng,
+      p_decanato: datos.decanato ?? null,
+      p_telefono: datos.telefono ?? null,
+      p_email: datos.email ?? null,
+      p_sitio_web: datos.sitio_web ?? null,
+      p_horario_secretaria: datos.horario_secretaria ?? null,
+      p_descripcion: datos.descripcion ?? null,
+      p_imagen_url: datos.imagen_url ?? null,
+      p_hay_confesiones: datos.hay_confesiones ?? false,
+      p_activo: datos.activo ?? true,
+      p_notas_horarios: datos.notas_horarios ?? null,
+      p_recibe_caritas: datos.recibe_caritas ?? false,
+    });
+    if (error) throw new Error(error.message);
 
-  const horarios = datos.horarios as HorarioData[] | undefined;
-  if (horarios !== undefined && solicitud.lugar_id) {
-    await supabaseAdmin.from("horarios").delete().eq("lugar_id", solicitud.lugar_id);
+    const horarios = datos.horarios as HorarioData[] | undefined;
+    if (horarios !== undefined && solicitud.lugar_id) {
+      await supabaseAdmin.from("horarios").delete().eq("lugar_id", solicitud.lugar_id);
 
-    if (horarios.length > 0) {
-      const rows = horarios.map((h) => ({
-        lugar_id: solicitud.lugar_id,
-        dia_semana: h.tipo === "semanal" ? h.dia_semana : null,
-        dia_mes: h.tipo === "mensual" ? h.dia_mes : null,
-        hora: h.hora,
-        temporada: h.temporada,
-        tipo_actividad: "Misa",
-        reemplaza_dia: h.tipo === "mensual" ? (h.reemplaza_dia ?? false) : false,
-        observacion: h.observacion ?? null,
-      }));
-      await supabaseAdmin.from("horarios").insert(rows);
+      if (horarios.length > 0) {
+        const rows = horarios.map((h) => ({
+          lugar_id: solicitud.lugar_id,
+          dia_semana: h.tipo === "semanal" ? h.dia_semana : null,
+          dia_mes: h.tipo === "mensual" ? h.dia_mes : null,
+          hora: h.hora,
+          temporada: h.temporada,
+          tipo_actividad: "Misa",
+          reemplaza_dia: h.tipo === "mensual" ? (h.reemplaza_dia ?? false) : false,
+          observacion: h.observacion ?? null,
+        }));
+        await supabaseAdmin.from("horarios").insert(rows);
+      }
     }
   }
 
@@ -214,6 +255,9 @@ export async function aprobarSolicitudEdicion(solicitudId: string) {
 
   revalidatePath("/admin/solicitudes");
   revalidatePath("/admin/capillas");
+  if (solicitud.lugar_id) {
+    revalidatePath(`/admin/capillas/${solicitud.lugar_id}/horarios`);
+  }
   revalidatePath("/capilla/[slug]", "page");
   revalidatePath("/");
   revalidatePath("/mapa");

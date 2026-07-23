@@ -100,6 +100,7 @@ export default function HorariosPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [horarioAEliminar, setHorarioAEliminar] = useState<string | null>(null);
   const [eliminando, setEliminando] = useState(false);
+  const [esEditor, setEsEditor] = useState(false);
 
   const fetchLugar = useCallback(async () => {
     if (!id) return;
@@ -107,6 +108,19 @@ export default function HorariosPage() {
     if (data) setLugar(data as Lugar);
     else setError("No se encontró la capilla.");
   }, [id]);
+
+  const fetchPerfil = useCallback(async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data: perfil } = await supabase
+      .from("perfiles")
+      .select("rol")
+      .eq("id", user.id)
+      .maybeSingle();
+    setEsEditor(perfil?.rol === "editor");
+  }, []);
 
   const fetchHorarios = useCallback(async () => {
     if (!id) return;
@@ -118,10 +132,10 @@ export default function HorariosPage() {
   }, [id]);
 
   useEffect(() => {
-    // Initial data load on mount — fetchLugar/fetchHorarios manage their own state.
+    // Initial data load on mount — fetchLugar/fetchHorarios/fetchPerfil manage their own state.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    Promise.all([fetchLugar(), fetchHorarios()]).finally(() => setLoading(false));
-  }, [fetchLugar, fetchHorarios]);
+    Promise.all([fetchLugar(), fetchHorarios(), fetchPerfil()]).finally(() => setLoading(false));
+  }, [fetchLugar, fetchHorarios, fetchPerfil]);
 
   const grouped = horarios.reduce<Record<number, Horario[]>>((acc, h) => {
     if (!acc[h.dia_semana]) acc[h.dia_semana] = [];
@@ -176,6 +190,7 @@ export default function HorariosPage() {
       setSuccess(null);
       try {
         const tipo = form.tipo === "Otro" ? (form.tipoCustom.trim() || "Misa") : form.tipo;
+        let esSolicitud = false;
         for (const dia of [...form.dias].sort()) {
           const fd = new FormData();
           fd.set("dia_semana", String(dia));
@@ -183,11 +198,16 @@ export default function HorariosPage() {
           fd.set("tipo_actividad", tipo);
           fd.set("temporada", form.temporada);
           fd.set("observacion", form.observacion.trim());
-          await agregarHorario(id, fd);
+          const result = await agregarHorario(id, fd);
+          if (result?.solicitud) esSolicitud = true;
         }
         await fetchHorarios();
         const count = form.dias.length;
-        setSuccess(`${count === 1 ? "1 horario agregado" : `${count} horarios agregados`} correctamente.`);
+        setSuccess(
+          esSolicitud
+            ? "Tu propuesta fue enviada al administrador para su aprobación."
+            : `${count === 1 ? "1 horario agregado" : `${count} horarios agregados`} correctamente.`,
+        );
         setForm(FORM_DEFAULT);
         setShowPanel(false);
       } catch (e) {
@@ -202,8 +222,13 @@ export default function HorariosPage() {
     setError(null);
     setSuccess(null);
     try {
-      await eliminarHorario(horarioId, id);
+      const result = await eliminarHorario(horarioId, id);
       await fetchHorarios();
+      setSuccess(
+        result?.solicitud
+          ? "Tu propuesta fue enviada al administrador para su aprobación."
+          : "Horario eliminado correctamente.",
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al eliminar");
     }
@@ -281,6 +306,13 @@ export default function HorariosPage() {
           </button>
         )}
       </div>
+
+      {esEditor && (
+        <div className="mb-6 rounded-xl bg-secondary-container px-5 py-4 text-sm text-on-secondary-container">
+          <strong>Modo editor:</strong> Los cambios en horarios se enviarán al administrador de tu
+          departamento para su aprobación antes de aplicarse.
+        </div>
+      )}
 
       {/* Alerts */}
       {error && (
@@ -601,10 +633,16 @@ export default function HorariosPage() {
                           onSave={fd => {
                             startTransition(async () => {
                               setError(null);
+                              setSuccess(null);
                               try {
-                                await editarHorario(h.id, id, fd);
+                                const result = await editarHorario(h.id, id, fd);
                                 setEditingId(null);
                                 await fetchHorarios();
+                                setSuccess(
+                                  result?.solicitud
+                                    ? "Tu propuesta fue enviada al administrador para su aprobación."
+                                    : "Horario actualizado correctamente.",
+                                );
                               } catch (e) {
                                 unstable_rethrow(e);
                                 setError(e instanceof Error ? e.message : "Error inesperado.");

@@ -303,7 +303,7 @@ export async function agregarHorario(lugarId: string, formData: FormData) {
   const diaSemanaRaw = formData.get("dia_semana") as string;
   const diaMesRaw = formData.get("dia_mes") as string;
 
-  const { error } = await supabaseAdmin.from("horarios").insert({
+  const datos = {
     lugar_id: lugarId,
     dia_semana: diaSemanaRaw ? parseInt(diaSemanaRaw) : null,
     dia_mes: diaMesRaw ? parseInt(diaMesRaw) : null,
@@ -311,7 +311,26 @@ export async function agregarHorario(lugarId: string, formData: FormData) {
     tipo_actividad: (formData.get("tipo_actividad") as string) || "Misa",
     temporada: (formData.get("temporada") as string) || "Todo el año",
     observacion: (formData.get("observacion") as string) || null,
-  });
+  };
+
+  if (perfil.rol === "editor") {
+    const { error } = await supabaseAdmin.from("solicitudes").insert({
+      tipo: "edicion",
+      estado: "pendiente",
+      solicitado_por: perfil.id,
+      lugar_id: lugarId,
+      campo_editado: "horarios",
+      motivo: "Solicitud de nuevo horario",
+      datos_propuestos: { accion: "agregar", horario: datos },
+    });
+    if (error) throw new Error(error.message);
+
+    revalidatePath(`/admin/capillas/${lugarId}/horarios`);
+    revalidatePath("/admin/solicitudes");
+    return { solicitud: true as const };
+  }
+
+  const { error } = await supabaseAdmin.from("horarios").insert(datos);
   if (error) throw new Error(error.message);
 
   revalidatePath(`/admin/capillas/${lugarId}/horarios`);
@@ -325,6 +344,23 @@ export async function eliminarHorario(horarioId: string, lugarId: string) {
   const departamento = await getLugarDepartamento(realLugarId);
   if (!departamento) throw new Error("La capilla no existe.");
   assertDepartamentoAccess(perfil, departamento);
+
+  if (perfil.rol === "editor") {
+    const { error } = await supabaseAdmin.from("solicitudes").insert({
+      tipo: "edicion",
+      estado: "pendiente",
+      solicitado_por: perfil.id,
+      lugar_id: lugarId,
+      campo_editado: "horarios",
+      motivo: "Solicitud de eliminación de horario",
+      datos_propuestos: { accion: "eliminar", horario_id: horarioId },
+    });
+    if (error) throw new Error(error.message);
+
+    revalidatePath(`/admin/capillas/${lugarId}/horarios`);
+    revalidatePath("/admin/solicitudes");
+    return { solicitud: true as const };
+  }
 
   const { error } = await supabaseAdmin
     .from("horarios")
@@ -351,16 +387,35 @@ export async function editarHorario(
   const diaSemanaRaw = formData.get("dia_semana") as string;
   const diaMesRaw = formData.get("dia_mes") as string;
 
+  const datos = {
+    dia_semana: diaSemanaRaw ? parseInt(diaSemanaRaw) : null,
+    dia_mes: diaMesRaw ? parseInt(diaMesRaw) : null,
+    hora: formData.get("hora") as string,
+    tipo_actividad: (formData.get("tipo_actividad") as string) || "Misa",
+    temporada: (formData.get("temporada") as string) || "Todo el año",
+    observacion: (formData.get("observacion") as string) || null,
+  };
+
+  if (perfil.rol === "editor") {
+    const { error } = await supabaseAdmin.from("solicitudes").insert({
+      tipo: "edicion",
+      estado: "pendiente",
+      solicitado_por: perfil.id,
+      lugar_id: lugarId,
+      campo_editado: "horarios",
+      motivo: "Solicitud de edición de horario",
+      datos_propuestos: { accion: "editar", horario_id: horarioId, datos },
+    });
+    if (error) throw new Error(error.message);
+
+    revalidatePath(`/admin/capillas/${lugarId}/horarios`);
+    revalidatePath("/admin/solicitudes");
+    return { solicitud: true as const };
+  }
+
   const { error } = await supabaseAdmin
     .from("horarios")
-    .update({
-      dia_semana: diaSemanaRaw ? parseInt(diaSemanaRaw) : null,
-      dia_mes: diaMesRaw ? parseInt(diaMesRaw) : null,
-      hora: formData.get("hora") as string,
-      tipo_actividad: (formData.get("tipo_actividad") as string) || "Misa",
-      temporada: (formData.get("temporada") as string) || "Todo el año",
-      observacion: (formData.get("observacion") as string) || null,
-    })
+    .update(datos)
     .eq("id", horarioId);
   if (error) throw new Error(error.message);
 
