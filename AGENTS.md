@@ -21,7 +21,9 @@ App web para horarios de misas, parroquias, capillas y santuarios católicos de 
 
 ### Turbopack y next.config.ts
 
-Turbopack no soporta plugins que inyecten una función `webpack(config)` en `next.config.ts` — si alguna dependencia lo requiere (ej. `next-pwa`), `next build` falla directo ("If your project has a custom webpack configuration..."). Antes de instalar algo que toque `next.config.ts`, confirmar que sea compatible con Turbopack o que el plan sea usar `--webpack` explícitamente.
+Turbopack no soporta plugins que inyecten una función `webpack(config)` en `next.config.ts` — si alguna dependencia lo requiere, `next build` falla directo ("If your project has a custom webpack configuration..."). Antes de instalar algo que toque `next.config.ts`, confirmar que sea compatible con Turbopack o que el plan sea usar `--webpack` explícitamente. Confirmado empíricamente con `next-pwa`, `@ducanh2912/next-pwa` y `@serwist/next` — los tres generan el service worker vía `workbox-webpack-plugin`, mismo problema de fondo en los tres, cambiar de paquete no lo evita.
+
+**PWA/offline**: por eso el soporte offline (`public/sw.js`) es un service worker escrito a mano, sin Workbox — cache-first para assets estáticos propios (`/_next/static/`, `/icons/`, imágenes), network-first con fallback a caché para navegación entre páginas. Nunca cachea respuestas de Supabase (dependen de ubicación/parámetros del usuario; cachearlas serviría datos incorrectos, no solo desactualizados). Se registra desde `app/components/register-sw.tsx`, solo en producción (`NODE_ENV === "production"`, para no interferir con HMR en desarrollo).
 
 ## Estructura de carpetas
 
@@ -46,7 +48,7 @@ app/
 ├── components/                      # UI compartida (mapas, diálogos, chips, candle-loader, animated-counter, etc.)
 ├── login/page.tsx
 ├── opengraph-image.tsx               # og:image genérica (ImageResponse), fallback del sitio
-├── manifest.ts                       # PWA manifest (instalable, sin service worker/offline)
+├── manifest.ts                       # PWA manifest (instalable + offline básico, ver public/sw.js)
 └── layout.tsx + globals.css          # Metadata global + tokens de diseño (@theme), dark mode via .dark
 lib/
 ├── auth-server.ts                     # requirePerfil / assertDepartamentoAccess / assertAdmin
@@ -67,7 +69,7 @@ proxy.ts                             # Gate de sesión server-side para /admin/*
 |---|---|---|
 | `super_admin` | Toda la arquidiócesis | Control total: CRUD directo de capillas/eventos/horarios en cualquier departamento, gestiona voluntarios, aprueba/rechaza cualquier solicitud |
 | `admin_departamento` | Su `departamento_asignado` | Edita capillas/eventos/horarios directo *en su depto*, aprueba/rechaza solicitudes de su depto |
-| `editor` | Su `departamento_asignado` | Propone cambios que requieren aprobación vía tabla `solicitudes`: alta de capilla, edición de campos de contacto, baja, y (desde el fix de deuda técnica de horarios) alta/edición/baja de horarios sueltos en el editor avanzado (`[id]/horarios`). Sigue escribiendo eventos directo sin pasar por aprobación — inconsistencia conocida, ver "Gaps conocidos". |
+| `editor` | Su `departamento_asignado` | Propone cambios que requieren aprobación vía tabla `solicitudes`: alta/edición/baja de capilla, horarios sueltos en el editor avanzado (`[id]/horarios`), y alta/edición/baja de eventos. Todo lo que un editor escribe pasa por aprobación — no queda ninguna escritura directa a la BD. |
 
 Los nombres de rol en la BD son `super_admin` / `admin_departamento` / `editor` (renombrados desde `admin` / — / `editor_departamento` en la migración 011 "roles v2"). **Nunca comparar contra los nombres viejos** — quedan strings sueltos rotos si aparecen.
 
@@ -160,9 +162,10 @@ Ningún archivo `"use client"` debe importar `supabase-admin` — rompería el b
 | [proxy.ts](proxy.ts) | Gate de sesión server-side para `/admin/*` (Next 16 Proxy) |
 | [app/admin/layout.tsx](app/admin/layout.tsx) | Nav por rol, sidebar/drawer, auto-logout por inactividad (1h) — el gate de sesión real es `proxy.ts`, esto es solo UI |
 | [app/admin/capillas/actions.ts](app/admin/capillas/actions.ts) | El más completo: ground-truth department check, ramificación `editor` → `solicitudes` (capillas y horarios sueltos) |
-| [app/admin/solicitudes/actions.ts](app/admin/solicitudes/actions.ts) | Aprobación de solicitudes; aplica `datos_propuestos` vía RPC (alta/edición de capilla) o directo contra `horarios` (edición de horarios sueltos) |
+| [app/admin/solicitudes/actions.ts](app/admin/solicitudes/actions.ts) | Aprobación de solicitudes; ramifica por `campo_editado` — RPC (alta/edición de capilla), directo contra `horarios` (horarios sueltos), o directo contra `eventos` (alta/edición/baja de evento) |
 | [app/components/candle-loader.tsx](app/components/candle-loader.tsx) | Loader animado usado en todo el panel admin y algunas vistas públicas |
 | [app/components/animated-counter.tsx](app/components/animated-counter.tsx) | Contador que anima al entrar en viewport (usado en `/acerca`) |
+| [public/sw.js](public/sw.js) | Service worker manual (sin Workbox, ver sección Turbopack) — cache-first de assets propios, network-first de páginas |
 | [supabase/migrations/](supabase/migrations/) | Historial de schema — leer antes de asumir la forma de una tabla |
 | [pantallas/DESIGN.md](pantallas/DESIGN.md) | Sistema de diseño light ("Warm Organic", sage green) |
 | [pantallas/DESIGNdark.md](pantallas/DESIGNdark.md) | Sistema de diseño dark |
@@ -198,8 +201,6 @@ Son genéricos y no conocen las particularidades de este repo. Cuando se invoque
 
 ## Gaps conocidos y documentados
 
-- **`eventos` no ramifica por rol**: `crearEvento`/`actualizarEvento` en `app/admin/eventos/actions.ts` no tienen la rama `if (perfil.rol === "editor") → solicitudes` — un editor escribe eventos directo, sin aprobación. Inconsistente con `capillas` y con el editor avanzado de horarios (ya corregido). No resuelto todavía.
-- **PWA sin soporte offline**: el manifest (`app/manifest.ts`) e íconos existen (la app es instalable), pero no hay service worker ni caché offline — `next-pwa`/`@ducanh2912/next-pwa` no son compatibles con Turbopack (inyectan `webpack(config)`, que Turbopack rechaza). Pendiente de una solución Turbopack-nativa (service worker manual o build con `--webpack`).
 - **`eventos/[slug]` sin imagen OG propia dedicada de evento**: tiene `openGraph.images` (agregado junto con las mejoras de metadata), pero si el evento no tiene lugar/imagen asociada cae al fallback genérico del sitio, no a una imagen específica del tipo de evento.
 
 ## Lo que NO tocar sin mostrar el SQL/diff primero

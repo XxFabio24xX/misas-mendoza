@@ -28,6 +28,33 @@ export async function crearEvento(formData: FormData) {
   const descripcion = (formData.get("descripcion") as string) || "";
   const activo = formData.get("activo") === "on";
 
+  if (perfil.rol === "editor") {
+    const { error } = await supabaseAdmin.from("solicitudes").insert({
+      tipo: "alta",
+      estado: "pendiente",
+      solicitado_por: perfil.id,
+      lugar_id: null,
+      campo_editado: "evento",
+      motivo: "Solicitud de nuevo evento",
+      datos_propuestos: {
+        titulo,
+        tipo,
+        departamento,
+        lugar_id,
+        ubicacion,
+        descripcion,
+        fecha_inicio,
+        fecha_fin: fecha_fin || null,
+        activo,
+      },
+    });
+    if (error) throw new Error(error.message);
+
+    revalidatePath("/admin/solicitudes");
+    revalidatePath("/admin/eventos");
+    redirect("/admin/eventos?enviado=alta_evento");
+  }
+
   const { error } = await supabaseAdmin.from("eventos").insert({
     titulo,
     tipo,
@@ -64,6 +91,34 @@ export async function actualizarEvento(id: string, formData: FormData) {
   const descripcion = (formData.get("descripcion") as string) || "";
   const activo = formData.get("activo") === "on";
 
+  if (perfil.rol === "editor") {
+    const { error } = await supabaseAdmin.from("solicitudes").insert({
+      tipo: "edicion",
+      estado: "pendiente",
+      solicitado_por: perfil.id,
+      lugar_id: null,
+      campo_editado: "evento",
+      motivo: "Solicitud de edición de evento",
+      datos_propuestos: {
+        evento_id: id,
+        titulo,
+        tipo,
+        departamento,
+        lugar_id,
+        ubicacion,
+        descripcion,
+        fecha_inicio,
+        fecha_fin: fecha_fin || null,
+        activo,
+      },
+    });
+    if (error) throw new Error(error.message);
+
+    revalidatePath("/admin/solicitudes");
+    revalidatePath("/admin/eventos");
+    redirect("/admin/eventos?enviado=edicion_evento");
+  }
+
   const { error } = await supabaseAdmin
     .from("eventos")
     .update({
@@ -92,6 +147,23 @@ export async function eliminarEvento(id: string) {
   const departamento = await getEventoDepartamento(id);
   if (!departamento) throw new Error("El evento no existe.");
   assertDepartamentoAccess(perfil, departamento);
+
+  if (perfil.rol === "editor") {
+    const { error } = await supabaseAdmin.from("solicitudes").insert({
+      tipo: "baja",
+      estado: "pendiente",
+      solicitado_por: perfil.id,
+      lugar_id: null,
+      campo_editado: "evento",
+      motivo: "Solicitud de baja de evento",
+      datos_propuestos: { evento_id: id, departamento },
+    });
+    if (error) throw new Error(error.message);
+
+    revalidatePath("/admin/solicitudes");
+    revalidatePath("/admin/eventos");
+    return;
+  }
 
   const { error } = await supabaseAdmin.from("eventos").delete().eq("id", id);
 

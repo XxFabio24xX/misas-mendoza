@@ -3,6 +3,7 @@ import { Church, User } from "lucide-react";
 import { ThemeToggle } from "@/app/components/theme-toggle";
 import { BottomNav } from "@/app/components/bottom-nav";
 import { HeaderNav } from "@/app/components/header-nav";
+import { OfflineBanner } from "@/app/components/offline-banner";
 
 export default function PublicLayout({
   children,
@@ -38,6 +39,8 @@ export default function PublicLayout({
           </div>
         </div>
       </header>
+
+      <OfflineBanner />
 
       <main className="pb-20 md:pb-0">{children}</main>
 

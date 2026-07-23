@@ -45,13 +45,34 @@ export async function aprobarSolicitudBaja(solicitudId: string) {
 
   const { data: solicitud } = await supabaseAdmin
     .from("solicitudes")
-    .select("lugar_id, estado")
+    .select("lugar_id, campo_editado, datos_propuestos, estado")
     .eq("id", solicitudId)
     .maybeSingle();
 
   if (!solicitud) throw new Error("La solicitud no existe.");
   if (solicitud.estado !== "pendiente") {
     throw new Error("La solicitud ya fue resuelta.");
+  }
+
+  if (solicitud.campo_editado === "evento") {
+    const datos = solicitud.datos_propuestos as Record<string, unknown>;
+    const { error } = await supabaseAdmin
+      .from("eventos")
+      .delete()
+      .eq("id", datos.evento_id as string);
+    if (error) throw new Error(error.message);
+
+    // A diferencia de la baja de capilla, acá no hay FK con CASCADE que
+    // borre la solicitud sola — hay que marcarla aprobada a mano.
+    await supabaseAdmin
+      .from("solicitudes")
+      .update({ estado: "aprobada", revisado_por: perfil.id })
+      .eq("id", solicitudId);
+
+    revalidatePath("/admin/solicitudes");
+    revalidatePath("/admin/eventos");
+    revalidatePath("/eventos");
+    return;
   }
 
   const { error } = await supabaseAdmin
@@ -88,7 +109,7 @@ export async function aprobarSolicitudAlta(solicitudId: string) {
 
   const { data: solicitud } = await supabaseAdmin
     .from("solicitudes")
-    .select("datos_propuestos, estado")
+    .select("campo_editado, datos_propuestos, estado")
     .eq("id", solicitudId)
     .maybeSingle();
 
@@ -98,6 +119,31 @@ export async function aprobarSolicitudAlta(solicitudId: string) {
   }
 
   const datos = solicitud.datos_propuestos as Record<string, unknown>;
+
+  if (solicitud.campo_editado === "evento") {
+    const { error } = await supabaseAdmin.from("eventos").insert({
+      titulo: datos.titulo,
+      tipo: datos.tipo,
+      departamento: datos.departamento,
+      lugar_id: datos.lugar_id ?? null,
+      ubicacion: datos.ubicacion,
+      descripcion: datos.descripcion,
+      fecha_inicio: new Date(datos.fecha_inicio as string).toISOString(),
+      fecha_fin: datos.fecha_fin ? new Date(datos.fecha_fin as string).toISOString() : null,
+      activo: datos.activo ?? true,
+    });
+    if (error) throw new Error(error.message);
+
+    await supabaseAdmin
+      .from("solicitudes")
+      .update({ estado: "aprobada", revisado_por: perfil.id })
+      .eq("id", solicitudId);
+
+    revalidatePath("/admin/solicitudes");
+    revalidatePath("/admin/eventos");
+    revalidatePath("/eventos");
+    return;
+  }
 
   const { data: lugar, error } = await supabaseAdmin.rpc("crear_lugar", {
     p_nombre: datos.nombre,
@@ -205,6 +251,22 @@ export async function aprobarSolicitudEdicion(solicitudId: string) {
 
   if (solicitud.campo_editado === "horarios") {
     await aplicarSolicitudHorario(datos);
+  } else if (solicitud.campo_editado === "evento") {
+    const { error } = await supabaseAdmin
+      .from("eventos")
+      .update({
+        titulo: datos.titulo,
+        tipo: datos.tipo,
+        departamento: datos.departamento,
+        lugar_id: datos.lugar_id ?? null,
+        ubicacion: datos.ubicacion,
+        descripcion: datos.descripcion,
+        fecha_inicio: new Date(datos.fecha_inicio as string).toISOString(),
+        fecha_fin: datos.fecha_fin ? new Date(datos.fecha_fin as string).toISOString() : null,
+        activo: datos.activo ?? true,
+      })
+      .eq("id", datos.evento_id as string);
+    if (error) throw new Error(error.message);
   } else {
     const { error } = await supabaseAdmin.rpc("actualizar_lugar", {
       p_id: solicitud.lugar_id,
@@ -257,6 +319,10 @@ export async function aprobarSolicitudEdicion(solicitudId: string) {
   revalidatePath("/admin/capillas");
   if (solicitud.lugar_id) {
     revalidatePath(`/admin/capillas/${solicitud.lugar_id}/horarios`);
+  }
+  if (solicitud.campo_editado === "evento") {
+    revalidatePath("/admin/eventos");
+    revalidatePath("/eventos");
   }
   revalidatePath("/capilla/[slug]", "page");
   revalidatePath("/");

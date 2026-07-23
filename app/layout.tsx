@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/app/components/theme-provider";
+import { RegisterSW } from "@/app/components/register-sw";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -44,6 +45,7 @@ export default function RootLayout({
         <ThemeProvider>
           {children}
         </ThemeProvider>
+        <RegisterSW />
         <Analytics />
       </body>
     </html>
