@@ -805,6 +805,82 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "WebSite",
+                "@id": "https://misasmendoza.com.ar/#website",
+                url: "https://misasmendoza.com.ar",
+                name: "Misas Mendoza",
+                description: "Horarios de misas y celebraciones católicas en Mendoza, Argentina",
+                inLanguage: "es-AR",
+                potentialAction: {
+                  "@type": "SearchAction",
+                  target: {
+                    "@type": "EntryPoint",
+                    urlTemplate: "https://misasmendoza.com.ar/?q={search_term_string}",
+                  },
+                  "query-input": "required name=search_term_string",
+                },
+              },
+              {
+                "@type": "Organization",
+                "@id": "https://misasmendoza.com.ar/#organization",
+                name: "Misas Mendoza",
+                url: "https://misasmendoza.com.ar",
+                logo: "https://misasmendoza.com.ar/icons/icon-192.png",
+                description: "Plataforma gratuita de horarios de misas y celebraciones católicas para la Arquidiócesis de Mendoza",
+                areaServed: {
+                  "@type": "State",
+                  name: "Mendoza",
+                  addressCountry: "AR",
+                },
+                contactPoint: {
+                  "@type": "ContactPoint",
+                  contactType: "customer support",
+                  url: "https://misasmendoza.com.ar/contacto",
+                  availableLanguage: "Spanish",
+                },
+              },
+              {
+                "@type": "LocalBusiness",
+                "@id": "https://misasmendoza.com.ar/#localbusiness",
+                name: "Misas Mendoza",
+                url: "https://misasmendoza.com.ar",
+                description: "Directorio de horarios de misas, parroquias, capillas y santuarios de la Arquidiócesis de Mendoza",
+                address: {
+                  "@type": "PostalAddress",
+                  addressLocality: "Mendoza",
+                  addressRegion: "Mendoza",
+                  addressCountry: "AR",
+                },
+                geo: {
+                  "@type": "GeoCoordinates",
+                  latitude: -32.8908,
+                  longitude: -68.8272,
+                },
+                areaServed: [
+                  "Capital, Mendoza",
+                  "Godoy Cruz, Mendoza",
+                  "Guaymallén, Mendoza",
+                  "Las Heras, Mendoza",
+                  "Maipú, Mendoza",
+                  "Luján de Cuyo, Mendoza",
+                  "San Martín, Mendoza",
+                  "Junín, Mendoza",
+                  "Rivadavia, Mendoza",
+                ],
+                sameAs: ["https://misasmendoza.com.ar"],
+              },
+            ],
+          }).replace(/</g, "\\u003c"),
+        }}
+      />
     </div>
   );
 }

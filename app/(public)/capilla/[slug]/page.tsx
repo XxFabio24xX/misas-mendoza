@@ -25,6 +25,9 @@ type Lugar = {
   slug: string;
   temporada_actual: "Invierno" | "Verano" | null;
   estado_verificacion?: "sin_verificar" | "en_revision" | "verificada";
+  descripcion?: string;
+  tipo: "parroquia" | "capilla" | "santuario";
+  sitio_web?: string;
 };
 
 type Horario = {
@@ -125,7 +128,7 @@ function groupByDay(horarios: Horario[]) {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const LUGAR_COLS =
-  "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, departamento, lat, lng, recibe_caritas, slug, temporada_actual, estado_verificacion";
+  "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, departamento, lat, lng, recibe_caritas, slug, temporada_actual, estado_verificacion, descripcion, tipo, sitio_web";
 
 // cache(): generateMetadata y la página comparten la misma consulta por request.
 const getLugarBySlug = cache(async (slug: string): Promise<Lugar | null> => {
@@ -201,6 +204,43 @@ export default async function CapillaPage({
   const temporadasPresentes = seasonOrder(lugar.temporada_actual).filter((s) =>
     byTemporada.has(s),
   );
+
+  // dia_semana == null son horarios mensuales fijos (dia_mes): no tienen
+  // un día de la semana fijo, así que quedan fuera de openingHoursSpecification.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CatholicChurch",
+    name: lugar.nombre,
+    description:
+      lugar.descripcion ??
+      `${lugar.tipo === "parroquia" ? "Parroquia" : lugar.tipo === "santuario" ? "Santuario" : "Capilla"} ubicada en ${lugar.departamento}, Mendoza`,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: lugar.direccion,
+      addressLocality: lugar.departamento,
+      addressRegion: "Mendoza",
+      addressCountry: "AR",
+    },
+    ...(lugar.lat && lugar.lng
+      ? { geo: { "@type": "GeoCoordinates", latitude: lugar.lat, longitude: lugar.lng } }
+      : {}),
+    ...(lugar.telefono ? { telephone: lugar.telefono } : {}),
+    ...(lugar.email ? { email: lugar.email } : {}),
+    ...(lugar.sitio_web ? { url: lugar.sitio_web } : {}),
+    ...(lugar.imagen_url ? { image: lugar.imagen_url } : {}),
+    url: `https://misasmendoza.com.ar/capilla/${lugar.slug}`,
+    openingHoursSpecification: horarios
+      .filter((h) => h.dia_semana != null)
+      .map((h) => ({
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: [
+          "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+        ][h.dia_semana as number],
+        opens: h.hora,
+        closes: h.hora,
+        description: h.tipo_actividad ?? "Misa",
+      })),
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -475,6 +515,11 @@ export default async function CapillaPage({
           </div>
         </div>
       </div>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
     </div>
   );
 }
