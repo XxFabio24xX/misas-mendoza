@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { supabasePublic } from "@/lib/supabase-public";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://misas-mendoza.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://misasmendoza.com.ar";
 
 // Regenerar cada hora para reflejar capillas/eventos nuevos sin redeploy.
 export const revalidate = 3600;

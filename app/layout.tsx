@@ -10,7 +10,7 @@ const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://misas-mendoza.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://misasmendoza.com.ar",
   ),
   title: {
     default: "Misas Mendoza",
