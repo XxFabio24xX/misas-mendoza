@@ -68,6 +68,16 @@
   --radius-xl: 1.5rem;
   --radius-2xl: 2rem;
   --radius-full: 9999px;
+
+  /* Temporadas de horarios */
+  --color-season-winter-bg: #eff6ff;
+  --color-season-winter-text: #1d4ed8;
+  --color-season-summer-bg: #fffbeb;
+  --color-season-summer-text: #b45309;
+
+  /* Badge Cáritas */
+  --color-caritas-bg: #e9dec8;
+  --color-caritas-text: #476254;
 }
 
 body {
@@ -148,6 +158,16 @@ button {
   --color-tertiary-fixed-dim: #eabbba;
   --color-on-tertiary-fixed: #2e1414;
   --color-on-tertiary-fixed-variant: #603e3d;
+
+  /* Temporadas de horarios */
+  --color-season-winter-bg: #172554;
+  --color-season-winter-text: #93c5fd;
+  --color-season-summer-bg: #451a03;
+  --color-season-summer-text: #fcd34d;
+
+  /* Badge Cáritas */
+  --color-caritas-bg: #2d2416;
+  --color-caritas-text: #b0cdbc;
 }
 
 @keyframes candle-flicker {

@@ -26,7 +26,7 @@ const ESTADO_VERIF_META: Record<
   { color: string; label: string }
 > = {
   sin_verificar: { color: "bg-outline-variant/40", label: "Sin verificar" },
-  en_revision: { color: "bg-amber-400", label: "En revisión" },
+  en_revision: { color: "bg-[var(--color-season-summer-text)]", label: "En revisión" },
   verificada: { color: "bg-primary", label: "Datos verificados" },
 };
 
@@ -404,7 +404,7 @@ export function CapillasList({
                       <td className="px-4 py-3 text-on-surface-variant max-w-50 truncate">{l.direccion}</td>
                       <td className="px-4 py-3">
                         {next === "—" ? (
-                          <span className="flex items-center gap-1 text-amber-600">
+                          <span className="flex items-center gap-1 text-error">
                             <AlertTriangle className="h-3.5 w-3.5" />
                             Sin horarios
                           </span>

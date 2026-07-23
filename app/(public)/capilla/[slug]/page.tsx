@@ -64,14 +64,14 @@ const TEMPORADA_META: Record<
   Invierno: {
     label: "Invierno",
     icon: "snow",
-    style: "bg-blue-50/60 dark:bg-blue-950/20",
-    headerStyle: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
+    style: "bg-[var(--color-season-winter-bg)]",
+    headerStyle: "bg-[var(--color-season-winter-bg)] text-[var(--color-season-winter-text)] border-[var(--color-season-winter-text)]/20",
   },
   Verano: {
     label: "Verano",
     icon: "sun",
-    style: "bg-amber-50/60 dark:bg-amber-950/20",
-    headerStyle: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
+    style: "bg-[var(--color-season-summer-bg)]",
+    headerStyle: "bg-[var(--color-season-summer-bg)] text-[var(--color-season-summer-text)] border-[var(--color-season-summer-text)]/20",
   },
 };
 
@@ -275,10 +275,7 @@ export default async function CapillaPage({
             </p>
 
             {lugar.recibe_caritas && (
-              // Colores fijos (no theme-aware) a propósito: el fondo #e9dec8 tampoco
-              // cambia con el tema, así que el texto debe quedar igual de fijo para
-              // no perder contraste en dark mode.
-              <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#e9dec8] px-3.5 py-1.5 text-xs font-medium text-[#476254]">
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[var(--color-caritas-bg)] px-3.5 py-1.5 text-xs font-medium text-[var(--color-caritas-text)]">
                 <HandHeart className="h-3.5 w-3.5 shrink-0" />
                 Recibe donaciones para Cáritas
               </div>

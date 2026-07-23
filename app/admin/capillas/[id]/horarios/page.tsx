@@ -40,14 +40,14 @@ const TEMPORADAS = [
 
 const TEMP_CHIP: Record<string, string> = {
   "Todo el año": "bg-primary/10 text-primary border border-primary/20",
-  Invierno: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
-  Verano: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
+  Invierno: "bg-[var(--color-season-winter-bg)] text-[var(--color-season-winter-text)] border border-[var(--color-season-winter-text)]/20",
+  Verano: "bg-[var(--color-season-summer-bg)] text-[var(--color-season-summer-text)] border border-[var(--color-season-summer-text)]/20",
 };
 
 const TEMP_BTN_ACTIVE: Record<string, string> = {
   "Todo el año": "border-primary bg-primary/10 text-primary",
-  Invierno: "border-blue-400 bg-blue-50 text-blue-700 dark:border-blue-600 dark:bg-blue-950/40 dark:text-blue-300",
-  Verano: "border-amber-400 bg-amber-50 text-amber-700 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-300",
+  Invierno: "border-[var(--color-season-winter-text)]/40 bg-[var(--color-season-winter-bg)] text-[var(--color-season-winter-text)]",
+  Verano: "border-[var(--color-season-summer-text)]/40 bg-[var(--color-season-summer-bg)] text-[var(--color-season-summer-text)]",
 };
 
 const QUICK_TIMES = ["07:00", "08:00", "09:00", "10:00", "11:00", "17:00", "18:00", "19:00", "20:00", "21:00"];

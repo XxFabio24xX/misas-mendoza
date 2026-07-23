@@ -502,7 +502,7 @@ export default function EditarCapillaPage() {
                   value: "en_revision",
                   label: "En revisión",
                   desc: "Un voluntario está revisando los datos",
-                  color: "border-amber-500/40 text-amber-600 dark:text-amber-400",
+                  color: "border-[var(--color-season-summer-text)]/40 text-[var(--color-season-summer-text)]",
                 },
                 {
                   value: "verificada",
