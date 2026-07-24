@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Guía para Voluntarios — Misas Mendoza</title>
+<style>
+  @media print {
+    @page {
+      size: A4;
+      margin: 12mm 14mm;
+    }
+
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+
+    html, body {
+      margin: 0 !important;
+      background: white !important;
+    }
+
+    .no-print { display: none !important; }
+
+    .page {
+      width: 100% !important;
+      min-height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      page-break-after: always;
+      break-after: page;
+    }
+
+    /* Evitar que elementos se corten entre páginas */
+    .step, .note, table, tr, h2, h3 {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Evitar que títulos queden solos al final de página */
+    h2, h3 {
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+
+    /* La última página no necesita salto */
+    .page:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Georgia', serif; background: #f0ece4; color: #1c1c15; font-size: 14px; line-height: 1.7; }
+  .print-btn { position: fixed; bottom: 24px; right: 24px; background: #476254; color: white; border: none; padding: 12px 24px; border-radius: 99px; font-size: 14px; font-family: sans-serif; cursor: pointer; box-shadow: 0 4px 12px rgba(71,98,84,0.3); z-index: 100; }
+  .page { background: white; width: 794px; min-height: 1123px; margin: 32px auto; padding: 48px 56px; box-shadow: 0 4px 32px rgba(0,0,0,0.12); }
+  /* PORTADA */
+  .cover-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 64px; }
+  .cover-logo-icon { width: 36px; height: 36px; background: #476254; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .cover-eyebrow { font-family: sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #476254; margin-bottom: 16px; }
+  .cover-h1 { font-size: 42px; font-weight: 700; color: #1c1c15; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 16px; }
+  .cover-tagline { font-size: 16px; color: #424844; font-style: italic; margin-bottom: 48px; }
+  .cover-divider { border: none; border-top: 1.5px solid #e6e2d7; margin: 32px 0; }
+  .cover-roles { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px; }
+  .role-box { padding: 20px; border-radius: 10px; font-family: sans-serif; }
+  .role-box.editor { background: #f7f3e8; border-left: 3px solid #655e4c; }
+  .role-box.admin { background: #f0f7f3; border-left: 3px solid #476254; }
+  .role-box-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .role-box.editor .role-box-title { color: #655e4c; }
+  .role-box.admin .role-box-title { color: #476254; }
+  .role-box-desc { font-size: 12px; color: #424844; line-height: 1.5; }
+  .cover-footer { margin-top: 48px; font-family: sans-serif; font-size: 12px; color: #c2c8c2; border-top: 0.5px solid #e6e2d7; padding-top: 16px; display: flex; justify-content: space-between; }
+  /* SECCIONES */
+  .section-num { font-family: sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #476254; margin-bottom: 6px; }
+  h2 { font-size: 24px; font-weight: 700; color: #1c1c15; margin-bottom: 4px; }
+  .section-sub { font-size: 13px; color: #727974; font-family: sans-serif; margin-bottom: 16px; }
+  .divider { border: none; border-top: 1px solid #e6e2d7; margin-bottom: 20px; }
+  p { color: #424844; margin-bottom: 12px; font-size: 13px; }
+  /* PASOS */
+  .steps { display: flex; flex-direction: column; gap: 0; margin: 16px 0; }
+  .step { display: flex; gap: 16px; padding: 16px 0; border-bottom: 0.5px solid #f2eee3; }
+  .step:last-child { border-bottom: none; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: #476254; color: white; font-family: sans-serif; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .step-content { flex: 1; }
+  .step-title { font-family: sans-serif; font-size: 13px; font-weight: 600; color: #1c1c15; margin-bottom: 4px; }
+  .step-desc { font-size: 12px; color: #424844; line-height: 1.5; }
+  .step-tip { font-size: 11px; color: #476254; font-style: italic; margin-top: 4px; }
+  /* NOTA */
+  .note { padding: 14px 18px; border-radius: 8px; margin: 12px 0; font-family: sans-serif; font-size: 12px; line-height: 1.5; }
+  .note.info { background: #f0f7f3; border-left: 3px solid #476254; color: #1c1c15; }
+  .note.warning { background: #fff8ec; border-left: 3px solid #b45309; color: #1c1c15; }
+  .note.tip { background: #f7f3e8; border-left: 3px solid #655e4c; color: #1c1c15; }
+  .note strong { display: block; margin-bottom: 3px; }
+  /* TABLA */
+  table { width: 100%; border-collapse: collapse; font-family: sans-serif; font-size: 12px; margin: 12px 0; }
+  th { text-align: left; padding: 8px 12px; background: #f2eee3; color: #727974; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+  td { padding: 10px 12px; border-bottom: 0.5px solid #e6e2d7; color: #424844; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { font-weight: 600; color: #1c1c15; }
+  /* BADGE */
+  .badge { display: inline-block; font-size: 10px; font-family: sans-serif; padding: 2px 8px; border-radius: 99px; font-weight: 600; }
+  .badge.editor { background: #f7f3e8; color: #655e4c; }
+  .badge.admin { background: #f0f7f3; color: #476254; }
+  .badge.both { background: #e6e2d7; color: #424844; }
+  /* PAGE FOOTER */
+  .page-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding-top: 14px; border-top: 0.5px solid #e6e2d7; font-family: sans-serif; font-size: 11px; color: #c2c8c2; }
+  /* CHECKLIST */
+  .checklist { list-style: none; margin: 12px 0; display: flex; flex-direction: column; gap: 6px; }
+  .checklist li { display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: #424844; font-family: sans-serif; }
+  .checklist li::before { content: '☐'; font-size: 14px; color: #476254; flex-shrink: 0; margin-top: -1px; }
+  h3 { font-size: 15px; font-weight: 600; color: #1c1c15; margin: 16px 0 8px; font-family: sans-serif; }
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">⬇ Guardar como PDF</button>
+
+<!-- PORTADA -->
+<div class="page">
+  <div class="cover-logo">
+    <div class="cover-logo-icon">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <rect x="9" y="2" width="2" height="16" rx="0.5" fill="white"/>
+        <rect x="4" y="7" width="12" height="2" rx="0.5" fill="white"/>
+      </svg>
+    </div>
+    <span style="font-family:sans-serif;font-size:15px;font-weight:600;color:#1c1c15">Misas Mendoza</span>
+  </div>
+
+  <div class="cover-eyebrow">Guía para voluntarios · 2026</div>
+  <div class="cover-h1">Bienvenido al equipo de Misas Mendoza</div>
+  <div class="cover-tagline">Todo lo que necesitás saber para mantener actualizada la información de las capillas de tu zona.</div>
+
+  <div class="note info">
+    <strong>¿Qué es Misas Mendoza?</strong>
+    Una plataforma web gratuita donde cualquier persona puede encontrar los horarios de misas, confesiones y eventos de las capillas de la Arquidiócesis de Mendoza. Vos sos parte del equipo que mantiene esa información actualizada.
+  </div>
+
+  <hr class="cover-divider">
+
+  <p style="font-family:sans-serif;font-size:13px;font-weight:600;color:#1c1c15;margin-bottom:12px">Tu rol en el equipo</p>
+  <div class="cover-roles">
+    <div class="role-box editor">
+      <div class="role-box-title">✏️ Editor</div>
+      <div class="role-box-desc">Podés proponer cambios en las capillas de tu departamento. Tus propuestas las revisa el Admin antes de publicarse. Ideal para voluntarios parroquiales.</div>
+    </div>
+    <div class="role-box admin">
+      <div class="role-box-title">🏛️ Admin Departamental</div>
+      <div class="role-box-desc">Podés editar directamente las capillas de tu departamento y aprobar o rechazar las propuestas de los editores de tu zona.</div>
+    </div>
+  </div>
+
+  <div class="cover-footer">
+    <span>misasmendoza.com.ar · soporte@misasmendoza.com.ar</span>
+    <span>Julio 2026</span>
+  </div>
+</div>
+
+<!-- PÁGINA 1: PRIMEROS PASOS -->
+<div class="page">
+  <div class="section-num">01 — Primeros pasos</div>
+  <h2>Cómo entrar al panel</h2>
+  <div class="section-sub">Todo lo que necesitás para empezar</div>
+  <hr class="divider">
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Entrá a misasmendoza.com.ar/login</div>
+        <div class="step-desc">Desde cualquier celular o computadora, abrí el navegador y escribí esa dirección. También podés instalar la app en tu celular tocando "Agregar a pantalla de inicio" en el menú del navegador.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Ingresá con tu email y contraseña</div>
+        <div class="step-desc">El administrador te creó un usuario con tu email. Si es la primera vez, usá la contraseña que te enviaron. Si no la recordás, escribile a soporte@misasmendoza.com.ar.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Explorá el panel</div>
+        <div class="step-desc">Una vez adentro vas a ver el menú con las secciones: Capillas, Eventos, Mensajes y (si sos Admin) Solicitudes. En el dashboard inicial ves un resumen de las capillas de tu zona.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note warning">
+    <strong>⚠️ Importante sobre la sesión</strong>
+    Si dejás el panel abierto sin usarlo por más de 1 hora, la sesión se cierra automáticamente. Esto es para proteger los datos. Solo volvé a hacer login y continuá donde estabas.
+  </div>
+
+  <h3>El panel en un vistazo</h3>
+  <table>
+    <thead><tr><th>Sección</th><th>Para qué sirve</th><th>Quién lo ve</th></tr></thead>
+    <tbody>
+      <tr><td>Dashboard</td><td>Resumen de capillas de tu zona y alertas</td><td><span class="badge both">Todos</span></td></tr>
+      <tr><td>Capillas</td><td>Ver, editar y gestionar las capillas</td><td><span class="badge both">Todos</span></td></tr>
+      <tr><td>Eventos</td><td>Publicar avisos y actividades</td><td><span class="badge both">Todos</span></td></tr>
+      <tr><td>Mensajes</td><td>Ver reportes de la comunidad</td><td><span class="badge admin">Admin</span></td></tr>
+      <tr><td>Solicitudes</td><td>Aprobar o rechazar propuestas de editores</td><td><span class="badge admin">Admin</span></td></tr>
+      <tr><td>Voluntarios</td><td>Gestionar el equipo</td><td><span class="badge admin">Super Admin</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>Misas Mendoza · Guía para voluntarios</span>
+    <span>1</span>
+  </div>
+</div>
+
+<!-- PÁGINA 2: EDITAR CAPILLAS -->
+<div class="page">
+  <div class="section-num">02 — Capillas</div>
+  <h2>Editar una capilla</h2>
+  <div class="section-sub">Cómo actualizar los datos de una capilla de tu zona</div>
+  <hr class="divider">
+
+  <p>Esta es tu tarea principal. Cada capilla tiene datos básicos (nombre, dirección, teléfono) y horarios de misa. Lo más importante es mantener los horarios actualizados.</p>
+
+  <h3>Para editar una capilla existente</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Andá a Capillas en el menú</div>
+        <div class="step-desc">Vas a ver la lista de todas las capillas de tu departamento. Podés buscar por nombre en el campo de búsqueda.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Hacé click en el ícono de lápiz ✏️ (Editar)</div>
+        <div class="step-desc">Se abre el formulario con todos los datos de la capilla. Podés modificar nombre, dirección, teléfono, email, descripción y foto.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Guardá los cambios</div>
+        <div class="step-desc">Hacé click en "Guardar Capilla" al final del formulario.</div>
+        <div class="step-tip">✏️ Editor: tus cambios importantes van a aprobación del Admin antes de publicarse. 🏛️ Admin: los cambios se publican directamente.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Para editar los horarios de misa</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">En la lista de capillas, hacé click en el ícono de reloj 🕐 (Horarios)</div>
+        <div class="step-desc">Se abre la página de horarios de esa capilla específica.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Revisá los horarios existentes</div>
+        <div class="step-desc">Vas a ver una tabla con todos los horarios cargados. Si alguno está mal, podés eliminarlo con el botón de papelera 🗑️.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Agregá los horarios correctos</div>
+        <div class="step-desc">Usá el formulario de abajo para agregar cada horario: elegí el día, la hora, el tipo de actividad (Misa, Adoración, etc.) y la temporada (Todo el año, Verano, Invierno).</div>
+        <div class="step-tip">💡 Si la misa es el "1° domingo del mes", usá el campo Observación para aclararlo.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note tip">
+    <strong>💡 Temporadas</strong>
+    Muchas capillas tienen horarios diferentes en verano (enero-febrero) e invierno. Podés cargar los dos por separado usando el campo "Temporada". Ojo: el cambio <strong>no es automático</strong> — cuando la parroquia te avise que cambia de horario, entrá a Horarios y tocá el botón "Invierno" o "Verano" en "Temporada vigente" para activarla.
+  </div>
+
+  <div class="page-footer">
+    <span>Misas Mendoza · Guía para voluntarios</span>
+    <span>2</span>
+  </div>
+</div>
+
+<!-- PÁGINA 3: CREAR Y VERIFICAR -->
+<div class="page">
+  <div class="section-num">03 — Crear y verificar</div>
+  <h2>Agregar una capilla nueva y verificar datos</h2>
+  <div class="section-sub">Cómo sumar una capilla que falta y marcar datos confirmados</div>
+  <hr class="divider">
+
+  <h3>Para agregar una capilla que no está en la lista</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Hacé click en "+ Agregar capilla"</div>
+        <div class="step-desc">Está en la esquina superior derecha de la sección Capillas.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Completá el formulario</div>
+        <div class="step-desc">Los campos obligatorios son: nombre, tipo (parroquia/capilla/santuario), departamento y dirección. El resto es opcional pero muy útil: teléfono, email, descripción y foto.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Marcá la ubicación en el mapa</div>
+        <div class="step-desc">Hacé click en el mapa para poner el pin exactamente donde está la capilla. Esto es importante para que aparezca correctamente en la búsqueda por cercanía.</div>
+        <div class="step-tip">💡 Abrí Google Maps en otra pestaña, buscá la capilla y usá esas coordenadas como referencia.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">Guardá — va a revisión</div>
+        <div class="step-desc">Si sos Editor, tu propuesta va al Admin para aprobación. Si sos Admin, se publica directamente y podés cargar los horarios enseguida.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Estado de verificación</h3>
+  <p>Cada capilla tiene un estado que indica si sus datos fueron confirmados con la parroquia real:</p>
+
+  <table>
+    <thead><tr><th>Estado</th><th>Qué significa</th><th>Qué hacer</th></tr></thead>
+    <tbody>
+      <tr><td>⚪ Sin verificar</td><td>Datos importados automáticamente, sin confirmar</td><td>Llamar a la parroquia y confirmar los horarios</td></tr>
+      <tr><td>🟡 En revisión</td><td>Alguien está trabajando en verificarla</td><td>Marcarla así mientras la estás revisando</td></tr>
+      <tr><td>🟢 Verificada</td><td>Datos confirmados con la parroquia</td><td>Marcarla así una vez confirmado todo</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note info">
+    <strong>📞 Cómo verificar una capilla</strong>
+    Lo ideal es llamar directamente al teléfono de la parroquia y confirmar: horarios de misa (incluyendo cambios de verano), horario de secretaría, si hay confesiones y cuándo. Con esa info, actualizás los datos y marcás la capilla como "Verificada".
+  </div>
+
+  <div class="page-footer">
+    <span>Misas Mendoza · Guía para voluntarios</span>
+    <span>3</span>
+  </div>
+</div>
+
+<!-- PÁGINA 4: EVENTOS Y MENSAJES -->
+<div class="page">
+  <div class="section-num">04 — Eventos y mensajes</div>
+  <h2>Publicar eventos y atender mensajes</h2>
+  <div class="section-sub">Cómo mantener la comunidad informada</div>
+  <hr class="divider">
+
+  <h3>Publicar un evento o aviso</h3>
+  <p>En la sección Eventos podés publicar actividades de jóvenes, retiros, misas especiales y cualquier aviso importante para tu zona.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Andá a Eventos → "+ Agregar"</div>
+        <div class="step-desc">Se abre el formulario de nuevo evento.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Completá los datos del evento</div>
+        <div class="step-desc">Título, tipo (Jóvenes / Aviso / Especial), departamento, descripción y fecha. Podés vincular el evento a una capilla específica si querés.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Publicá</div>
+        <div class="step-desc">Si sos Editor, va a revisión del Admin. Si sos Admin, se publica directamente en la app pública.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Mensajes de la comunidad <span class="badge admin">Solo Admin</span></h3>
+  <p>En la sección Mensajes aparecen los reportes y sugerencias que manda la gente desde el sitio público. Hay dos tipos:</p>
+
+  <table>
+    <thead><tr><th>Tipo</th><th>Qué es</th><th>Qué hacer</th></tr></thead>
+    <tbody>
+      <tr><td>💬 Sugerencia</td><td>Comentario general sobre la app</td><td>Leer, marcar como leído o respondido</td></tr>
+      <tr><td>⚠️ Error en horario</td><td>Alguien reportó un horario incorrecto</td><td>Verificar y corregir el horario de la capilla mencionada</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note tip">
+    <strong>💡 Los errores reportados son oro</strong>
+    Cuando alguien se toma el tiempo de reportar un error en un horario, significa que intentó ir a misa y encontró algo mal. Priorizá estos mensajes y corregí el horario lo antes posible.
+  </div>
+
+  <div class="page-footer">
+    <span>Misas Mendoza · Guía para voluntarios</span>
+    <span>4</span>
+  </div>
+</div>
+
+<!-- PÁGINA 5: CHECKLIST Y CONTACTO -->
+<div class="page">
+  <div class="section-num">05 — Checklist y contacto</div>
+  <h2>Contacto y soporte</h2>
+  <div class="section-sub">¿Necesitás ayuda o tenés alguna duda?</div>
+  <hr class="divider">
+
+  <div class="note info" style="margin-top: 24px;">
+    <strong>📞 ¿Necesitás ayuda?</strong>
+    Si tenés dudas sobre cómo usar el panel, encontrás un error o querés reportar algo, escribinos a soporte@misasmendoza.com.ar o contactá al administrador de tu decanato. Estamos para ayudarte.
+  </div>
+
+  <div style="margin-top: 32px; padding: 20px; background: #f2eee3; border-radius: 10px; font-family: sans-serif;">
+    <div style="font-size: 12px; font-weight: 700; color: #476254; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px;">Datos útiles</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div>
+        <div style="font-size: 11px; color: #727974; margin-bottom: 2px;">Sitio público</div>
+        <div style="font-size: 13px; color: #1c1c15; font-weight: 500;">misasmendoza.com.ar</div>
+      </div>
+      <div>
+        <div style="font-size: 11px; color: #727974; margin-bottom: 2px;">Panel admin</div>
+        <div style="font-size: 13px; color: #1c1c15; font-weight: 500;">misasmendoza.com.ar/admin</div>
+      </div>
+      <div>
+        <div style="font-size: 11px; color: #727974; margin-bottom: 2px;">Soporte</div>
+        <div style="font-size: 13px; color: #1c1c15; font-weight: 500;">soporte@misasmendoza.com.ar</div>
+      </div>
+      <div>
+        <div style="font-size: 11px; color: #727974; margin-bottom: 2px;">Login</div>
+        <div style="font-size: 13px; color: #1c1c15; font-weight: 500;">misasmendoza.com.ar/login</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Misas Mendoza · Guía para voluntarios · misasmendoza.com.ar</span>
+    <span>5</span>
+  </div>
+</div>
+
+</body>
+</html>
