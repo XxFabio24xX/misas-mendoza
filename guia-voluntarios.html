@@ -39,6 +39,12 @@
       break-inside: avoid;
     }
 
+    /* Espaciado más ajustado que en pantalla, para que el contenido más
+       denso (ej. página "Editar capillas") entre en una sola hoja A4. */
+    .steps { margin: 10px 0 !important; }
+    .step { padding: 10px 0 !important; }
+    .note { padding: 10px 16px !important; margin: 8px 0 !important; }
+
     /* Evitar que títulos queden solos al final de página */
     h2, h3 {
       page-break-after: avoid;
@@ -57,7 +63,6 @@
   .page { background: white; width: 794px; min-height: 1123px; margin: 32px auto; padding: 48px 56px; box-shadow: 0 4px 32px rgba(0,0,0,0.12); }
   /* PORTADA */
   .cover-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 64px; }
-  .cover-logo-icon { width: 36px; height: 36px; background: #476254; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
   .cover-eyebrow { font-family: sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #476254; margin-bottom: 16px; }
   .cover-h1 { font-size: 42px; font-weight: 700; color: #1c1c15; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 16px; }
   .cover-tagline { font-size: 16px; color: #424844; font-style: italic; margin-bottom: 48px; }
@@ -119,12 +124,13 @@
 <!-- PORTADA -->
 <div class="page">
   <div class="cover-logo">
-    <div class="cover-logo-icon">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <rect x="9" y="2" width="2" height="16" rx="0.5" fill="white"/>
-        <rect x="4" y="7" width="12" height="2" rx="0.5" fill="white"/>
-      </svg>
-    </div>
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#476254" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 9h4"/>
+      <path d="M12 7v5"/>
+      <path d="M14 21v-3a2 2 0 0 0-4 0v3"/>
+      <path d="m18 9 3.52 2.147a1 1 0 0 1 .48.854V19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6.999a1 1 0 0 1 .48-.854L6 9"/>
+      <path d="M6 21V7a1 1 0 0 1 .376-.782l5-3.999a1 1 0 0 1 1.249.001l5 4A1 1 0 0 1 18 7v14"/>
+    </svg>
     <span style="font-family:sans-serif;font-size:15px;font-weight:600;color:#1c1c15">Misas Mendoza</span>
   </div>
 
