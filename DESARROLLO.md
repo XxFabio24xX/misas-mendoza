@@ -56,7 +56,7 @@ Sin este archivo `npm run dev` arranca pero todo falla al consultar datos, y
 
 ```bash
 npm run lint    # sin errores
-npm test        # 18 tests en verde
+npm test        # 30 tests en verde
 npm run build   # compila y genera todas las rutas
 npm run dev     # http://localhost:3000
 ```
@@ -72,12 +72,13 @@ Si las cuatro pasan, la PC quedó lista.
 
 ## 7. Migraciones de base de datos
 
-Las migraciones viven en `supabase/migrations/` numeradas (001–010) y **se
+Las migraciones viven en `supabase/migrations/` numeradas (001–026) y **se
 aplican a mano** en el dashboard de Supabase → **SQL Editor** (no hay CLI
-configurada). Reglas:
+configurada) — o vía el MCP de Supabase (`apply_migration`) si trabajás con
+un agente que lo tenga conectado. Reglas:
 
 - Se corren **en orden** y una sola vez cada una. Las ya aplicadas en el
-  proyecto actual son la 001 a la 010.
+  proyecto actual son la 001 a la 026.
 - Si un cambio de código depende de una migración nueva, **primero se corre la
   migración en Supabase y después se pushea el código** — al revés, producción
   queda rota entre el deploy y la migración.
@@ -94,8 +95,8 @@ configurada). Reglas:
   `especial` (minúscula, sin tilde). El mapeo a etiquetas visibles está
   centralizado en `lib/eventos-tipos.ts` — nunca mandar la etiqueta como valor.
 - **Departamentos**: la lista de los formularios está en `lib/departamentos.ts`
-  (5 habilitados). El enum de la DB ya acepta 9; a futuro serán todos los de
-  Mendoza — se agregan ahí, en un solo lugar.
+  (9 habilitados, coincide 1 a 1 con el enum `departamentos_mza` de la DB). A
+  futuro serán todos los de Mendoza — se agregan ahí, en un solo lugar.
 - **Slugs**: las URLs públicas (`/capilla/...`, `/eventos/...`) usan slugs
   generados por triggers en la DB (migración 009). No se setean desde el
   código; una vez creado, el slug no cambia aunque se renombre la capilla.

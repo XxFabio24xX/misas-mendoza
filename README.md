@@ -4,7 +4,7 @@
 
 El proyecto tiene dos caras: un **sitio público** donde cualquier persona encuentra misas por cercanía, día y horario, y un **panel de administración** donde voluntarios autorizados mantienen los datos de su zona al día. Contempla las realidades concretas de las parroquias mendocinas: horarios que cambian entre invierno y verano (cuando cada parroquia lo decide), misas mensuales especiales que reemplazan a las del día, y eventos de la comunidad.
 
-Fue creado y es mantenido por **un único voluntario** ([@XxFabio24xX](https://github.com/XxFabio24xX)), sin fines de lucro y con infraestructura de costo cero, con la idea de sumar voluntarios por zona a medida que crezca la cobertura.
+Fue creado y es mantenido por voluntarios ([@XxFabio24xX](https://github.com/XxFabio24xX)), sin fines de lucro y con infraestructura de costo cero, con la idea de sumar más voluntarios por zona a medida que crezca la cobertura.
 
 > **Stack:** Next.js 16 · Supabase (PostgreSQL + PostGIS) · Tailwind CSS v4 · TypeScript · Vitest
 
@@ -38,7 +38,7 @@ Es la cara visible del proyecto: está pensado para que cualquier persona —sin
 | **Mapa (`/mapa`)** | Mapa global con pins de todas las capillas activas, tooltips y popups con acceso al detalle. |
 | **Acerca (`/acerca`)** | Qué es el proyecto y cómo colaborar como voluntario. |
 
-Las URLs públicas usan **slugs** legibles (`/capilla/parroquia-santiago-apostol`) generados automáticamente desde el nombre; los links viejos con UUID redirigen con 301. Hay favoritos persistidos en `localStorage` (sin cuenta), modo claro/oscuro, **PWA instalable** (agregar a la pantalla de inicio), metadata Open Graph por página (vista previa al compartir por WhatsApp), `sitemap.xml` dinámico, `robots.txt` y Vercel Analytics.
+Las URLs públicas usan **slugs** legibles (`/capilla/parroquia-santiago-apostol`) generados automáticamente desde el nombre; los links viejos con UUID redirigen con 301. Hay favoritos persistidos en `localStorage` (sin cuenta), modo claro/oscuro, **PWA instalable con soporte offline básico** (service worker propio, sin Workbox — cachea assets estáticos y páginas ya visitadas), metadata Open Graph + structured data (JSON-LD) por página (vista previa al compartir por WhatsApp, resultados enriquecidos en Google), `sitemap.xml` dinámico, `robots.txt` y Vercel Analytics.
 
 #### Temporadas y casos especiales de horarios
 
@@ -48,20 +48,22 @@ Las URLs públicas usan **slugs** legibles (`/capilla/parroquia-santiago-apostol
 
 ### Panel de Administración (`/admin`)
 
-Detrás del sitio público hay un panel al que solo acceden voluntarios con usuario y contraseña, desde el celular o la computadora. El diseño sigue un principio de prudencia: cada voluntario solo edita lo que le corresponde, y las acciones destructivas requieren una segunda aprobación — así un error local nunca borra datos de forma permanente.
+Detrás del sitio público hay un panel al que solo acceden voluntarios con usuario y contraseña, desde el celular o la computadora. El diseño sigue un principio de prudencia: cada voluntario solo edita lo que le corresponde, y las acciones delicadas requieren una segunda aprobación — así un error local nunca borra ni cambia datos de forma permanente.
 
-Acceso protegido por login (sesión en cookies vía `@supabase/ssr` + `proxy.ts`). Dos roles:
+Acceso protegido por login (sesión en cookies vía `@supabase/ssr` + `proxy.ts`, con auto-logout a la hora de inactividad). Tres roles:
 
-- **Super Admin:** acceso completo a todas las secciones. Puede eliminar capillas directamente.
-- **Editor de departamento:** solo gestiona capillas y eventos de su departamento asignado. No elimina capillas: envía una **solicitud de baja** con motivo, que un admin revisa.
+- **Super Admin:** acceso completo a todas las secciones y departamentos. Aprueba o rechaza cualquier solicitud.
+- **Admin Departamental:** edita capillas, horarios y eventos directo, pero solo en su propio departamento. Aprueba o rechaza las solicitudes de su zona.
+- **Editor:** propone cambios en las capillas, horarios sueltos y eventos de su departamento — todo lo que escribe pasa por una **solicitud** que un Admin revisa antes de aplicarse (alta, edición o baja).
 
 | Sección | Funcionalidades |
 |---|---|
 | **Dashboard** | Resumen por departamento, capillas sin horarios, tabla de acceso rápido. |
-| **Capillas** | CRUD completo. Formulario con info básica, contacto, checkbox de Cáritas, **subida de imagen con recorte y compresión** (Supabase Storage), **grilla dinámica de horarios** (semanales + mensuales fijos con opción de reemplazo del día, por temporada) y selector de ubicación en mapa. El editor de horarios incluye el **switch de temporada vigente** (Invierno/Verano). |
+| **Capillas** | CRUD completo. Formulario con info básica, contacto, checkbox de Cáritas, estado de **verificación** (sin verificar / en revisión / verificada), **subida de imagen con recorte y compresión** (Supabase Storage), **grilla dinámica de horarios** (semanales + mensuales fijos con opción de reemplazo del día, por temporada) y selector de ubicación en mapa. El editor de horarios incluye el **switch de temporada vigente** (Invierno/Verano). |
 | **Eventos** | CRUD completo. Filtro en cascada departamento → capilla, fechas DD/MM/AAAA con datepicker, tipos del enum `tipo_evento`, y botón **Duplicar** para eventos recurrentes (precarga todo menos las fechas). |
-| **Voluntarios** _(solo admin)_ | Crear, editar y desactivar cuentas de colaboradores (Supabase Auth + perfil). |
-| **Solicitudes de Baja** _(solo admin)_ | Bandeja de pedidos de eliminación: aprobar (elimina la capilla) o rechazar, con historial. El menú muestra un badge con las pendientes. |
+| **Mensajes** _(Admin)_ | Bandeja de sugerencias y reportes de error enviados desde `/contacto` por el público (sin login). Filtros por tipo y estado. |
+| **Solicitudes** _(Admin)_ | Bandeja de propuestas de los Editores: alta, edición o baja de capillas, horarios sueltos y eventos. Aprobar aplica los datos propuestos; rechazar queda con historial. El menú muestra un badge con las pendientes. |
+| **Voluntarios** _(solo Super Admin)_ | Crear, editar y desactivar cuentas de colaboradores (Supabase Auth + perfil), incluyendo cambio de rol y contraseña. |
 
 ---
 
@@ -86,21 +88,24 @@ Las decisiones técnicas apuntan a dos cosas: **costo cero** de infraestructura 
 app/
 ├── (public)/                      # Sitio público
 │   ├── page.tsx                   # Inicio: buscador + filtros + capillas cercanas
-│   ├── capilla/[slug]/page.tsx    # Detalle de capilla (Server Component + generateMetadata)
+│   ├── capilla/[slug]/page.tsx    # Detalle de capilla (Server Component + generateMetadata + JSON-LD)
 │   ├── eventos/page.tsx           # Listado de eventos vigentes
 │   ├── eventos/[slug]/page.tsx    # Detalle de evento (+ .ics)
-│   ├── acerca/page.tsx            # Acerca del proyecto / colaborar
+│   ├── contacto/page.tsx          # Form público de sugerencias/reportes → tabla mensajes
+│   ├── acerca/page.tsx            # Acerca del proyecto / colaborar (stats reales de Supabase)
 │   └── mapa/page.tsx              # Mapa global
 ├── admin/
 │   ├── layout.tsx                 # Sidebar + drawer mobile + guard de sesión
 │   ├── page.tsx                   # Dashboard
 │   ├── capillas/                  # CRUD + editor de horarios y temporada ([id]/horarios)
 │   ├── eventos/                   # CRUD con filtro en cascada + duplicar
-│   ├── voluntarios/               # Gestión de cuentas (solo admin)
-│   └── solicitudes/               # Bandeja de solicitudes de baja (solo admin)
-├── components/                    # UI compartida (mapas, diálogos <dialog>, chips, share, etc.)
+│   ├── mensajes/                  # Bandeja de sugerencias/reportes públicos (Admin)
+│   ├── solicitudes/               # Bandeja de aprobación (alta/edición/baja) (Admin)
+│   └── voluntarios/               # Gestión de cuentas (solo Super Admin)
+├── components/                    # UI compartida (mapas, diálogos, chips, candle-loader, etc.)
 ├── login/page.tsx
-├── manifest.ts                    # PWA
+├── opengraph-image.tsx            # og:image genérica (ImageResponse), fallback del sitio
+├── manifest.ts                    # PWA (instalable + soporte offline básico, ver public/sw.js)
 ├── sitemap.ts / robots.ts         # SEO
 └── globals.css                    # Tailwind v4: @theme, tokens, dark mode
 lib/
@@ -108,11 +113,12 @@ lib/
 ├── auth-server.ts                 # requirePerfil / assertDepartamentoAccess / assertAdmin
 ├── misas-utils.ts                 # findNextMisa (temporadas/reemplazos), franjas, normalizeText
 ├── eventos-tipos.ts               # Mapeo slug ↔ etiqueta/color del enum tipo_evento
-├── departamentos.ts               # Departamentos habilitados en formularios
+├── departamentos.ts               # Departamentos habilitados en formularios (9)
 ├── date-dmy.ts                    # Conversión DD/MM/AAAA ↔ ISO
 ├── ics.ts                         # Generación de archivos iCalendar
 └── *.test.ts                      # Tests de Vitest
-supabase/migrations/               # 001–010, ver DESARROLLO.md para aplicarlas
+public/sw.js                       # Service worker manual (sin Workbox — ver AGENTS.md)
+supabase/migrations/               # 001–026, ver DESARROLLO.md para aplicarlas
 .github/workflows/ci.yml           # CI: lint + tests + build
 proxy.ts                           # Gate de sesión para /admin/*
 ```
@@ -121,7 +127,7 @@ proxy.ts                           # Gate de sesión para /admin/*
 
 ## Base de Datos (Supabase)
 
-El modelo gira alrededor de tres tablas: `lugares` (los templos), `horarios` (una fila por misa, lo que permite que una capilla grande tenga tantas misas como necesite) y `eventos`. Las tablas `perfiles` y `solicitudes_baja` sostienen el sistema de roles del panel. Las migraciones SQL numeradas en `supabase/migrations/` son la historia completa del esquema.
+El modelo gira alrededor de tres tablas: `lugares` (los templos), `horarios` (una fila por misa, lo que permite que una capilla grande tenga tantas misas como necesite) y `eventos`. Las tablas `perfiles` y `solicitudes` sostienen el sistema de roles del panel, y `mensajes` guarda las sugerencias/reportes del público. Las migraciones SQL numeradas en `supabase/migrations/` son la historia completa del esquema.
 
 ### `lugares`
 | Columna | Tipo | Notas |
@@ -130,7 +136,7 @@ El modelo gira alrededor de tres tablas: `lugares` (los templos), `horarios` (un
 | `nombre` | `text` | |
 | `slug` | `text` | Único. Generado por trigger desde `nombre`; estable ante renombres |
 | `tipo` | `tipo_lugar` | enum: `parroquia`, `capilla`, `santuario` |
-| `departamento` | `departamentos_mza` | enum (9 valores; los formularios habilitan 5 por ahora) |
+| `departamento` | `departamentos_mza` | enum, 9 departamentos habilitados en los formularios (`lib/departamentos.ts`) |
 | `direccion` | `text` | |
 | `lat`, `lng` | `float8` | |
 | `coordenadas` | `geography(Point,4326)` | Calculado por RPC desde lat/lng |
@@ -139,6 +145,7 @@ El modelo gira alrededor de tres tablas: `lugares` (los templos), `horarios` (un
 | `hay_confesiones` | `boolean` | |
 | `recibe_caritas` | `boolean` | Muestra el badge de Cáritas en el detalle |
 | `temporada_actual` | `text (nullable)` | `'Invierno'` / `'Verano'`. Switch manual de la temporada vigente; NULL si no usa temporadas |
+| `estado_verificacion` | `estado_verificacion` | enum: `sin_verificar`, `en_revision`, `verificada` — si los datos fueron confirmados con la parroquia |
 | `activo` | `boolean` | |
 
 ### `horarios`
@@ -171,23 +178,39 @@ El modelo gira alrededor de tres tablas: `lugares` (los templos), `horarios` (un
 |---|---|
 | `id` | `uuid` (FK → auth.users) |
 | `nombre_completo` | `text` |
-| `rol` | `'admin'` / `'editor_departamento'` |
-| `departamento_asignado` | `text` |
+| `email` | `text` |
+| `rol` | `rol_usuario` — enum: `super_admin` / `admin_departamento` / `editor` |
+| `departamento_asignado` | `departamentos_mza` (nullable) |
 | `activo` | `boolean` |
 
-### `solicitudes_baja`
+### `mensajes`
 | Columna | Tipo | Notas |
 |---|---|---|
-| `lugar_id` | `uuid` | FK → lugares (`ON DELETE CASCADE`) |
-| `motivo` | `text` | |
-| `estado` | `varchar` | `pendiente` / `aprobada` / `rechazada` |
-| `solicitado_por` | `uuid` | FK → perfiles |
-| `created_at` | `timestamptz` | |
+| `tipo` | enum | `sugerencia` / `error_horario` |
+| `estado` | enum | `nuevo` / `leido` / `respondido` |
+| `nombre`, `telefono`, `email` | `text` (nullable) | El mensaje puede ser anónimo |
+| `lugar_id` | `uuid` (nullable) | FK → lugares, si el reporte es sobre una capilla puntual |
+| `notas_internas` | `text` (nullable) | Solo visibles para el equipo |
+
+### `solicitudes`
+Tabla de aprobación para todo lo que un **Editor** propone (antes se llamaba `solicitudes_baja` y solo cubría bajas de capilla; hoy cubre alta/edición/baja de capillas, horarios sueltos y eventos).
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| `tipo` | `text` | `alta` / `baja` / `edicion` |
+| `estado` | `text` | `pendiente` / `aprobada` / `rechazada` |
+| `lugar_id` | `uuid` (nullable) | FK → lugares. NULL en altas (la capilla/evento todavía no existe) |
+| `campo_editado` | `text` (nullable) | Distingue qué se está proponiendo (ej. `"horarios"`, `"evento"`) cuando no es el form completo de capilla |
+| `datos_propuestos` | `jsonb` | Snapshot de los datos propuestos; la forma varía según `campo_editado` |
+| `motivo`, `motivo_rechazo` | `text` | |
+| `solicitado_por`, `revisado_por` | `uuid` | FK → perfiles |
 
 ### RPCs
-- `crear_lugar` / `actualizar_lugar` — insert/update con PostGIS y todos los campos.
-- `get_lugares_cercanos(user_lat, user_lng, radio_km)` — capillas activas ordenadas por distancia (incluye `slug` y `temporada_actual`).
+- `crear_lugar` / `actualizar_lugar` — insert/update con PostGIS, `estado_verificacion` y todos los campos.
+- `get_lugares_cercanos(user_lat, user_lng, radio_km)` — capillas activas ordenadas por distancia (incluye `slug` y `temporada_actual`), sin `LIMIT` interno (pagina el frontend).
+- `get_lugares(filtro_departamento, filtro_busqueda)` — variante sin geolocalización.
 - `slugify` + triggers `set_lugar_slug` / `set_evento_slug` — generación automática de slugs.
+- `is_super_admin()` — función `SECURITY DEFINER` para evitar recursión infinita en las RLS policies de `perfiles`.
 
 ---
 
