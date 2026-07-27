@@ -782,7 +782,7 @@ export default function Home() {
               </div>
 
               {/* Botones */}
-              <div className="flex gap-3 pb-20 md:pb-0">
+              <div className="flex gap-3 pb-8 md:pb-0">
                 {hasActiveFilters && (
                   <button
                     onClick={() => {
