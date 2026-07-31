@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Church, User } from "lucide-react";
 import { ThemeToggle } from "@/app/components/theme-toggle";
 import { BottomNav } from "@/app/components/bottom-nav";
+import { Footer } from "@/app/components/footer";
 import { HeaderNav } from "@/app/components/header-nav";
 import { OfflineBanner } from "@/app/components/offline-banner";
 
@@ -42,7 +43,9 @@ export default function PublicLayout({
 
       <OfflineBanner />
 
-      <main className="pb-20 md:pb-0">{children}</main>
+      <main>{children}</main>
+
+      <Footer />
 
       <BottomNav />
     </>

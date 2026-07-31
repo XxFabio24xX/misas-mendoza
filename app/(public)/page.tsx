@@ -244,7 +244,7 @@ export default function Home() {
   };
 
   return (
-    <div className="mx-auto max-w-280 space-y-8 px-4 py-10 md:px-6 md:py-16">
+    <div className="mx-auto max-w-280 space-y-8 px-4 pt-10 md:px-6 md:pt-16">
       <HeroBanner />
 
       {/* Banner informativo: verificación de datos en curso */}
