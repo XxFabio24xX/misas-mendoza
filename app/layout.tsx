@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     template: "%s | Misas Mendoza",
   },
   description:
-    "Encontrá los horarios de misas, confesiones y celebraciones católicas más cercanas a vos en Mendoza, Argentina. Parroquias, capillas y santuarios de toda la arquidiócesis.",
+    "Horarios de misas en Mendoza. Encontrá la capilla más cercana, sus horarios, confesiones y eventos en Capital, Godoy Cruz, Guaymallén, Las Heras y Maipú.",
   keywords: [
     "misas mendoza",
     "horario de misas mendoza",
