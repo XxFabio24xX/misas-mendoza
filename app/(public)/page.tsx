@@ -833,7 +833,7 @@ export default function Home() {
                 "@id": "https://misasmendoza.com.ar/#organization",
                 name: "Misas Mendoza",
                 url: "https://misasmendoza.com.ar",
-                logo: "https://misasmendoza.com.ar/icons/icon-192.png",
+                logo: "https://misasmendoza.com.ar/icons/icon-512.png",
                 description: "Plataforma gratuita de horarios de misas y celebraciones católicas para la Arquidiócesis de Mendoza",
                 areaServed: {
                   "@type": "State",
