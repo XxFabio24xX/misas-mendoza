@@ -131,14 +131,12 @@ export default function VoluntariosPage() {
           >
             Quiero ser voluntario
           </a>
-          <a
-            href="/guia-voluntarios.html"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/guia"
             className="text-sm font-medium text-primary hover:underline"
           >
             Mirá la guía del voluntario para ver cómo funciona el panel →
-          </a>
+          </Link>
         </div>
       </section>
 
