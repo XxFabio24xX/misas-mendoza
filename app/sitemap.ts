@@ -18,6 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/eventos`, changeFrequency: "daily", priority: 0.8 },
     { url: `${BASE_URL}/mapa`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${BASE_URL}/voluntarios`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${BASE_URL}/guia`, changeFrequency: "monthly", priority: 0.4 },
     ...(lugares ?? []).map((l) => ({
       url: `${BASE_URL}/capilla/${l.slug}`,
       lastModified: l.updated_at ? new Date(l.updated_at) : undefined,
