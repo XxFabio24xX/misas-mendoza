@@ -14,11 +14,11 @@ const supabaseHost = (() => {
 
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""};
+  script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://static.cloudflareinsights.com;
   style-src 'self' 'unsafe-inline';
   img-src 'self' blob: data: https://*.tile.openstreetmap.org https://${supabaseHost};
   font-src 'self' data:;
-  connect-src 'self' https://${supabaseHost} wss://${supabaseHost};
+  connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://cloudflareinsights.com;
   worker-src 'self' blob:;
   object-src 'none';
   base-uri 'self';
