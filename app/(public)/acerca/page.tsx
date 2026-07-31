@@ -116,8 +116,8 @@ export default async function AcercaPage() {
           datos de tu departamento, escribinos. Toda ayuda suma: cargar
           horarios lleva minutos y le ahorra la búsqueda a mucha gente.
         </p>
-        <Link href="/contacto" className="mt-4 inline-block text-sm font-medium text-primary hover:underline">
-          Escribinos →
+        <Link href="/voluntarios" className="mt-4 inline-block text-sm font-medium text-primary hover:underline">
+          Sumate como voluntario →
         </Link>
       </section>
 
