@@ -15,9 +15,9 @@ export default function PublicLayout({
     <>
       <header className="sticky top-0 z-50 border-b border-outline-variant/30 bg-surface-container/95 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-280 items-center justify-between px-5 md:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <Church className="h-5 w-5 text-primary" strokeWidth={1.75} />
-            <span className="text-lg font-semibold tracking-tight text-primary">
+          <Link href="/" className="flex min-w-0 items-center gap-2">
+            <Church className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} />
+            <span className="truncate text-lg font-semibold tracking-tight text-primary">
               Misas Mendoza
             </span>
           </Link>
@@ -35,7 +35,13 @@ export default function PublicLayout({
             </Link>
           </div>
 
-          <div className="md:hidden">
+          <div className="flex shrink-0 items-center gap-2 md:hidden">
+            <Link
+              href="/voluntarios"
+              className="rounded-full bg-primary px-3.5 py-1.5 text-xs font-medium text-on-primary shadow-md transition-colors hover:bg-primary-container"
+            >
+              Sumate
+            </Link>
             <ThemeToggle />
           </div>
         </div>

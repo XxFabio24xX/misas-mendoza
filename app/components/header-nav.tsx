@@ -32,6 +32,12 @@ export function HeaderNav() {
           </Link>
         );
       })}
+      <Link
+        href="/voluntarios"
+        className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-on-primary shadow-md transition-colors hover:bg-primary-container"
+      >
+        Sumate
+      </Link>
     </nav>
   );
 }
