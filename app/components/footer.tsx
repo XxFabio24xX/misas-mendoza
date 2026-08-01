@@ -6,6 +6,13 @@ export function Footer() {
       <p>
         © {new Date().getFullYear()} Misas Mendoza ·{" "}
         <Link
+          href="/voluntarios"
+          className="underline underline-offset-2 hover:text-primary"
+        >
+          Voluntariado
+        </Link>{" "}
+        ·{" "}
+        <Link
           href="/legal"
           className="underline underline-offset-2 hover:text-primary"
         >
