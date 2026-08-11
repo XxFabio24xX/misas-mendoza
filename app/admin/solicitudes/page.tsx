@@ -20,12 +20,20 @@ export default async function SolicitudesPage() {
   if (perfil?.rol !== "super_admin" && perfil?.rol !== "admin_departamento") redirect("/admin");
 
   // RLS: super_admin lee todas, admin_departamento solo las de su depto.
-  const { data } = await supabase
+  // perfiles!solicitado_por: hay dos FKs de solicitudes hacia perfiles
+  // (solicitado_por y revisado_por) — sin desambiguar, PostgREST no puede
+  // resolver el embed ("more than one relationship was found") y la query
+  // falla entera.
+  const { data, error } = await supabase
     .from("solicitudes")
     .select(
-      "id, tipo, motivo, campo_editado, estado, created_at, lugares(nombre, departamento), perfiles(nombre_completo, email)",
+      "id, tipo, motivo, campo_editado, estado, created_at, lugares(nombre, departamento), perfiles!solicitado_por(nombre_completo, email)",
     )
     .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("ERROR AL CARGAR SOLICITUDES:", error);
+  }
 
   return (
     <div>
@@ -36,7 +44,17 @@ export default async function SolicitudesPage() {
         Pedidos de alta, baja y edición enviados por los editores.
       </p>
 
-      <SolicitudesList initialSolicitudes={(data ?? []) as unknown as Solicitud[]} />
+      {error ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mt-6 rounded-xl bg-error-container px-4 py-3 text-sm text-on-error-container"
+        >
+          No se pudieron cargar las solicitudes. Intentá de nuevo.
+        </div>
+      ) : (
+        <SolicitudesList initialSolicitudes={(data ?? []) as unknown as Solicitud[]} />
+      )}
     </div>
   );
 }
