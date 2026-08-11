@@ -115,3 +115,107 @@ export function horaEnFranja(hora: string, franja: FranjaHoraria): boolean {
   if (!banda) return false;
   return hora >= banda.start && hora < banda.end;
 }
+
+export type FiltroDiaHorario = {
+  selectedDias: Set<number>;
+  horarioFilter: FranjaHoraria | null;
+  /** Temporada vigente del lugar; ver temporadaVigente(). */
+  temporadaActual?: string | null;
+  /** Inyectable para tests. */
+  ahora?: Date;
+};
+
+/**
+ * True si el lugar tiene al menos una misa que cae en el día y/o franja
+ * horaria pedidos, respetando la temporada vigente. Si el filtro de día es
+ * exactamente "hoy" (un solo día == hoy), descarta las misas que ya
+ * pasaron. Sin selectedDias ni horarioFilter, siempre true (sin filtro,
+ * pasan todos los lugares aunque no tengan horarios cargados).
+ *
+ * Extraída del filtro inline de app/(public)/page.tsx para poder
+ * reusar el mismo criterio en el mapa.
+ */
+export function lugarPasaFiltro(
+  horarios: HorarioBase[],
+  { selectedDias, horarioFilter, temporadaActual, ahora }: FiltroDiaHorario,
+): boolean {
+  if (selectedDias.size === 0 && horarioFilter === null) return true;
+
+  const now = ahora ?? new Date();
+  const hoy = now.getDay();
+  const minutosAhora = now.getHours() * 60 + now.getMinutes();
+  const esFiltroPorHoy = selectedDias.size === 1 && selectedDias.has(hoy);
+
+  return horarios.some((h) => {
+    if (!temporadaVigente(h, temporadaActual)) return false;
+    if (selectedDias.size > 0 && (h.dia_semana == null || !selectedDias.has(h.dia_semana))) {
+      return false;
+    }
+    if (horarioFilter !== null && !horaEnFranja(h.hora, horarioFilter)) {
+      return false;
+    }
+    // Si el filtro es HOY, descartar misas que ya pasaron.
+    if (esFiltroPorHoy) {
+      const [hs, ms] = h.hora.split(":").map(Number);
+      const minutosMisa = hs * 60 + ms;
+      if (minutosMisa <= minutosAhora) return false;
+    }
+    return true;
+  });
+}
+
+/**
+ * Nombres de grupo de día usados en la URL (?dia=hoy|semana|sabado|domingo)
+ * para compartir el filtro entre Inicio y Mapa. "hoy" es relativo al
+ * momento en que se decodifica, no un día fijo.
+ */
+export const GRUPO_DIA_LABELS: Record<string, string> = {
+  hoy: "Hoy",
+  semana: "Lun-Vie",
+  sabado: "Sábado",
+  domingo: "Domingo",
+};
+
+/** Decodifica ?dia=... a un Set de dia_semana. Valor inválido/ausente → sin filtro. */
+export function diasDesdeGrupoParam(
+  grupo: string | null | undefined,
+  ahora: Date = new Date(),
+): Set<number> {
+  switch (grupo) {
+    case "hoy":
+      return new Set([ahora.getDay()]);
+    case "semana":
+      return new Set(GRUPOS_DIAS.semana);
+    case "sabado":
+      return new Set(GRUPOS_DIAS.sabado);
+    case "domingo":
+      return new Set(GRUPOS_DIAS.domingo);
+    default:
+      return new Set();
+  }
+}
+
+/** Codifica un Set de dia_semana al nombre de grupo para la URL. Si no matchea
+ *  exactamente ninguno de los 4 grupos conocidos, devuelve null (sin param). */
+export function grupoParamDesdeDias(
+  selectedDias: Set<number>,
+  ahora: Date = new Date(),
+): string | null {
+  if (selectedDias.size === 0) return null;
+  const hoy = ahora.getDay();
+  if (selectedDias.size === 1 && selectedDias.has(hoy)) return "hoy";
+  if (
+    selectedDias.size === GRUPOS_DIAS.semana.length &&
+    GRUPOS_DIAS.semana.every((d) => selectedDias.has(d))
+  ) {
+    return "semana";
+  }
+  if (selectedDias.size === 1 && selectedDias.has(6)) return "sabado";
+  if (selectedDias.size === 1 && selectedDias.has(0)) return "domingo";
+  return null;
+}
+
+/** Decodifica ?horario=... a FranjaHoraria. Valor inválido/ausente → null (sin filtro). */
+export function franjaDesdeParam(v: string | null | undefined): FranjaHoraria | null {
+  return FRANJAS_HORARIAS.some((f) => f.value === v) ? (v as FranjaHoraria) : null;
+}

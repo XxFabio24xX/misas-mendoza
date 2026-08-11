@@ -1,15 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Clock, Heart, MapPin, Search, SlidersHorizontal, X } from "lucide-react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Heart,
+  Map as MapIcon,
+  MapPin,
+  Search,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import {
   FRANJAS_HORARIAS,
   GRUPOS_DIAS,
+  diasDesdeGrupoParam,
   findNextMisa,
   formatDistancia,
-  horaEnFranja,
+  franjaDesdeParam,
+  grupoParamDesdeDias,
+  lugarPasaFiltro,
   normalizeText,
   temporadaVigente,
   type FranjaHoraria,
@@ -43,7 +57,26 @@ type Horario = {
 
 const LUGARES_POR_PAGINA = 12;
 
+// useSearchParams exige un boundary de Suspense en páginas estáticas.
 export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <CandleLoader size="md" />
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [lugares, setLugares] = useState<Lugar[]>([]);
   const [horarios, setHorarios] = useState<Horario[]>([]);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -53,11 +86,32 @@ export default function Home() {
   const [noLocation, setNoLocation] = useState(false);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [selectedDias, setSelectedDias] = useState<Set<number>>(new Set());
-  const [horarioFilter, setHorarioFilter] = useState<FranjaHoraria | null>(null);
+  // Día y horario arrancan con lo que traiga la URL (?dia=...&horario=...),
+  // así el filtro llega ya aplicado si venís del mapa o de un link compartido.
+  const [selectedDias, setSelectedDias] = useState<Set<number>>(() =>
+    diasDesdeGrupoParam(searchParams.get("dia")),
+  );
+  const [horarioFilter, setHorarioFilter] = useState<FranjaHoraria | null>(() =>
+    franjaDesdeParam(searchParams.get("horario")),
+  );
   const [paginaActual, setPaginaActual] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
   const { isFavorite } = useFavorites();
+
+  // Mantiene ?dia= y ?horario= en la URL sincronizados con el filtro activo,
+  // para poder compartir el link y para que viajen al ir al mapa. Localidad
+  // NO se refleja acá (sigue viviendo solo en memoria).
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    const grupo = grupoParamDesdeDias(selectedDias);
+    if (grupo) params.set("dia", grupo);
+    else params.delete("dia");
+    if (horarioFilter) params.set("horario", horarioFilter);
+    else params.delete("horario");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo reacciona a cambios de filtro, no a la propia URL que este efecto escribe.
+  }, [selectedDias, horarioFilter, pathname, router]);
 
   const departments = useMemo(() => {
     const set = new Set(lugares.map((l) => l.departamento).filter(Boolean));
@@ -195,33 +249,15 @@ export default function Home() {
     }
     // Solo capillas con al menos una misa que caiga en el día y/o franja
     // elegidos, considerando únicamente horarios de la temporada vigente.
+    // Mismo criterio que usa el mapa (lib/misas-utils.ts).
     if (selectedDias.size > 0 || horarioFilter !== null) {
-      // Calculados dentro del memo (no capturados de afuera) para que el
-      // compilador de React pueda preservar la memoización: son locales al
-      // cuerpo de la función, no dependencias externas inestables.
-      const hoyLocal = new Date().getDay();
-      const ahoraLocal = new Date();
-      const minutosAhoraLocal = ahoraLocal.getHours() * 60 + ahoraLocal.getMinutes();
-      const esFiltroPorHoyLocal = selectedDias.size === 1 && selectedDias.has(hoyLocal);
-      result = result.filter((p) => {
-        const misas = horariosMap.get(p.id) ?? [];
-        return misas.some((h) => {
-          if (!temporadaVigente(h, p.temporada_actual)) return false;
-          if (selectedDias.size > 0 && (h.dia_semana == null || !selectedDias.has(h.dia_semana))) {
-            return false;
-          }
-          if (horarioFilter !== null && !horaEnFranja(h.hora, horarioFilter)) {
-            return false;
-          }
-          // Si el filtro es HOY, descartar misas que ya pasaron.
-          if (esFiltroPorHoyLocal) {
-            const [hs, ms] = h.hora.split(":").map(Number);
-            const minutosMisa = hs * 60 + ms;
-            if (minutosMisa <= minutosAhoraLocal) return false;
-          }
-          return true;
-        });
-      });
+      result = result.filter((p) =>
+        lugarPasaFiltro(horariosMap.get(p.id) ?? [], {
+          selectedDias,
+          horarioFilter,
+          temporadaActual: p.temporada_actual,
+        }),
+      );
     }
     // Favoritas fijadas primero, preservando el orden (por cercanía) del resto.
     return [...result].sort((a, b) => {
@@ -242,6 +278,17 @@ export default function Home() {
     setPaginaActual(pagina);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  // Día/horario activos, mismo encoding que la URL propia — así el link al
+  // mapa arranca ya filtrado. Localidad no viaja (no se usa en el mapa).
+  const mapaHref = useMemo(() => {
+    const params = new URLSearchParams();
+    const grupo = grupoParamDesdeDias(selectedDias);
+    if (grupo) params.set("dia", grupo);
+    if (horarioFilter) params.set("horario", horarioFilter);
+    const qs = params.toString();
+    return qs ? `/mapa?${qs}` : "/mapa";
+  }, [selectedDias, horarioFilter]);
 
   return (
     <div className="mx-auto max-w-280 space-y-8 px-4 pt-10 md:px-6 md:pt-16">
@@ -283,6 +330,15 @@ export default function Home() {
             className="w-full border-0 border-b-[1.5px] border-outline-variant bg-transparent py-4 pl-12 pr-4 text-base text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/60 focus:border-primary"
           />
         </div>
+
+        {/* Lleva el día/horario activo al mapa (localidad no viaja). */}
+        <Link
+          href={mapaHref}
+          className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+        >
+          <MapIcon className="h-4 w-4" />
+          Ver en el mapa
+        </Link>
 
         {/* Mobile: barra compacta con botón Filtros + chips activos (patrón C) */}
         <div className="md:hidden">
