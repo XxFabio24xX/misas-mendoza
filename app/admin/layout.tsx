@@ -9,6 +9,7 @@ import {
   Calendar,
   LogOut,
   Inbox,
+  ListChecks,
   MessageSquare,
   User,
   Home,
@@ -82,6 +83,12 @@ const editorNavItems: NavItem[] = [
   { href: "/admin", label: "Inicio del Panel", icon: LayoutDashboard },
   { href: "/admin/capillas", label: "Capillas", icon: Church },
   { href: "/admin/eventos", label: "Eventos", icon: Calendar },
+  {
+    href: "/admin/mis-solicitudes",
+    label: "Mis solicitudes",
+    icon: ListChecks,
+    tooltip: "Estado de tus pedidos de alta, baja y edición.",
+  },
 ];
 
 const mobileTabs = [
