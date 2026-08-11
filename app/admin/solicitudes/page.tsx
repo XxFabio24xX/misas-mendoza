@@ -27,7 +27,7 @@ export default async function SolicitudesPage() {
   const { data, error } = await supabase
     .from("solicitudes")
     .select(
-      "id, tipo, motivo, campo_editado, estado, created_at, lugares(nombre, departamento), perfiles!solicitado_por(nombre_completo, email)",
+      "id, tipo, motivo, campo_editado, estado, created_at, datos_propuestos, lugares(nombre, departamento), perfiles!solicitado_por(nombre_completo, email)",
     )
     .order("created_at", { ascending: false });
 

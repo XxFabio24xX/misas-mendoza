@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Check, Church, Inbox, Loader2, X } from "lucide-react";
+import { Check, Church, Eye, Inbox, Loader2, X } from "lucide-react";
 import {
   aprobarSolicitudAlta,
   aprobarSolicitudBaja,
@@ -12,6 +12,7 @@ import {
   rechazarSolicitudBaja,
 } from "./actions";
 import ConfirmDialog from "@/app/components/confirm-dialog";
+import { SolicitudDrawer } from "./solicitud-drawer";
 
 export type Solicitud = {
   id: string;
@@ -22,9 +23,10 @@ export type Solicitud = {
   created_at: string;
   lugares: { nombre: string; departamento: string } | null;
   perfiles: { nombre_completo: string; email: string } | null;
+  datos_propuestos: unknown;
 };
 
-const TIPO_BADGE: Record<Solicitud["tipo"], { label: string; className: string }> = {
+export const TIPO_BADGE: Record<Solicitud["tipo"], { label: string; className: string }> = {
   alta: { label: "Alta", className: "bg-primary-fixed text-on-primary-fixed" },
   baja: { label: "Baja", className: "bg-error-container text-on-error-container" },
   edicion: { label: "Edición", className: "bg-secondary-container text-on-secondary-container" },
@@ -60,7 +62,7 @@ const APROBAR_COPY: Record<
   },
 };
 
-function nombreSolicitud(s: Solicitud): string {
+export function nombreSolicitud(s: Solicitud): string {
   if (s.lugares) return s.lugares.nombre;
   return s.tipo === "alta" ? "Nueva capilla (alta)" : "Capilla eliminada";
 }
@@ -72,6 +74,7 @@ export function SolicitudesList({
 }) {
   const router = useRouter();
   const [aprobarTarget, setAprobarTarget] = useState<Solicitud | null>(null);
+  const [detalleTarget, setDetalleTarget] = useState<Solicitud | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -132,6 +135,10 @@ export function SolicitudesList({
         onCancel={() => setAprobarTarget(null)}
       />
 
+      {detalleTarget && (
+        <SolicitudDrawer solicitud={detalleTarget} onClose={() => setDetalleTarget(null)} />
+      )}
+
       {pendientes.length === 0 && (
         <div className="flex flex-col items-center gap-2 rounded-xl bg-surface-container-low py-12 text-center">
           <Inbox className="h-8 w-8 text-on-surface-variant/50" />
@@ -178,6 +185,13 @@ export function SolicitudesList({
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">
+                  <button
+                    onClick={() => setDetalleTarget(s)}
+                    className="flex items-center gap-1.5 rounded-lg border border-outline-variant px-3.5 py-2 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Ver detalle
+                  </button>
                   <button
                     onClick={() => handleRechazar(s.id)}
                     disabled={busyId !== null}
