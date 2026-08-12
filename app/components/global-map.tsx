@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, ZoomControl, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Link from "next/link";
 import { LocateFixed, LocateOff } from "lucide-react";
+import { diasDesdeGrupoParam, lugarPasaFiltro, type FranjaHoraria, type HorarioBase } from "@/lib/misas-utils";
 
 const icon = L.divIcon({
   className: "",
@@ -86,6 +87,9 @@ export type LugarMapa = {
   lat: number;
   lng: number;
   slug: string;
+  /** Para filtrar por día/horario con el mismo criterio que Inicio (lugarPasaFiltro). */
+  temporada_actual?: string | null;
+  horarios?: HorarioBase[];
 };
 
 type UserLocation = { lat: number; lng: number };
@@ -117,13 +121,35 @@ function CenterOnUser({ location }: { location: UserLocation | null }) {
   return null;
 }
 
-export default function GlobalMap({ lugares }: { lugares: LugarMapa[] }) {
+type GlobalMapProps = {
+  lugares: LugarMapa[];
+  /** Grupo de día tal como viene de la URL (?dia=hoy|semana|sabado|domingo), o null sin filtro. */
+  diaParam?: string | null;
+  horarioParam?: FranjaHoraria | null;
+};
+
+export default function GlobalMap({ lugares, diaParam = null, horarioParam = null }: GlobalMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [geoStatus, setGeoStatus] = useState<"pending" | "granted" | "denied">(() =>
     "geolocation" in navigator ? "pending" : "denied",
   );
   const [showLocationHint, setShowLocationHint] = useState(false);
+
+  // Oculta (no atenúa) las capillas que no tienen ninguna misa que cumpla
+  // día Y horario, mismo criterio que Inicio (lib/misas-utils.ts). Sin
+  // filtro en la URL, muestra todas.
+  const selectedDias = useMemo(() => diasDesdeGrupoParam(diaParam), [diaParam]);
+  const lugaresFiltrados = useMemo(() => {
+    if (selectedDias.size === 0 && horarioParam === null) return lugares;
+    return lugares.filter((l) =>
+      lugarPasaFiltro(l.horarios ?? [], {
+        selectedDias,
+        horarioFilter: horarioParam,
+        temporadaActual: l.temporada_actual,
+      }),
+    );
+  }, [lugares, selectedDias, horarioParam]);
 
   useEffect(() => {
     if (!("geolocation" in navigator)) return;
@@ -166,11 +192,11 @@ export default function GlobalMap({ lugares }: { lugares: LugarMapa[] }) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Sin ubicación del usuario: comportamiento de siempre, ajustar a las capillas. */}
-        {geoStatus === "denied" && <FitBounds lugares={lugares} />}
+        {/* Sin ubicación del usuario: comportamiento de siempre, ajustar a las capillas (ya filtradas). */}
+        {geoStatus === "denied" && <FitBounds lugares={lugaresFiltrados} />}
         <CenterOnUser location={geoStatus === "granted" ? userLocation : null} />
 
-        {lugares.map((lugar) => (
+        {lugaresFiltrados.map((lugar) => (
           <Marker key={lugar.id} position={[lugar.lat, lugar.lng]} icon={icon}>
             <Tooltip>{lugar.nombre}</Tooltip>
             {/* leaflet.css hardcodes the popup card to a white background regardless of
