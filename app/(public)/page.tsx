@@ -31,6 +31,7 @@ import {
 import { useFavorites } from "@/hooks/useFavorites";
 import HeroBanner from "@/app/components/hero-banner";
 import { FilterChip } from "@/app/components/filter-chip";
+import { FiltrosDiaHorario } from "@/app/components/filtros-dia-horario";
 import { CandleLoader } from "@/app/components/candle-loader";
 
 type Lugar = {
@@ -450,56 +451,13 @@ function HomeContent() {
               </div>
             </div>
 
-            {/* Día de misa */}
-            <div role="group" aria-label="Filtrar por día de misa">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
-                Día de misa
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <FilterChip
-                  active={selectedDias.size === 1 && selectedDias.has(hoy)}
-                  onClick={() => toggleGrupoDias([hoy])}
-                >
-                  Hoy
-                </FilterChip>
-                <FilterChip
-                  active={GRUPOS_DIAS.semana.every((d) => selectedDias.has(d)) && selectedDias.size === GRUPOS_DIAS.semana.length}
-                  onClick={() => toggleGrupoDias(GRUPOS_DIAS.semana)}
-                >
-                  Lun-Vie
-                </FilterChip>
-                <FilterChip
-                  active={selectedDias.size === 1 && selectedDias.has(6)}
-                  onClick={() => toggleGrupoDias(GRUPOS_DIAS.sabado)}
-                >
-                  Sábado
-                </FilterChip>
-                <FilterChip
-                  active={selectedDias.size === 1 && selectedDias.has(0)}
-                  onClick={() => toggleGrupoDias(GRUPOS_DIAS.domingo)}
-                >
-                  Domingo
-                </FilterChip>
-              </div>
-            </div>
-
-            {/* Horario */}
-            <div role="group" aria-label="Filtrar por horario">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
-                Horario
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {FRANJAS_HORARIAS.map((franja) => (
-                  <FilterChip
-                    key={franja.value}
-                    active={horarioFilter === franja.value}
-                    onClick={() => toggleHorario(franja.value)}
-                  >
-                    {franja.label}
-                  </FilterChip>
-                ))}
-              </div>
-            </div>
+            <FiltrosDiaHorario
+              selectedDias={selectedDias}
+              horarioFilter={horarioFilter}
+              hoy={hoy}
+              onToggleDia={toggleGrupoDias}
+              onToggleHorario={toggleHorario}
+            />
           </div>
 
           {hasActiveFilters && (
@@ -786,55 +744,16 @@ function HomeContent() {
                 </div>
               </div>
 
-              {/* Sección Día */}
-              <div className="mb-5">
-                <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
-                  Día de misa
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <FilterChip
-                    active={selectedDias.size === 1 && selectedDias.has(hoy)}
-                    onClick={() => toggleGrupoDias([hoy])}
-                  >
-                    Hoy
-                  </FilterChip>
-                  <FilterChip
-                    active={GRUPOS_DIAS.semana.every((d) => selectedDias.has(d)) && selectedDias.size === GRUPOS_DIAS.semana.length}
-                    onClick={() => toggleGrupoDias(GRUPOS_DIAS.semana)}
-                  >
-                    Lun-Vie
-                  </FilterChip>
-                  <FilterChip
-                    active={selectedDias.size === 1 && selectedDias.has(6)}
-                    onClick={() => toggleGrupoDias(GRUPOS_DIAS.sabado)}
-                  >
-                    Sábado
-                  </FilterChip>
-                  <FilterChip
-                    active={selectedDias.size === 1 && selectedDias.has(0)}
-                    onClick={() => toggleGrupoDias(GRUPOS_DIAS.domingo)}
-                  >
-                    Domingo
-                  </FilterChip>
-                </div>
-              </div>
-
-              {/* Sección Horario */}
+              {/* Día de misa + Horario */}
               <div className="mb-6">
-                <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
-                  Horario
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {FRANJAS_HORARIAS.map((franja) => (
-                    <FilterChip
-                      key={franja.value}
-                      active={horarioFilter === franja.value}
-                      onClick={() => toggleHorario(franja.value)}
-                    >
-                      {franja.label}
-                    </FilterChip>
-                  ))}
-                </div>
+                <FiltrosDiaHorario
+                  selectedDias={selectedDias}
+                  horarioFilter={horarioFilter}
+                  hoy={hoy}
+                  onToggleDia={toggleGrupoDias}
+                  onToggleHorario={toggleHorario}
+                  layout="stacked"
+                />
               </div>
 
               {/* Botones */}

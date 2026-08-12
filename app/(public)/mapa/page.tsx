@@ -2,7 +2,7 @@ import Link from "next/link";
 import { List } from "lucide-react";
 import { supabasePublic } from "@/lib/supabase-public";
 import GlobalMapWrapper from "@/app/components/global-map-wrapper";
-import { MapFilterBadges } from "@/app/components/map-filter-badges";
+import { MapFiltrosPanel } from "@/app/components/map-filtros-panel";
 import type { LugarMapa } from "@/app/components/global-map";
 import { GRUPO_DIA_LABELS, franjaDesdeParam, type HorarioBase } from "@/lib/misas-utils";
 
@@ -77,7 +77,7 @@ export default async function MapaPage({
           Ver en lista
         </Link>
       </div>
-      <MapFilterBadges dia={diaParam} horario={horarioParam} />
+      <MapFiltrosPanel dia={diaParam} horario={horarioParam} />
       <GlobalMapWrapper lugares={lugares} diaParam={diaParam} horarioParam={horarioParam} />
     </div>
   );
