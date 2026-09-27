@@ -126,6 +126,7 @@ export async function crearCapilla(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/");
   revalidatePath("/mapa");
+  revalidatePath("/capillas", "layout");
   redirect("/admin/capillas");
 }
 
@@ -219,6 +220,7 @@ export async function actualizarCapilla(id: string, formData: FormData) {
   revalidatePath("/capilla/[slug]", "page");
   revalidatePath("/");
   revalidatePath("/mapa");
+  revalidatePath("/capillas", "layout");
   redirect("/admin/capillas");
 }
 
@@ -241,6 +243,8 @@ export async function eliminarCapilla(id: string) {
   revalidatePath("/admin");
   revalidatePath("/");
   revalidatePath("/mapa");
+  revalidatePath("/capilla/[slug]", "page");
+  revalidatePath("/capillas", "layout");
 }
 
 export async function solicitarBajaCapilla(lugarId: string, motivo: string) {
@@ -279,6 +283,7 @@ export async function setTemporadaActual(
 
   revalidatePath("/capilla/[slug]", "page");
   revalidatePath("/");
+  revalidatePath("/capillas", "layout");
   revalidatePath("/admin/capillas");
 }
 
@@ -292,6 +297,8 @@ export async function toggleCapillaActiva(id: string, activo: boolean) {
   revalidatePath("/admin/capillas");
   revalidatePath("/");
   revalidatePath("/mapa");
+  revalidatePath("/capilla/[slug]", "page");
+  revalidatePath("/capillas", "layout");
 }
 
 export async function agregarHorario(lugarId: string, formData: FormData) {
@@ -335,6 +342,7 @@ export async function agregarHorario(lugarId: string, formData: FormData) {
 
   revalidatePath(`/admin/capillas/${lugarId}/horarios`);
   revalidatePath("/capilla/[slug]", "page");
+  revalidatePath("/capillas", "layout");
 }
 
 export async function eliminarHorario(horarioId: string, lugarId: string) {
@@ -370,6 +378,7 @@ export async function eliminarHorario(horarioId: string, lugarId: string) {
 
   revalidatePath(`/admin/capillas/${lugarId}/horarios`);
   revalidatePath("/capilla/[slug]", "page");
+  revalidatePath("/capillas", "layout");
 }
 
 export async function editarHorario(
@@ -421,4 +430,5 @@ export async function editarHorario(
 
   revalidatePath(`/admin/capillas/${lugarId}/horarios`);
   revalidatePath("/capilla/[slug]", "page");
+  revalidatePath("/capillas", "layout");
 }
