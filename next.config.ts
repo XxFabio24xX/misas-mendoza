@@ -31,6 +31,13 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: supabaseHost }],
   },
+  async redirects() {
+    return [
+      // /capilla sola no tiene página (solo /capilla/[slug]); es una URL que
+      // la gente y Google prueban al recortar la ruta de una capilla.
+      { source: "/capilla", destination: "/capillas", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {
