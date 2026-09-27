@@ -7,7 +7,7 @@ import { BackButton } from "@/app/components/back-button";
 import { FavoriteButton } from "@/app/components/favorite-button";
 import { ShareButton } from "@/app/components/share-button";
 import MapWrapper from "@/app/components/map-wrapper";
-import { ArrowRight, Clock, Cross as CrossIcon, HandHeart, MapPin, MessageSquare, Navigation, Snowflake, Sun } from "lucide-react";
+import { ArrowRight, CalendarClock, Clock, Cross as CrossIcon, HandHeart, MapPin, MessageSquare, Navigation, Snowflake, Sun } from "lucide-react";
 import { notFound, permanentRedirect } from "next/navigation";
 
 type Lugar = {
@@ -28,6 +28,7 @@ type Lugar = {
   descripcion?: string;
   tipo: "parroquia" | "capilla" | "santuario";
   sitio_web?: string;
+  horario_secretaria?: string | null;
 };
 
 type Horario = {
@@ -128,7 +129,7 @@ function groupByDay(horarios: Horario[]) {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const LUGAR_COLS =
-  "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, departamento, lat, lng, recibe_caritas, slug, temporada_actual, estado_verificacion, descripcion, tipo, sitio_web";
+  "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, departamento, lat, lng, recibe_caritas, slug, temporada_actual, estado_verificacion, descripcion, tipo, sitio_web, horario_secretaria";
 
 // cache(): generateMetadata y la página comparten la misma consulta por request.
 const getLugarBySlug = cache(async (slug: string): Promise<Lugar | null> => {
@@ -341,6 +342,18 @@ export default async function CapillaPage({
                     {lugar.email}
                   </a>
                 )}
+              </div>
+            )}
+
+            {lugar.horario_secretaria && (
+              <div className="mt-6 rounded-xl border border-outline-variant/50 bg-surface-container-low p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-on-surface">
+                  <CalendarClock className="h-4 w-4 text-primary" />
+                  Horario de secretaría
+                </p>
+                <p className="mt-1.5 text-sm leading-relaxed text-on-surface-variant">
+                  {lugar.horario_secretaria}
+                </p>
               </div>
             )}
 
