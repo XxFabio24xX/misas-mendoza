@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  agruparPorDias,
   diasDesdeGrupoParam,
   findNextMisa,
   formatDistancia,
@@ -8,6 +9,7 @@ import {
   horaEnFranja,
   lugarPasaFiltro,
   normalizeText,
+  resumenHorarios,
 } from "./misas-utils";
 
 describe("horaEnFranja", () => {
@@ -292,5 +294,59 @@ describe("franjaDesdeParam", () => {
     expect(franjaDesdeParam(null)).toBeNull();
     expect(franjaDesdeParam(undefined)).toBeNull();
     expect(franjaDesdeParam("madrugada")).toBeNull();
+  });
+});
+
+describe("agruparPorDias", () => {
+  it("junta días consecutivos con las mismas horas", () => {
+    const h = (d: number, hora: string) => ({ dia_semana: d, hora: `${hora}:00` });
+    const grupos = agruparPorDias([h(0, "09:30"), h(0, "11:00"), h(2, "19:00"), h(3, "19:00"), h(4, "19:00"), h(6, "20:00")]);
+    expect(grupos.map((g) => [g.label, g.horas.join(" ")])).toEqual([
+      ["Domingo", "09:30 11:00"],
+      ["Martes a Jueves", "19:00"],
+      ["Sábado", "20:00"],
+    ]);
+  });
+
+  it("no junta días con horas iguales si no son consecutivos, e ignora mensuales", () => {
+    const grupos = agruparPorDias([
+      { dia_semana: 1, hora: "19:00:00" },
+      { dia_semana: 3, hora: "19:00:00" },
+      { dia_semana: null, dia_mes: 1, hora: "18:00:00" },
+    ]);
+    expect(grupos.map((g) => g.label)).toEqual(["Lunes", "Miércoles"]);
+  });
+
+  it("no repite horas duplicadas", () => {
+    expect(agruparPorDias([{ dia_semana: 0, hora: "10:00:00" }, { dia_semana: 0, hora: "10:00" }])[0].horas).toEqual(["10:00"]);
+  });
+});
+
+describe("resumenHorarios", () => {
+  const todo = { dia_semana: 0, hora: "10:00:00", temporada: "Todo el año" };
+  const inv = { dia_semana: 0, hora: "19:30:00", temporada: "Invierno" };
+  const ver = { dia_semana: 0, hora: "20:15:00", temporada: "Verano" };
+
+  it("con temporada vigente muestra un solo bloque", () => {
+    const r = resumenHorarios([todo, inv, ver], "Verano");
+    expect(r).toHaveLength(1);
+    expect(r[0].temporada).toBe("Verano");
+    expect(r[0].grupos[0].horas).toEqual(["10:00", "20:15"]);
+  });
+
+  it("sin temporada vigente separa invierno y verano en vez de mezclarlos", () => {
+    const r = resumenHorarios([todo, inv, ver], null);
+    expect(r.map((b) => [b.temporada, b.grupos[0].horas.join(" ")])).toEqual([
+      ["Invierno", "10:00 19:30"],
+      ["Verano", "10:00 20:15"],
+    ]);
+  });
+
+  it("sin horarios de temporada devuelve un bloque sin etiqueta", () => {
+    expect(resumenHorarios([todo], null)).toEqual([{ temporada: null, grupos: [{ dias: [0], horas: ["10:00"], label: "Domingo" }] }]);
+  });
+
+  it("sin horarios semanales no devuelve bloques", () => {
+    expect(resumenHorarios([{ dia_semana: null, dia_mes: 5, hora: "18:00:00" }], null)).toEqual([]);
   });
 });

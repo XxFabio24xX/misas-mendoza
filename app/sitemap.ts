@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { supabasePublic } from "@/lib/supabase-public";
 import { SITE_URL } from "@/lib/site";
+import { slugDepartamento } from "@/lib/departamentos";
 
 const BASE_URL = SITE_URL;
 
@@ -9,7 +10,7 @@ export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [{ data: lugares }, { data: eventos }] = await Promise.all([
-    supabasePublic.from("lugares").select("slug, updated_at").eq("activo", true),
+    supabasePublic.from("lugares").select("slug, updated_at, departamento").eq("activo", true),
     supabasePublic.from("eventos").select("slug").eq("activo", true),
   ]);
 
@@ -22,6 +23,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/contacto`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${BASE_URL}/voluntarios`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE_URL}/guia`, changeFrequency: "monthly", priority: 0.4 },
+    ...[...new Set((lugares ?? []).map((l) => l.departamento as string))].map((dep) => ({
+      url: `${BASE_URL}/capillas/${slugDepartamento(dep)}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    })),
     ...(lugares ?? []).map((l) => ({
       url: `${BASE_URL}/capilla/${l.slug}`,
       lastModified: l.updated_at ? new Date(l.updated_at) : undefined,

@@ -219,3 +219,62 @@ export function grupoParamDesdeDias(
 export function franjaDesdeParam(v: string | null | undefined): FranjaHoraria | null {
   return FRANJAS_HORARIAS.some((f) => f.value === v) ? (v as FranjaHoraria) : null;
 }
+
+const DIAS_NOMBRE = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+export type GrupoDias = { dias: number[]; label: string; horas: string[] };
+
+/**
+ * Agrupa días consecutivos con las mismas horas: "Martes a Sábado: 19:00".
+ * Solo horarios semanales (ignora los mensuales con dia_mes).
+ */
+export function agruparPorDias(horarios: HorarioBase[]): GrupoDias[] {
+  const porDia = new Map<number, Set<string>>();
+  for (const h of horarios) {
+    if (h.dia_semana == null) continue;
+    if (!porDia.has(h.dia_semana)) porDia.set(h.dia_semana, new Set());
+    porDia.get(h.dia_semana)!.add(h.hora.slice(0, 5));
+  }
+  const grupos: { dias: number[]; horas: string[] }[] = [];
+  for (const [dia, set] of [...porDia.entries()].sort(([a], [b]) => a - b)) {
+    const horas = [...set].sort();
+    const ultimo = grupos[grupos.length - 1];
+    if (ultimo && ultimo.horas.join() === horas.join() && ultimo.dias[ultimo.dias.length - 1] === dia - 1) {
+      ultimo.dias.push(dia);
+    } else {
+      grupos.push({ dias: [dia], horas });
+    }
+  }
+  return grupos.map((g) => ({
+    ...g,
+    label:
+      g.dias.length === 1
+        ? DIAS_NOMBRE[g.dias[0]]
+        : `${DIAS_NOMBRE[g.dias[0]]} a ${DIAS_NOMBRE[g.dias[g.dias.length - 1]]}`,
+  }));
+}
+
+export type ResumenTemporada = { temporada: "Invierno" | "Verano" | null; grupos: GrupoDias[] };
+
+/**
+ * Horarios de una capilla listos para mostrar resumidos. Si tiene temporada
+ * vigente, un solo bloque (todo el año + esa temporada). Si tiene horarios de
+ * temporada pero no se definió cuál rige, un bloque por temporada para no
+ * mezclarlos. Sin horarios de temporada, un bloque sin etiqueta.
+ */
+export function resumenHorarios(
+  horarios: HorarioBase[],
+  temporadaActual: string | null | undefined,
+): ResumenTemporada[] {
+  const esBase = (h: HorarioBase) => !h.temporada || h.temporada === "Todo el año";
+  const base = horarios.filter(esBase);
+  const temporadas = (["Invierno", "Verano"] as const).filter((t) => horarios.some((h) => h.temporada === t));
+  const bloque = (t: "Invierno" | "Verano" | null): ResumenTemporada => ({
+    temporada: t,
+    grupos: agruparPorDias(t ? [...base, ...horarios.filter((h) => h.temporada === t)] : base),
+  });
+
+  if (temporadas.length === 0) return [bloque(null)].filter((b) => b.grupos.length > 0);
+  if (temporadaActual === "Invierno" || temporadaActual === "Verano") return [bloque(temporadaActual)];
+  return temporadas.map(bloque).filter((b) => b.grupos.length > 0);
+}
