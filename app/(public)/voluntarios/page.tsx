@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Sumate como voluntario | Misas Mendoza",
+  title: "Sumate como voluntario",
+  alternates: { canonical: "/voluntarios" },
   description:
     "Sumate como voluntario de Misas Mendoza y ayudá a mantener actualizados los horarios de misas de tu departamento. No hace falta saber de tecnología, lleva minutos por semana.",
   openGraph: {

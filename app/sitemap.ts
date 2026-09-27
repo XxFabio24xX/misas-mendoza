@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
 import { supabasePublic } from "@/lib/supabase-public";
+import { SITE_URL } from "@/lib/site";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://misasmendoza.com.ar";
+const BASE_URL = SITE_URL;
 
 // Regenerar cada hora para reflejar capillas/eventos nuevos sin redeploy.
 export const revalidate = 3600;
@@ -16,7 +16,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: BASE_URL, changeFrequency: "daily", priority: 1 },
     { url: `${BASE_URL}/eventos`, changeFrequency: "daily", priority: 0.8 },
+    { url: `${BASE_URL}/capillas`, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE_URL}/mapa`, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${BASE_URL}/acerca`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${BASE_URL}/contacto`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${BASE_URL}/voluntarios`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE_URL}/guia`, changeFrequency: "monthly", priority: 0.4 },
     ...(lugares ?? []).map((l) => ({

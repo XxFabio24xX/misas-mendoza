@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { supabasePublic } from "@/lib/supabase-public";
+import { SITE_URL } from "@/lib/site";
 import { BackButton } from "@/app/components/back-button";
 import { FavoriteButton } from "@/app/components/favorite-button";
 import { ShareButton } from "@/app/components/share-button";
@@ -154,6 +155,7 @@ export async function generateMetadata({
   return {
     title: lugar.nombre,
     description,
+    alternates: { canonical: `/capilla/${lugar.slug}` },
     openGraph: {
       title: lugar.nombre,
       description,
@@ -229,7 +231,7 @@ export default async function CapillaPage({
     ...(lugar.email ? { email: lugar.email } : {}),
     ...(lugar.sitio_web ? { url: lugar.sitio_web } : {}),
     ...(lugar.imagen_url ? { image: lugar.imagen_url } : {}),
-    url: `https://misasmendoza.com.ar/capilla/${lugar.slug}`,
+    url: `${SITE_URL}/capilla/${lugar.slug}`,
     openingHoursSpecification: horarios
       .filter((h) => h.dia_semana != null)
       .map((h) => ({

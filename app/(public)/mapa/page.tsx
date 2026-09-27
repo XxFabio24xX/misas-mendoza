@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { List } from "lucide-react";
 import { supabasePublic } from "@/lib/supabase-public";
@@ -5,6 +6,13 @@ import GlobalMapWrapper from "@/app/components/global-map-wrapper";
 import { MapFiltrosPanel } from "@/app/components/map-filtros-panel";
 import type { LugarMapa } from "@/app/components/global-map";
 import { GRUPO_DIA_LABELS, franjaDesdeParam, type HorarioBase } from "@/lib/misas-utils";
+
+export const metadata: Metadata = {
+  title: "Mapa de capillas y parroquias",
+  description:
+    "Mapa de las capillas, parroquias y santuarios de Mendoza con sus horarios de misa. Encontrá la más cercana a vos.",
+  alternates: { canonical: "/mapa" },
+};
 
 type LugarRow = Omit<LugarMapa, "horarios"> & { temporada_actual: string | null };
 type HorarioRow = HorarioBase & { lugar_id: string };

@@ -30,7 +30,9 @@ Turbopack no soporta plugins que inyecten una función `webpack(config)` en `nex
 ```
 app/
 ├── (public)/                       # Sitio público
-│   ├── page.tsx                     # Home: búsqueda por cercanía, filtros, paginación
+│   ├── page.tsx                     # Home (Server): canónica + JSON-LD del sitio, renderiza home-client.tsx
+│   ├── home-client.tsx              # Home (Client): búsqueda por cercanía, filtros, paginación
+│   ├── capillas/page.tsx             # Directorio SSR de todas las capillas por departamento (links internos para Google)
 │   ├── acerca/page.tsx               # Server Component async: trae stats reales de Supabase
 │   ├── capilla/[slug]/page.tsx        # Detalle de capilla, generateMetadata con og:image
 │   ├── contacto/page.tsx + actions.ts   # Form público de sugerencias/reportes → tabla mensajes
@@ -56,6 +58,7 @@ lib/
 ├── supabase-server.ts                  # cliente server-side que respeta RLS (sesión del usuario)
 ├── supabase-public.ts                   # cliente anon, solo lectura pública
 ├── supabase-admin.ts                    # cliente service role — SOLO server-only, bypassea RLS
+├── site.ts                             # SITE_URL: URL canónica del sitio (www)
 ├── misas-utils.ts                      # findNextMisa, temporadaVigente, franjas horarias, normalizeText
 ├── eventos-tipos.ts, departamentos.ts, date-dmy.ts, ics.ts
 └── *.test.ts
@@ -145,6 +148,8 @@ Ningún archivo `"use client"` debe importar `supabase-admin` — rompería el b
 **`revalidatePath`** — cada Server Action que muta datos revalida todas las rutas donde ese dato se muestra: la propia lista admin, `/admin` (dashboard), y las rutas públicas equivalentes (`/`, `/mapa`, `/capilla/[slug]`, `/eventos`). Mirar las acciones existentes en `capillas/actions.ts` como referencia antes de agregar una nueva.
 
 **Mapa** — siempre `dynamic import` con `{ ssr: false }` para cualquier componente que use `react-leaflet`/Leaflet.
+
+**SEO / URLs** — toda URL absoluta (JSON-LD, sitemap, robots) sale de `SITE_URL` (`lib/site.ts`, `https://www.misasmendoza.com.ar`). Nunca hardcodear el dominio: el sin-www redirige (308) y `misas-mendoza.vercel.app` sirve una copia. Cada página pública nueva declara su canónica con `alternates: { canonical: "/ruta" }` (relativa; `metadataBase` la completa). No poner la canónica en un layout compartido: la heredarían todas las páginas hijas que no la redefinan. Si la página es un Client Component, la metadata va en un `layout.tsx` del segmento (como `eventos/` y `contacto/`). Los títulos no llevan "| Misas Mendoza": lo agrega el template del layout raíz.
 
 **Colores** — siempre vía las variables `--color-*` definidas en `app/globals.css` (`@theme`), nunca hex hardcodeado ni clases Tailwind crudas tipo `blue-500`/`amber-400` (rompen dark mode). Si hace falta un color que no tiene token todavía (ej. estados de temporada, Cáritas), agregar el par light/dark en `globals.css` antes de usarlo.
 

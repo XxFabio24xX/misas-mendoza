@@ -7,7 +7,8 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Acerca de Misas Mendoza",
+  title: { absolute: "Acerca de Misas Mendoza" },
+  alternates: { canonical: "/acerca" },
   description:
     "Conocé el proyecto detrás de Misas Mendoza — una plataforma gratuita para encontrar horarios de misas y celebraciones católicas en Mendoza, Argentina.",
   openGraph: {

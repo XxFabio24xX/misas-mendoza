@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Legal | Misas Mendoza",
+  title: "Legal y privacidad",
+  alternates: { canonical: "/legal" },
   description:
     "Aviso legal y política de privacidad de Misas Mendoza.",
 };
