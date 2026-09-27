@@ -33,6 +33,7 @@ app/
 │   ├── page.tsx                     # Home (Server): canónica + JSON-LD del sitio, renderiza home-client.tsx
 │   ├── home-client.tsx              # Home (Client): búsqueda por cercanía, filtros, paginación
 │   ├── capillas/page.tsx             # Directorio SSR de todas las capillas por departamento (links internos para Google)
+│   ├── capillas/[departamento]/page.tsx  # "Horarios de misa en <depto>": capillas del depto con horarios resumidos (ISR)
 │   ├── acerca/page.tsx               # Server Component async: trae stats reales de Supabase
 │   ├── capilla/[slug]/page.tsx        # Detalle de capilla, generateMetadata con og:image
 │   ├── contacto/page.tsx + actions.ts   # Form público de sugerencias/reportes → tabla mensajes
@@ -146,6 +147,8 @@ Para *crear* un recurso nuevo (sin fila existente en la BD) sí se usa el depart
 Ningún archivo `"use client"` debe importar `supabase-admin` — rompería el bundle del browser exponiendo la service role key.
 
 **`revalidatePath`** — cada Server Action que muta datos revalida todas las rutas donde ese dato se muestra: la propia lista admin, `/admin` (dashboard), y las rutas públicas equivalentes (`/`, `/mapa`, `/capilla/[slug]`, `/eventos`). Mirar las acciones existentes en `capillas/actions.ts` como referencia antes de agregar una nueva.
+
+**Caché de páginas públicas (ISR)** — `/capilla/[slug]`, `/capillas` y `/capillas/[departamento]` se sirven desde caché (`revalidate = 3600`). Toda Server Action que cambie `lugares` u `horarios` de forma visible (incluido borrar o desactivar) tiene que llamar `revalidatePath("/capilla/[slug]", "page")` y `revalidatePath("/capillas", "layout")` (este último cubre también las páginas por departamento); si no, el cambio tarda hasta una hora en verse. No calcular en esas páginas nada que dependa de la hora actual ("próxima misa", "hoy"): quedaría congelado en la versión cacheada.
 
 **Mapa** — siempre `dynamic import` con `{ ssr: false }` para cualquier componente que use `react-leaflet`/Leaflet.
 
