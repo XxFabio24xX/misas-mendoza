@@ -59,7 +59,7 @@ lib/
 ├── misas-utils.ts                      # findNextMisa, temporadaVigente, franjas horarias, normalizeText
 ├── eventos-tipos.ts, departamentos.ts, date-dmy.ts, ics.ts
 └── *.test.ts
-supabase/migrations/                 # Historial numerado 001–026. Ver advertencia — no es 100% fiel a la BD viva.
+supabase/migrations/                 # Historial numerado 001–027. Ver advertencia — no es 100% fiel a la BD viva.
 proxy.ts                             # Gate de sesión server-side para /admin/* (Next 16 "Proxy", ex-middleware)
 ```
 
@@ -93,7 +93,7 @@ RLS habilitada en las 6 tablas. `perfiles` solo tiene policies de `SELECT` (prop
 - `is_super_admin()` — función `SECURITY DEFINER` en `public` (no en `auth`). Existe para evitar recursión infinita de RLS en policies de `perfiles`. Si necesitás otro chequeo de rol dentro de una policy de la misma tabla, agregalo como función `SECURITY DEFINER`, no como subquery directa.
 - No existe ningún RPC de tipo "get_lugar_detalle" — el detalle de capilla se resuelve con un `select()` directo contra `lugares`/`horarios` desde el Server Component.
 
-## Migraciones aplicadas (001–026)
+## Migraciones aplicadas (001–027)
 
 | # | Propósito |
 |---|---|
@@ -123,6 +123,7 @@ RLS habilitada en las 6 tablas. `perfiles` solo tiene policies de `SELECT` (prop
 | 024 | Angosta policies `SELECT` de `perfiles` de `public` a `authenticated` |
 | 025 | Fix de listado del bucket `imagenes_capillas` (acceso directo por URL no necesita RLS) |
 | 026 | Columna `estado_verificacion` en lugares + RPCs actualizadas |
+| 027 | Datos de contacto (teléfono, email, secretaría) y un horario tomados de las fichas de la Arquidiócesis. Aplicada vía script con service role; no figura en el historial de Supabase |
 
 ## Convenciones obligatorias
 
@@ -147,7 +148,7 @@ Ningún archivo `"use client"` debe importar `supabase-admin` — rompería el b
 
 **Colores** — siempre vía las variables `--color-*` definidas en `app/globals.css` (`@theme`), nunca hex hardcodeado ni clases Tailwind crudas tipo `blue-500`/`amber-400` (rompen dark mode). Si hace falta un color que no tiene token todavía (ej. estados de temporada, Cáritas), agregar el par light/dark en `globals.css` antes de usarlo.
 
-**Migraciones SQL** — usar el prefijo numérico siguiente en `supabase/migrations/` (van por 026). Escribirlas de forma idempotente cuando se pueda (`ADD COLUMN IF NOT EXISTS`, `DROP POLICY IF EXISTS`). Aplicar contra la BD real vía MCP de Supabase, no solo dejarlas en el repo — **el repo y la BD viva ya se desincronizaron una vez** (ver advertencia).
+**Migraciones SQL** — usar el prefijo numérico siguiente en `supabase/migrations/` (van por 027). Escribirlas de forma idempotente cuando se pueda (`ADD COLUMN IF NOT EXISTS`, `DROP POLICY IF EXISTS`). Aplicar contra la BD real vía MCP de Supabase, no solo dejarlas en el repo — **el repo y la BD viva ya se desincronizaron una vez** (ver advertencia).
 
 **`proxy.ts`** — único gate de sesión real para `/admin/*`. Nunca crear `middleware.ts` en paralelo (no es una convención válida en Next 16, sería un archivo muerto).
 
@@ -206,7 +207,7 @@ Son genéricos y no conocen las particularidades de este repo. Cuando se invoque
 ## Lo que NO tocar sin mostrar el SQL/diff primero
 
 - **RLS policies** — no reescribir por intuición. Antes de tocar una policy, consultar `pg_policies` vía MCP para ver el estado real (el repo puede no coincidir con la BD viva) y mostrar el SQL al usuario antes de aplicarlo.
-- **Migraciones ya aplicadas** (001–026) — no editarlas retroactivamente; agregar una nueva con el número siguiente.
+- **Migraciones ya aplicadas** (001–027) — no editarlas retroactivamente; agregar una nueva con el número siguiente.
 - **`proxy.ts`** — es la única capa de gate de sesión real para `/admin/*`. No crear `middleware.ts` en paralelo.
 - **Tokens de diseño** (`app/globals.css`, `pantallas/DESIGN.md`, `pantallas/DESIGNdark.md`) — paleta "Warm Organic" sage green, no introducir colores fuera de las variables `--color-*` existentes.
 - **`SUPABASE_SERVICE_ROLE_KEY`** — solo en `lib/supabase-admin.ts`. Si algo parece necesitar la service role desde el cliente, la solución es una Server Action, no exponer la key.
