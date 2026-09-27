@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/app/components/theme-provider";
 import { RegisterSW } from "@/app/components/register-sw";
@@ -9,9 +10,7 @@ import { RegisterSW } from "@/app/components/register-sw";
 const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://misasmendoza.com.ar",
-  ),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Misas Mendoza — Horarios de misas en Mendoza",
     template: "%s | Misas Mendoza",

@@ -82,6 +82,7 @@ export async function generateMetadata({
   return {
     title: evento.titulo,
     description,
+    alternates: { canonical: `/eventos/${evento.slug}` },
     openGraph: {
       title: evento.titulo,
       description,

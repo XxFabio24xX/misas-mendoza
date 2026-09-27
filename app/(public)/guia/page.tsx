@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Church, Download, Phone } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Guía del voluntario | Misas Mendoza",
+  title: "Guía del voluntario",
+  alternates: { canonical: "/guia" },
   description:
     "Guía paso a paso para voluntarios de Misas Mendoza: cómo entrar al panel, editar capillas y horarios, cargar capillas nuevas, verificar datos y publicar eventos.",
   openGraph: {
