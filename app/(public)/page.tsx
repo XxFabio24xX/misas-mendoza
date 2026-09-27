@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
+import HeroBanner from "@/app/components/hero-banner";
+import { supabasePublic } from "@/lib/supabase-public";
+import { DEPARTAMENTOS } from "@/lib/departamentos";
 import { SITE_URL } from "@/lib/site";
 import Home from "./home-client";
 
 // La home es un Client Component envuelto en Suspense (usa useSearchParams),
 // así que su contenido no llega en el HTML inicial. Esta página de servidor
-// aporta lo que Google necesita leer sin ejecutar JavaScript: la canónica y el
-// JSON-LD del sitio.
+// aporta lo que Google necesita leer sin ejecutar JavaScript: la canónica, el
+// JSON-LD y el encabezado, con el h1 (que además es el LCP) y los links por
+// departamento.
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
@@ -81,7 +87,11 @@ const jsonLd = {
   ],
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { data } = await supabasePublic.from("lugares").select("departamento").eq("activo", true);
+  const conCapillas = new Set((data ?? []).map((l) => l.departamento as string));
+  const departamentos = DEPARTAMENTOS.filter((d) => conCapillas.has(d));
+
   return (
     <>
       <script
@@ -90,6 +100,10 @@ export default function HomePage() {
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
+      <div className="mx-auto max-w-280 px-4 pt-10 md:px-6 md:pt-16">
+        <HeroBanner departamentos={departamentos} />
+      </div>
+
       <Home />
     </>
   );
