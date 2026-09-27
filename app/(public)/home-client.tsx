@@ -29,7 +29,6 @@ import {
   type FranjaHoraria,
 } from "@/lib/misas-utils";
 import { useFavorites } from "@/hooks/useFavorites";
-import HeroBanner from "@/app/components/hero-banner";
 import { FilterChip } from "@/app/components/filter-chip";
 import { FiltrosDiaHorario } from "@/app/components/filtros-dia-horario";
 import { CandleLoader } from "@/app/components/candle-loader";
@@ -292,9 +291,7 @@ function HomeContent() {
   }, [selectedDias, horarioFilter]);
 
   return (
-    <div className="mx-auto max-w-280 space-y-8 px-4 pt-10 md:px-6 md:pt-16">
-      <HeroBanner />
-
+    <div className="mx-auto max-w-280 space-y-8 px-4 pt-8 md:px-6">
       {/* Banner informativo: verificación de datos en curso */}
       <div className="overflow-hidden rounded-full border border-outline-variant/30 bg-secondary-container px-4 py-2.5">
         <div className="flex items-center gap-3">

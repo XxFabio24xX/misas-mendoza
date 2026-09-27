@@ -86,6 +86,8 @@ export async function aprobarSolicitudBaja(solicitudId: string) {
   revalidatePath("/admin");
   revalidatePath("/");
   revalidatePath("/mapa");
+  revalidatePath("/capilla/[slug]", "page");
+  revalidatePath("/capillas", "layout");
 }
 
 export async function rechazarSolicitudBaja(solicitudId: string) {
@@ -192,6 +194,7 @@ export async function aprobarSolicitudAlta(solicitudId: string) {
   revalidatePath("/admin");
   revalidatePath("/");
   revalidatePath("/mapa");
+  revalidatePath("/capillas", "layout");
 }
 
 /**
@@ -327,4 +330,5 @@ export async function aprobarSolicitudEdicion(solicitudId: string) {
   revalidatePath("/capilla/[slug]", "page");
   revalidatePath("/");
   revalidatePath("/mapa");
+  revalidatePath("/capillas", "layout");
 }

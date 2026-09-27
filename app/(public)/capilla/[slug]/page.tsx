@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { supabasePublic } from "@/lib/supabase-public";
+import fondoCapilla from "@/public/fondocapilla.webp";
 import { SITE_URL } from "@/lib/site";
 import { BackButton } from "@/app/components/back-button";
 import { FavoriteButton } from "@/app/components/favorite-button";
@@ -132,6 +133,36 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const LUGAR_COLS =
   "id, nombre, direccion, telefono, email, imagen_url, hay_confesiones, departamento, lat, lng, recibe_caritas, slug, temporada_actual, estado_verificacion, descripcion, tipo, sitio_web, horario_secretaria";
 
+// Página servida desde caché (ISR). Las Server Actions del panel que cambian
+// capillas u horarios invalidan "/capilla/[slug]"; esto es solo el respaldo.
+export const revalidate = 3600;
+
+// Pre-genera todas las capillas activas en el build; las nuevas se generan
+// en la primera visita (dynamicParams sigue en true).
+export async function generateStaticParams() {
+  const { data } = await supabasePublic.from("lugares").select("slug").eq("activo", true);
+  return (data ?? []).map((l) => ({ slug: l.slug as string }));
+}
+
+// Solo se usan fotos de nuestro Storage: las externas (Google, Facebook)
+// vencen o bloquean el hotlinking, y next/image rechaza su dominio.
+const SUPABASE_HOST = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").host;
+  } catch {
+    return "";
+  }
+})();
+
+function fotoPropia(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).host === SUPABASE_HOST ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 // cache(): generateMetadata y la página comparten la misma consulta por request.
 const getLugarBySlug = cache(async (slug: string): Promise<Lugar | null> => {
   const { data } = await supabasePublic
@@ -152,15 +183,19 @@ export async function generateMetadata({
   const lugar = await getLugarBySlug(slug);
   if (!lugar) return {};
   const description = `Horarios de misa, dirección y contacto de ${lugar.nombre} — ${lugar.direccion}, ${lugar.departamento}, Mendoza.`;
+  // Título con la búsqueda real ("horarios de misa" + nombre + departamento);
+  // sin el sufijo de marca para que Google no lo corte antes del departamento.
+  const title = `Horarios de misa: ${lugar.nombre} (${lugar.departamento})`;
+  const foto = fotoPropia(lugar.imagen_url);
   return {
-    title: lugar.nombre,
+    title: { absolute: title },
     description,
     alternates: { canonical: `/capilla/${lugar.slug}` },
     openGraph: {
-      title: lugar.nombre,
+      title,
       description,
-      images: lugar.imagen_url
-        ? [{ url: lugar.imagen_url, width: 1200, height: 630 }]
+      images: foto
+        ? [{ url: foto, width: 1200, height: 630 }]
         : [{ url: "/opengraph-image", width: 1200, height: 630 }],
     },
   };
@@ -186,6 +221,7 @@ export default async function CapillaPage({
 
   const lugar = await getLugarBySlug(slug);
   if (!lugar) notFound();
+  const foto = fotoPropia(lugar.imagen_url);
 
   const horariosRes = await supabasePublic
     .from("horarios")
@@ -230,7 +266,7 @@ export default async function CapillaPage({
     ...(lugar.telefono ? { telephone: lugar.telefono } : {}),
     ...(lugar.email ? { email: lugar.email } : {}),
     ...(lugar.sitio_web ? { url: lugar.sitio_web } : {}),
-    ...(lugar.imagen_url ? { image: lugar.imagen_url } : {}),
+    ...(foto ? { image: foto } : {}),
     url: `${SITE_URL}/capilla/${lugar.slug}`,
     openingHoursSpecification: horarios
       .filter((h) => h.dia_semana != null)
@@ -248,22 +284,17 @@ export default async function CapillaPage({
   return (
     <div className="min-h-screen bg-background">
       <div className="relative h-52 overflow-hidden rounded-b-xl bg-surface-container-high md:h-[420px]">
-        {lugar.imagen_url ? (
-          <Image
-            src={lugar.imagen_url}
-            alt={lugar.nombre}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
-          />
-        ) : (
-          <img
-            src="/fondocapilla.webp"
-            alt={lugar.nombre}
-            className="h-48 w-full object-cover md:h-[420px]"
-          />
-        )}
+        {/* next/image en los dos casos: sirve la foto al tamaño de la
+            pantalla (la genérica pesa 500 KB a 2000px) y la prioriza. */}
+        <Image
+          src={foto ?? fondoCapilla}
+          alt={lugar.nombre}
+          fill
+          priority
+          sizes="100vw"
+          placeholder={foto ? "empty" : "blur"}
+          className="object-cover"
+        />
         <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
         {/* Alineados a la columna de contenido (max-w-280), no a los bordes de la pantalla */}
         <div className="absolute inset-x-0 top-4 z-10">

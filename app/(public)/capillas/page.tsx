@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, MapPin } from "lucide-react";
 import { supabasePublic } from "@/lib/supabase-public";
-import { DEPARTAMENTOS } from "@/lib/departamentos";
+import { DEPARTAMENTOS, slugDepartamento } from "@/lib/departamentos";
 import { SITE_URL } from "@/lib/site";
 
 // Directorio renderizado en el servidor: es el único lugar del HTML inicial
@@ -90,7 +90,7 @@ export default async function CapillasPage() {
           {grupos.map(({ dep, items }) => (
             <a
               key={dep}
-              href={`#${slugDep(dep)}`}
+              href={`#${slugDepartamento(dep)}`}
               className="rounded-full border border-outline-variant/50 bg-surface-container-low px-3 py-1 text-xs font-medium text-on-surface-variant transition-colors hover:border-primary hover:text-primary"
             >
               {dep} <span className="text-on-surface-variant/70">({items.length})</span>
@@ -100,8 +100,16 @@ export default async function CapillasPage() {
       )}
 
       {grupos.map(({ dep, items }) => (
-        <section key={dep} id={slugDep(dep)} className="mt-10 scroll-mt-24">
-          <h2 className="text-lg font-semibold text-on-surface">{dep}</h2>
+        <section key={dep} id={slugDepartamento(dep)} className="mt-10 scroll-mt-24">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-lg font-semibold text-on-surface">{dep}</h2>
+            <Link
+              href={`/capillas/${slugDepartamento(dep)}`}
+              className="shrink-0 text-sm font-medium text-primary hover:underline"
+            >
+              Horarios de misa en {dep} →
+            </Link>
+          </div>
           <ul className="mt-3 divide-y divide-outline-variant/40 rounded-xl border border-outline-variant/50 bg-secondary-container">
             {items.map((l) => (
               <li key={l.slug}>
@@ -133,12 +141,4 @@ export default async function CapillasPage() {
       />
     </div>
   );
-}
-
-function slugDep(dep: string) {
-  return dep
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/\s+/g, "-");
 }
