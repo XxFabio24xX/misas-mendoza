@@ -39,7 +39,17 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
+    // Páginas privadas: Google puede entrar (no están bloqueadas en
+    // robots.txt) pero este header le dice que no las indexe. Si se
+    // bloquearan en robots.txt, Google no vería el header y las indexaría
+    // igual por los links a /login que hay en todo el sitio. Son Client
+    // Components, por eso va como header y no como metadata.
+    const noIndex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
     return [
+      { source: "/login", headers: noIndex },
+      { source: "/restablecer-password", headers: noIndex },
+      { source: "/admin", headers: noIndex },
+      { source: "/admin/:path*", headers: noIndex },
       {
         source: "/(.*)",
         headers: [
